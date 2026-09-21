@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MercaJusto — Mi Canasta</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <style>
+    body { background: var(--bg-secondary); }
+
+    /* ── Header ── */
+    .cart-header {
+      background: var(--bg-primary);
+      padding: var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .cart-header__title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .cart-header__clear {
+      font-size: 13px;
+      color: var(--danger);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 500;
+    }
+
+    /* ── Seller group ── */
+    .seller-group {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      margin: var(--space-4) var(--space-4) 0;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .seller-group__header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+
+    .seller-group__avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--primary-10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .seller-group__name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+
+    .seller-group__location {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* ── Cart item ── */
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .cart-item:last-child { border-bottom: none; }
+
+    .cart-item__img {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .cart-item__info { flex: 1; min-width: 0; }
+
+    .cart-item__name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .cart-item__unit {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: var(--space-2);
+    }
+
+    .cart-item__price {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .cart-item__original {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-decoration: line-through;
+      margin-left: 4px;
+    }
+
+    .cart-item__controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--space-2);
+    }
+
+    .cart-item__remove {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 18px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .cart-item__remove:hover { color: var(--danger); }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-full);
+      padding: 4px 8px;
+    }
+
+    .cart-item-qty__btn {
+      width: 24px;
+      height: 24px;
+      border-radius: var(--radius-full);
+      background: var(--bg-primary);
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .cart-item-qty__val {
+      font-size: 14px;
+      font-weight: 700;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    /* ── Ahorro banner ── */
+    .saving-banner {
+      margin: var(--space-4) var(--space-4) 0;
+      background: linear-gradient(135deg, rgba(45,198,83,0.1), rgba(0,143,255,0.08));
+      border: 1.5px solid rgba(45,198,83,0.3);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .saving-banner__icon {
+      font-size: 28px;
+    }
+
+    .saving-banner__text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .saving-banner__amount {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    /* ── Summary ── */
+    .cart-summary {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      margin: var(--space-4) var(--space-4) 0;
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cart-summary__row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-2) 0;
+    }
+
+    .cart-summary__label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .cart-summary__value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .cart-summary__total-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .cart-summary__total-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    /* ── Checkout bar ── */
+    .checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 390px;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      padding: var(--space-4);
+      z-index: 200;
+    }
+
+    .cart-content {
+      padding-bottom: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ═══════════════════════════════════════
+         HEADER
+    ═══════════════════════════════════════ -->
+    <header class="cart-header">
+      <a href="home.html" class="back-btn" aria-label="Volver">←</a>
+      <h1 class="cart-header__title">Mi Canasta</h1>
+      <button class="cart-header__clear" onclick="clearCart()">Vaciar</button>
+    </header>
+
+    <!-- ═══════════════════════════════════════
+         CONTENIDO
+    ═══════════════════════════════════════ -->
+    <div class="cart-content" id="cartContent">
+
+      <!-- Ahorro estimado -->
+      <div class="saving-banner animate-in">
+        <div class="saving-banner__icon">🎉</div>
+        <div class="saving-banner__text">
+          Ahorro estimado<br>
+          <span class="saving-banner__amount">$4.300</span>
+          <span style="font-size:12px; color:var(--text-tertiary);"> vs supermercado</span>
+        </div>
+      </div>
+
+      <!-- ── Grupo: Don José ── -->
+      <div class="seller-group animate-in">
+        <div class="seller-group__header">
+          <div class="seller-group__avatar">👨‍🌾</div>
+          <div>
+            <div class="seller-group__name">Don José · Finca El Bolso</div>
+            <div class="seller-group__location">📍 Vereda El Diviso</div>
+          </div>
+        </div>
+
+        <!-- Item Papa -->
+        <div class="cart-item" id="item-papa">
+          <div class="cart-item__img">🥔</div>
+          <div class="cart-item__info">
+            <div class="cart-item__name">Papa Pastusa</div>
+            <div class="cart-item__unit">Por Kilo</div>
+            <div>
+              <span class="cart-item__price" id="papa-price">$4.800</span>
+              <span class="cart-item__original">$6.000</span>
+            </div>
+          </div>
+          <div class="cart-item__controls">
+            <button class="cart-item__remove" onclick="removeItem('item-papa')" aria-label="Eliminar">✕</button>
+            <div class="cart-item-qty">
+              <button class="cart-item-qty__btn" onclick="changeItemQty('papa', -1)">−</button>
+              <span class="cart-item-qty__val" id="papa-qty">2</span>
+              <button class="cart-item-qty__btn" onclick="changeItemQty('papa', 1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item Cebolla -->
+        <div class="cart-item" id="item-cebolla">
+          <div class="cart-item__img">🥬</div>
+          <div class="cart-item__info">
+            <div class="cart-item__name">Cebolla Larga</div>
+            <div class="cart-item__unit">Por Atado</div>
+            <div>
+              <span class="cart-item__price" id="cebolla-price">$1.500</span>
+            </div>
+          </div>
+          <div class="cart-item__controls">
+            <button class="cart-item__remove" onclick="removeItem('item-cebolla')" aria-label="Eliminar">✕</button>
+            <div class="cart-item-qty">
+              <button class="cart-item-qty__btn" onclick="changeItemQty('cebolla', -1)">−</button>
+              <span class="cart-item-qty__val" id="cebolla-qty">1</span>
+              <button class="cart-item-qty__btn" onclick="changeItemQty('cebolla', 1)">+</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Grupo: Doña Carmen ── -->
+      <div class="seller-group animate-in">
+        <div class="seller-group__header">
+          <div class="seller-group__avatar">👩‍🌾</div>
+          <div>
+            <div class="seller-group__name">Doña Carmen · Vereda Motilón</div>
+            <div class="seller-group__location">📍 Vereda Motilón</div>
+          </div>
+        </div>
+
+        <!-- Item Aguacate -->
+        <div class="cart-item" id="item-aguacate">
+          <div class="cart-item__img">🥑</div>
+          <div class="cart-item__info">
+            <div class="cart-item__name">Aguacate Hass</div>
+            <div class="cart-item__unit">Por Kilo</div>
+            <div>
+              <span class="cart-item__price" id="aguacate-price">$2.900</span>
+              <span class="cart-item__original">$5.000</span>
+            </div>
+          </div>
+          <div class="cart-item__controls">
+            <button class="cart-item__remove" onclick="removeItem('item-aguacate')" aria-label="Eliminar">✕</button>
+            <div class="cart-item-qty">
+              <button class="cart-item-qty__btn" onclick="changeItemQty('aguacate', -1)">−</button>
+              <span class="cart-item-qty__val" id="aguacate-qty">1</span>
+              <button class="cart-item-qty__btn" onclick="changeItemQty('aguacate', 1)">+</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Resumen ── -->
+      <div class="cart-summary animate-in">
+        <div class="cart-summary__row">
+          <span class="cart-summary__label">Subtotal (4 productos)</span>
+          <span class="cart-summary__value" id="subtotal">$9.200</span>
+        </div>
+        <div class="cart-summary__row">
+          <span class="cart-summary__label">Envío estimado</span>
+          <span class="cart-summary__value" style="color:var(--success);">Gratis 🎁</span>
+        </div>
+        <div class="cart-summary__row">
+          <span class="cart-summary__label">Descuento modo excedente</span>
+          <span class="cart-summary__value" style="color:var(--success);">−$4.300</span>
+        </div>
+        <div class="divider"></div>
+        <div class="cart-summary__row">
+          <span class="cart-summary__total-label">Total</span>
+          <span class="cart-summary__total-value" id="total">$9.200</span>
+        </div>
+      </div>
+
+      <!-- Spacer -->
+      <div style="height:var(--space-4);"></div>
+
+    </div><!-- /cart-content -->
+
+    <div class="checkout-bar">
+      <a href="checkout.html" class="btn btn-primary btn-full btn-lg">
+        Confirmar el pago →
+      </a>
+    </div>
+
+  </div><!-- /app-shell -->
+
+  <script>
+    const prices = { papa: 2400, cebolla: 1500, aguacate: 2900 };
+    const qtys   = { papa: 2,    cebolla: 1,    aguacate: 1    };
+
+    function changeItemQty(id, delta) {
+      qtys[id] = Math.max(1, qtys[id] + delta);
+      document.getElementById(`${id}-qty`).textContent = qtys[id];
+      document.getElementById(`${id}-price`).textContent =
+        '$' + (prices[id] * qtys[id]).toLocaleString('es-CO');
+      updateTotals();
+    }
+
+    function removeItem(itemId) {
+      const el = document.getElementById(itemId);
+      if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+      updateTotals();
+    }
+
+    function updateTotals() {
+      let sub = 0;
+      for (const k in qtys) {
+        const el = document.getElementById(`item-${k === 'aguacate' ? 'aguacate' : k}`);
+        if (el) sub += prices[k] * qtys[k];
+      }
+      document.getElementById('subtotal').textContent = '$' + sub.toLocaleString('es-CO');
+      document.getElementById('total').textContent = '$' + sub.toLocaleString('es-CO');
+    }
+
+    function clearCart() {
+      if (confirm('¿Vaciar la canasta?')) {
+        document.getElementById('cartContent').innerHTML =
+          '<div style="text-align:center;padding:60px var(--space-4);color:var(--text-tertiary);">' +
+          '<div style="font-size:64px;margin-bottom:16px;">🛒</div>' +
+          '<div style="font-size:16px;font-weight:600;margin-bottom:8px;">Tu canasta está vacía</div>' +
+          '<a href="home.html" class="btn btn-primary" style="margin-top:16px;">Explorar productos</a>' +
+          '</div>';
+      }
+    }
+  </script>
+</body>
+</html>

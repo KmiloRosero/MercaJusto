@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MercaJusto — Perfil Productor</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <style>
+    body { background: var(--bg-secondary); }
+
+    /* ── Hero ── */
+    .producer-hero {
+      position: relative;
+      height: 180px;
+      background: linear-gradient(135deg, #2E7D32 0%, #388E3C 60%, #43A047 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      overflow: hidden;
+    }
+
+    .producer-hero__back {
+      position: absolute;
+      top: var(--space-4);
+      left: var(--space-4);
+      z-index: 10;
+    }
+
+    .producer-hero__overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 80px;
+      background: linear-gradient(to top, var(--bg-secondary), transparent);
+    }
+
+    /* ── Profile card ── */
+    .profile-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      margin: -40px var(--space-4) 0;
+      padding: var(--space-5);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      z-index: 10;
+      text-align: center;
+    }
+
+    .profile-avatar-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-full);
+      background: var(--primary-10);
+      border: 4px solid var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      margin: -56px auto var(--space-3);
+      box-shadow: var(--shadow-md);
+    }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .profile-location {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-4);
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border);
+      margin-bottom: var(--space-4);
+    }
+
+    .stat { text-align: center; }
+
+    .stat__value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .stat__label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: var(--space-3);
+    }
+
+    /* ── About ── */
+    .section-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      margin: var(--space-4) var(--space-4) 0;
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .section-card__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+
+    .section-card__text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ── Products grid ── */
+    .producer-products {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+
+    .prod-mini {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .prod-mini:hover { background: var(--primary-light); }
+
+    .prod-mini__img { font-size: 36px; }
+    .prod-mini__name { font-size: 13px; font-weight: 600; color: var(--text-primary); text-align: center; }
+    .prod-mini__price { font-size: 13px; font-weight: 700; color: var(--primary); }
+
+    /* ── Publish product sheet ── */
+    .publish-sheet {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      margin: var(--space-4) var(--space-4) 0;
+      padding: var(--space-5);
+      box-shadow: var(--shadow-md);
+      border: 1.5px dashed var(--border);
+    }
+
+    .publish-sheet__title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+    }
+
+    .publish-upload {
+      width: 100%;
+      height: 100px;
+      background: var(--bg-secondary);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      margin-bottom: var(--space-4);
+      transition: border-color 0.2s;
+    }
+
+    .publish-upload:hover { border-color: var(--primary); }
+
+    .publish-upload__icon { font-size: 28px; }
+    .publish-upload__text { font-size: 13px; color: var(--text-tertiary); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-3) 0;
+      border-top: 1px solid var(--border);
+      margin-top: var(--space-3);
+    }
+
+    .toggle-row__label { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+    .toggle-row__sub   { font-size: 12px; color: var(--text-tertiary); }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- Hero -->
+    <div class="producer-hero">
+      🌾
+      <div class="producer-hero__back">
+        <a href="home.html" class="back-btn" style="background:rgba(255,255,255,0.85); backdrop-filter:blur(4px);">←</a>
+      </div>
+      <div class="producer-hero__overlay"></div>
+    </div>
+
+    <!-- Profile card -->
+    <div class="profile-card animate-in">
+      <div class="profile-avatar-wrap">👨‍🌾</div>
+
+      <div class="profile-name">Don José</div>
+      <div class="profile-location">📍 Finca El Bolso · Vereda El Diviso, Pasto</div>
+
+      <div class="profile-stats">
+        <div class="stat">
+          <div class="stat__value">$1.240.500</div>
+          <div class="stat__label">Vendido total</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">4.8 ⭐</div>
+          <div class="stat__label">Calificación</div>
+        </div>
+        <div class="stat">
+          <div class="stat__value">148</div>
+          <div class="stat__label">Pedidos</div>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn btn-primary" style="flex:1;" onclick="window.location.href='home.html'">
+          Pedir Ahora
+        </button>
+        <button class="btn btn-outline" style="flex:1;">
+          Ver Excedentes
+        </button>
+      </div>
+    </div>
+
+    <!-- Acerca del productor -->
+    <div class="section-card animate-in">
+      <div class="section-card__title">Acerca de Don José</div>
+      <p class="section-card__text">
+        Productor campesino con más de 20 años cultivando papa, cebolla y hortalizas en la vereda El Diviso. Apoya a más de 500 familias productoras de la región con prácticas de cultivo tradicionales y sostenibles.
+      </p>
+    </div>
+
+    <!-- Cosechas activas -->
+    <div class="section-card animate-in">
+      <div class="section-card__title">Cosechas activas</div>
+      <div class="producer-products">
+        <a href="producto.html" class="prod-mini">
+          <div class="prod-mini__img">🥔</div>
+          <div class="prod-mini__name">Papa Pastusa</div>
+          <div class="prod-mini__price">$2.400/kg</div>
+        </a>
+        <a href="producto.html" class="prod-mini">
+          <div class="prod-mini__img">🥬</div>
+          <div class="prod-mini__name">Cebolla Larga</div>
+          <div class="prod-mini__price">$1.500/atado</div>
+        </a>
+        <a href="producto.html" class="prod-mini">
+          <div class="prod-mini__img">🌿</div>
+          <div class="prod-mini__name">Cilantro</div>
+          <div class="prod-mini__price">$800/manojo</div>
+        </a>
+        <a href="producto.html" class="prod-mini">
+          <div class="prod-mini__img">🥕</div>
+          <div class="prod-mini__name">Zanahoria</div>
+          <div class="prod-mini__price">$1.800/kg</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Publicar nueva cosecha -->
+    <div class="publish-sheet animate-in">
+      <div class="publish-sheet__title">➕ Publicar cosecha</div>
+
+      <div class="publish-upload" role="button" tabindex="0" aria-label="Subir foto del producto">
+        <div class="publish-upload__icon">📷</div>
+        <div class="publish-upload__text">Subir foto del producto</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">¿Qué vas a vender?</label>
+        <input class="form-input" type="text" placeholder="Ej: Papa Pastusa" />
+      </div>
+
+      <div class="two-col">
+        <div class="form-group">
+          <label class="form-label">Precio</label>
+          <input class="form-input" type="number" placeholder="$2.400" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cantidad</label>
+          <input class="form-input" type="text" placeholder="20 kilos" />
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-row__label">¿Es producto excedente?</div>
+          <div class="toggle-row__sub">Activa el "Modo Excedente" para ventas rápidas</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="excedente" />
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+
+      <button class="btn btn-primary btn-full" style="margin-top:var(--space-4);" onclick="publishCosecha()">
+        Publicar cosecha ahora
+      </button>
+    </div>
+
+    <div style="height: var(--space-8);"></div>
+
+    <!-- Bottom Nav (Productor view) -->
+    <nav class="bottom-nav" aria-label="Navegación productor">
+      <a href="home.html" class="nav-item" aria-label="Ventas">
+        <span class="nav-item__icon">📊</span>
+        <span class="nav-item__label">Ventas</span>
+      </a>
+      <a href="#" class="nav-item" aria-label="Pedidos">
+        <span class="nav-item__icon">📦</span>
+        <span class="nav-item__label">Pedidos</span>
+      </a>
+      <a href="#" class="nav-item nav-item--cart" aria-label="Publicar">
+        <span class="nav-item__icon">➕</span>
+        <span class="nav-item__label">Publicar</span>
+      </a>
+      <a href="#" class="nav-item" aria-label="Mensajes">
+        <span class="nav-item__icon">💬</span>
+        <span class="nav-item__label">Mensajes</span>
+      </a>
+      <a href="perfil-productor.html" class="nav-item active" aria-label="Perfil">
+        <span class="nav-item__icon">👤</span>
+        <span class="nav-item__label">Perfil</span>
+      </a>
+    </nav>
+
+  </div><!-- /app-shell -->
+
+  <script>
+    function publishCosecha() {
+      const btn = event.currentTarget;
+      btn.textContent = '✓ ¡Cosecha publicada!';
+      btn.style.background = 'var(--success)';
+      setTimeout(() => {
+        btn.textContent = 'Publicar cosecha ahora';
+        btn.style.background = '';
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MercaJusto — Pedido Recibido</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <style>
+    body { background: var(--bg-secondary); }
+
+    /* ── Success hero ── */
+    .success-hero {
+      background: var(--bg-primary);
+      padding: var(--space-10) var(--space-6) var(--space-6);
+      text-align: center;
+    }
+
+    .success-icon {
+      width: 88px;
+      height: 88px;
+      background: linear-gradient(135deg, rgba(45,198,83,0.15), rgba(0,143,255,0.1));
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      margin: 0 auto var(--space-4);
+      border: 3px solid rgba(45,198,83,0.3);
+      animation: successPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes successPop {
+      0%   { transform: scale(0.5); opacity: 0; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+
+    .success-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .success-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    /* ── Rating card ── */
+    .rating-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      margin: var(--space-4) var(--space-4) 0;
+      padding: var(--space-5);
+      box-shadow: var(--shadow-md);
+    }
+
+    .rating-card__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: center;
+      margin-bottom: var(--space-5);
+    }
+
+    /* Stars */
+    .stars-row {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .star-btn {
+      font-size: 40px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s;
+      filter: grayscale(1);
+      opacity: 0.4;
+    }
+
+    .star-btn:hover,
+    .star-btn.active {
+      filter: grayscale(0);
+      opacity: 1;
+      transform: scale(1.2);
+    }
+
+    .star-feedback {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--warning);
+      min-height: 20px;
+      margin-bottom: var(--space-4);
+    }
+
+    /* Textarea */
+    .rating-textarea {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--bg-input);
+      outline: none;
+      resize: none;
+      min-height: 80px;
+      transition: border-color 0.2s;
+    }
+
+    .rating-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--primary-10);
+    }
+
+    /* ── Seller summary card ── */
+    .seller-summary {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      margin: var(--space-4) var(--space-4) 0;
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+
+    .seller-summary__avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-full);
+      background: var(--primary-10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .seller-summary__info { flex: 1; }
+
+    .seller-summary__name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .seller-summary__location {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .seller-summary__order {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+
+    /* ── Order items ── */
+    .delivered-items {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      margin: var(--space-4) var(--space-4) 0;
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .delivered-items__title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-3);
+    }
+
+    .delivered-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .delivered-item:last-child { border-bottom: none; }
+
+    .delivered-item__img {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .delivered-item__name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .delivered-item__price { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+    /* ── CTA bar ── */
+    .cta-bar {
+      padding: var(--space-4);
+      margin-top: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ═══ Success Hero ═══ -->
+    <div class="success-hero">
+      <div class="success-icon">✅</div>
+      <h1 class="success-title">¡Pedido recibido!</h1>
+      <p class="success-desc">
+        ¿Cómo te fue con tu pedido? Tu opinión ayuda a los productores y a toda la comunidad.
+      </p>
+    </div>
+
+    <!-- ═══ Seller info ═══ -->
+    <div class="seller-summary animate-in">
+      <div class="seller-summary__avatar">👨‍🌾</div>
+      <div class="seller-summary__info">
+        <div class="seller-summary__name">Don José · Finca El Bolso</div>
+        <div class="seller-summary__location">📍 Vereda El Diviso, Pasto</div>
+        <div class="seller-summary__order">Pedido #MJ-20240921 · Hace 2 horas</div>
+      </div>
+    </div>
+
+    <!-- ═══ Items entregados ═══ -->
+    <div class="delivered-items animate-in">
+      <div class="delivered-items__title">Productos recibidos</div>
+      <div class="delivered-item">
+        <div class="delivered-item__img">🥔</div>
+        <span class="delivered-item__name">Papa Pastusa × 2 kg</span>
+        <span class="delivered-item__price">$4.800</span>
+      </div>
+      <div class="delivered-item">
+        <div class="delivered-item__img">🥬</div>
+        <span class="delivered-item__name">Cebolla Larga × 1</span>
+        <span class="delivered-item__price">$1.500</span>
+      </div>
+      <div class="delivered-item">
+        <div class="delivered-item__img">🥑</div>
+        <span class="delivered-item__name">Aguacate Hass × 1 kg</span>
+        <span class="delivered-item__price">$2.900</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; padding-top:var(--space-3); margin-top:var(--space-2); border-top:1px solid var(--border);">
+        <span style="font-size:13px; font-weight:700; color:var(--text-primary);">Total pagado</span>
+        <span style="font-size:14px; font-weight:800; color:var(--primary);">$9.017</span>
+      </div>
+    </div>
+
+    <!-- ═══ Rating card ═══ -->
+    <div class="rating-card animate-in">
+      <div class="rating-card__title">¿Cómo calificarías tu pedido?</div>
+
+      <div class="stars-row" role="group" aria-label="Calificación de 1 a 5 estrellas">
+        <button class="star-btn" onclick="rate(1)" aria-label="1 estrella">⭐</button>
+        <button class="star-btn" onclick="rate(2)" aria-label="2 estrellas">⭐</button>
+        <button class="star-btn" onclick="rate(3)" aria-label="3 estrellas">⭐</button>
+        <button class="star-btn" onclick="rate(4)" aria-label="4 estrellas">⭐</button>
+        <button class="star-btn" onclick="rate(5)" aria-label="5 estrellas">⭐</button>
+      </div>
+
+      <div class="star-feedback" id="starFeedback"></div>
+
+      <textarea
+        class="rating-textarea"
+        id="reviewText"
+        placeholder="Cuéntanos tu experiencia (opcional)..."
+        aria-label="Comentario de reseña"
+      ></textarea>
+    </div>
+
+    <!-- ═══ CTA ═══ -->
+    <div class="cta-bar animate-in">
+      <button class="btn btn-primary btn-full btn-lg" onclick="submitRating()">
+        Enviar calificación
+      </button>
+      <a href="home.html" class="btn btn-ghost btn-full">
+        Volver al inicio
+      </a>
+    </div>
+
+    <div style="height: var(--space-6);"></div>
+
+  </div><!-- /app-shell -->
+
+  <script>
+    const feedbackLabels = ['', '😞 Muy malo', '😕 Regular', '🙂 Bien', '😊 Muy bien', '🤩 ¡Excelente!'];
+    let selectedRating = 0;
+
+    function rate(n) {
+      selectedRating = n;
+      const stars = document.querySelectorAll('.star-btn');
+      stars.forEach((s, i) => s.classList.toggle('active', i < n));
+      document.getElementById('starFeedback').textContent = feedbackLabels[n];
+    }
+
+    function submitRating() {
+      if (selectedRating === 0) {
+        alert('Por favor selecciona una calificación');
+        return;
+      }
+      const btn = event.currentTarget;
+      btn.textContent = '✓ ¡Gracias por tu calificación!';
+      btn.style.background = 'var(--success)';
+      btn.disabled = true;
+      setTimeout(() => window.location.href = 'home.html', 1800);
+    }
+  </script>
+</body>
+</html>

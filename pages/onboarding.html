@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MercaJusto — Bienvenida</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <style>
+    body { background: #fff; }
+
+    /* ── Slides ── */
+    .onboarding {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Hero image slide */
+    .slide-hero {
+      flex: 1;
+      position: relative;
+      min-height: 52vh;
+    }
+
+    .slide-hero__img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: linear-gradient(160deg, #4CAF50 0%, #2E7D32 40%, #1B5E20 100%);
+      min-height: 52vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 120px;
+    }
+
+    .slide-hero__overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(to top, var(--bg-primary), transparent);
+    }
+
+    /* Bottom content */
+    .slide-content {
+      padding: var(--space-6) var(--space-6) var(--space-8);
+      text-align: center;
+      background: var(--bg-primary);
+    }
+
+    .slide-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-5);
+    }
+
+    .slide-logo__icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .slide-logo__name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .slide-tagline {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      margin-bottom: var(--space-3);
+    }
+
+    .slide-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: var(--space-6);
+    }
+
+    /* Dots */
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: var(--space-6);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      background: var(--gray-200);
+      transition: all 0.3s;
+    }
+
+    .dot.active {
+      width: 24px;
+      background: var(--primary);
+    }
+
+    /* Actions */
+    .slide-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    /* ── Slide 2: Rol ── */
+    .role-screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: var(--space-10) var(--space-6) var(--space-8);
+      background: var(--bg-primary);
+    }
+
+    .role-screen.visible { display: flex; }
+
+    .role-screen__title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .role-screen__subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-8);
+    }
+
+    .role-cards {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      flex: 1;
+    }
+
+    .role-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-4);
+      position: relative;
+    }
+
+    .role-card:hover { border-color: var(--primary); background: var(--primary-light); }
+
+    .role-card.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .role-card__check {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--border);
+      background: var(--bg-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: transparent;
+      transition: all 0.2s;
+    }
+
+    .role-card.selected .role-card__check {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .role-card__icon {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .role-card.selected .role-card__icon {
+      background: rgba(0,143,255,0.12);
+    }
+
+    .role-card__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .role-card__desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ═══════════════════════════════════
+         SLIDE 1 — Imagen de campo
+    ═══════════════════════════════════ -->
+    <div class="onboarding" id="slide1">
+
+      <!-- Hero -->
+      <div class="slide-hero">
+        <div class="slide-hero__img">🌾</div>
+        <div class="slide-hero__overlay"></div>
+      </div>
+
+      <!-- Content -->
+      <div class="slide-content animate-in">
+
+        <div class="slide-logo">
+          <div class="slide-logo__icon">🛒</div>
+          <span class="slide-logo__name">MercaJusto</span>
+        </div>
+
+        <h1 class="slide-tagline">Del campo directo a<br>tu mesa</h1>
+        <p class="slide-desc">
+          Conectamos a pequeños productores de Nariño con compradores locales. Sin intermediarios, sin sobrecostos.
+        </p>
+
+        <!-- Pagination dots -->
+        <div class="dots">
+          <div class="dot active"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="slide-actions">
+          <button class="btn btn-primary btn-full" onclick="goToRoleScreen()">
+            Siguiente
+          </button>
+          <a href="login.html" class="btn btn-ghost btn-full">
+            Ya tengo cuenta
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════
+         SLIDE 2 — Elegir rol
+    ═══════════════════════════════════ -->
+    <div class="role-screen" id="slide2">
+
+      <div style="margin-bottom: var(--space-8);">
+        <div class="slide-logo" style="justify-content: flex-start; margin-bottom: var(--space-6);">
+          <div class="slide-logo__icon">🛒</div>
+          <span class="slide-logo__name">MercaJusto</span>
+        </div>
+        <h2 class="role-screen__title">¿Cómo quiere usar<br>MercaJusto hoy?</h2>
+        <p class="role-screen__subtitle">Puedes cambiar tu rol después</p>
+      </div>
+
+      <div class="role-cards">
+
+        <!-- Comprador -->
+        <div class="role-card selected" id="card-buyer" onclick="selectRole('buyer')">
+          <div class="role-card__icon">🛍️</div>
+          <div>
+            <div class="role-card__title">Soy Comprador</div>
+            <div class="role-card__desc">Accede a productos frescos directamente de los productores locales.</div>
+          </div>
+          <div class="role-card__check">✓</div>
+        </div>
+
+        <!-- Productor -->
+        <div class="role-card" id="card-seller" onclick="selectRole('seller')">
+          <div class="role-card__icon">🌱</div>
+          <div>
+            <div class="role-card__title">Soy Productor</div>
+            <div class="role-card__desc">Publica tus cosechas, fija tus precios y vende directo a tu plaza local.</div>
+          </div>
+          <div class="role-card__check">✓</div>
+        </div>
+
+      </div>
+
+      <!-- Pagination dots -->
+      <div class="dots" style="margin-top: var(--space-6);">
+        <div class="dot"></div>
+        <div class="dot active"></div>
+        <div class="dot"></div>
+      </div>
+
+      <div style="margin-top: var(--space-4);">
+        <button class="btn btn-primary btn-full btn-lg" onclick="window.location.href='login.html'">
+          Crear mi cuenta
+        </button>
+        <p style="text-align:center; margin-top: var(--space-4); font-size: 12px; color: var(--text-tertiary);">
+          ¿Ya tienes cuenta?
+          <a href="login.html" style="color: var(--primary); font-weight: 600;">Iniciar sesión</a>
+        </p>
+      </div>
+
+    </div>
+
+  </div><!-- /app-shell -->
+
+  <script>
+    function goToRoleScreen() {
+      document.getElementById('slide1').style.display = 'none';
+      const s2 = document.getElementById('slide2');
+      s2.classList.add('visible');
+    }
+
+    function selectRole(role) {
+      document.getElementById('card-buyer').classList.toggle('selected', role === 'buyer');
+      document.getElementById('card-seller').classList.toggle('selected', role === 'seller');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MercaJusto — Mapa de Pantallas</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    body {
+      background: var(--bg-secondary);
+      min-height: 100vh;
+      display: block;  /* override flex center for index */
+    }
+
+    .index-shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+    }
+
+    /* ── Header ── */
+    .index-header {
+      text-align: center;
+      margin-bottom: var(--space-10);
+    }
+
+    .index-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .index-logo__icon {
+      width: 56px;
+      height: 56px;
+      background: var(--primary);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 24px rgba(0,143,255,0.35);
+    }
+
+    .index-logo__name {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .index-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .index-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-full);
+      padding: 5px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: var(--space-3);
+    }
+
+    /* ── Flow section ── */
+    .flow-section {
+      margin-bottom: var(--space-10);
+    }
+
+    .flow-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .flow-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Page cards grid ── */
+    .pages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: var(--space-4);
+    }
+
+    /* ── Page card ── */
+    .page-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      box-shadow: var(--shadow-sm);
+      border: 1.5px solid var(--border);
+      transition: all 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--primary));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.22s ease;
+    }
+
+    .page-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+      border-color: var(--primary);
+    }
+
+    .page-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .page-card__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-lg);
+      background: var(--card-bg, var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .page-card__label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--card-color, var(--primary));
+    }
+
+    .page-card__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .page-card__desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      flex: 1;
+    }
+
+    .page-card__footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--border);
+    }
+
+    .page-card__file {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      font-family: 'Courier New', monospace;
+      background: var(--bg-secondary);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .page-card__arrow {
+      font-size: 16px;
+      color: var(--text-tertiary);
+      transition: transform 0.2s;
+    }
+
+    .page-card:hover .page-card__arrow { transform: translateX(4px); }
+
+    /* ── Design system section ── */
+    .ds-card {
+      background: var(--bg-primary);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: var(--space-6);
+    }
+
+    .ds-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-4);
+    }
+
+    .color-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch__circle {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .swatch__label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .ds-components {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .stat-box {
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      border: 1.5px solid var(--border);
+    }
+
+    .stat-box__value {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .stat-box__label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    /* ── Footer ── */
+    .index-footer {
+      text-align: center;
+      padding: var(--space-8) 0;
+      font-size: 13px;
+      color: var(--text-tertiary);
+      border-top: 1px solid var(--border);
+      margin-top: var(--space-8);
+    }
+
+    /* ── Theme toggle ── */
+    .index-theme-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: var(--bg-primary);
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: var(--shadow-md);
+      z-index: 999;
+      transition: all 0.2s;
+    }
+
+    .index-theme-btn:hover { box-shadow: var(--shadow-lg); transform: scale(1.1); }
+  </style>
+</head>
+<body>
+
+  <!-- Dark mode toggle -->
+  <button class="index-theme-btn" onclick="toggleTheme()" title="Cambiar tema">🌙</button>
+
+  <div class="index-shell">
+
+    <!-- ══════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════ -->
+    <header class="index-header">
+      <div class="index-logo">
+        <div class="index-logo__icon">🛒</div>
+        <span class="index-logo__name">MercaJusto</span>
+      </div>
+      <div class="index-badge">📱 Prototipo HTML · App Mobile</div>
+      <p class="index-subtitle">
+        Plataforma de conexión directa entre productores campesinos y compradores locales de Nariño. Sin intermediarios.
+      </p>
+    </header>
+
+    <!-- ══════════════════════════════════════
+         STATS
+    ══════════════════════════════════════ -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-box__value">10</div>
+        <div class="stat-box__label">Pantallas</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box__value">2</div>
+        <div class="stat-box__label">Roles de usuario</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box__value">1</div>
+        <div class="stat-box__label">Design System</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box__value">🌙</div>
+        <div class="stat-box__label">Modo oscuro</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         DESIGN SYSTEM
+    ══════════════════════════════════════ -->
+    <div class="ds-card">
+      <div class="ds-title">🎨 Design System — <code style="font-size:13px; color:var(--text-secondary);">css/global.css</code></div>
+
+      <div class="color-swatches">
+        <div class="swatch">
+          <div class="swatch__circle" style="background:#008FFF;"></div>
+          <div class="swatch__label">Primary<br>#008FFF</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__circle" style="background:#FF6B2B;"></div>
+          <div class="swatch__label">Accent<br>#FF6B2B</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__circle" style="background:#2DC653;"></div>
+          <div class="swatch__label">Success<br>#2DC653</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__circle" style="background:#F03A47;"></div>
+          <div class="swatch__label">Danger<br>#F03A47</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__circle" style="background:#FFB800;"></div>
+          <div class="swatch__label">Warning<br>#FFB800</div>
+        </div>
+        <div class="swatch">
+          <div class="swatch__circle" style="background:#111827; border:1px solid #E2E6EA;"></div>
+          <div class="swatch__label">Dark<br>#111827</div>
+        </div>
+      </div>
+
+      <div class="ds-components">
+        <span class="btn btn-primary btn-sm">Btn Primary</span>
+        <span class="btn btn-accent btn-sm">Btn Accent</span>
+        <span class="btn btn-outline btn-sm">Btn Outline</span>
+        <span class="pill pill-primary">Pill</span>
+        <span class="pill pill-success">✓ Activo</span>
+        <span class="pill pill-accent">🔥 Excedente</span>
+        <span class="pill pill-warning">⚠ En cosecha</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         FLUJO: ONBOARDING / AUTH
+    ══════════════════════════════════════ -->
+    <section class="flow-section">
+      <div class="flow-title">1 · Entrada y Autenticación</div>
+      <div class="pages-grid">
+
+        <a href="pages/onboarding.html" class="page-card" style="--card-accent:#008FFF; --card-bg:#E6F4FF; --card-color:#008FFF;">
+          <div class="page-card__icon">🌾</div>
+          <div>
+            <div class="page-card__label">Onboarding</div>
+            <div class="page-card__title">Bienvenida</div>
+            <div class="page-card__desc">Slide de campo + selección de rol (Comprador / Productor)</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">onboarding.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/login.html" class="page-card" style="--card-accent:#008FFF; --card-bg:#E6F4FF; --card-color:#008FFF;">
+          <div class="page-card__icon">📱</div>
+          <div>
+            <div class="page-card__label">Auth</div>
+            <div class="page-card__title">Iniciar Sesión</div>
+            <div class="page-card__desc">Ingreso por teléfono + verificación OTP con temporizador</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">login.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         FLUJO: COMPRA
+    ══════════════════════════════════════ -->
+    <section class="flow-section">
+      <div class="flow-title">2 · Flujo de Compra (Comprador)</div>
+      <div class="pages-grid">
+
+        <a href="pages/home.html" class="page-card" style="--card-accent:#2DC653; --card-bg:rgba(45,198,83,0.10); --card-color:#2DC653;">
+          <div class="page-card__icon">🏠</div>
+          <div>
+            <div class="page-card__label">Home</div>
+            <div class="page-card__title">Inicio</div>
+            <div class="page-card__desc">Banner Modo Excedente, categorías, cosechas frescas y productores cercanos</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">home.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/producto.html" class="page-card" style="--card-accent:#FF6B2B; --card-bg:#FFF0E9; --card-color:#FF6B2B;">
+          <div class="page-card__icon">🥔</div>
+          <div>
+            <div class="page-card__label">Producto</div>
+            <div class="page-card__title">Detalle de Cosecha</div>
+            <div class="page-card__desc">Hero, descripción, información del productor, contador de cantidad y canasta</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">producto.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/carrito.html" class="page-card" style="--card-accent:#008FFF; --card-bg:#E6F4FF; --card-color:#008FFF;">
+          <div class="page-card__icon">🛒</div>
+          <div>
+            <div class="page-card__label">Carrito</div>
+            <div class="page-card__title">Mi Canasta</div>
+            <div class="page-card__desc">Productos agrupados por productor, cantidades editables, ahorro estimado</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">carrito.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/checkout.html" class="page-card" style="--card-accent:#6C47FF; --card-bg:rgba(108,71,255,0.08); --card-color:#6C47FF;">
+          <div class="page-card__icon">💳</div>
+          <div>
+            <div class="page-card__label">Checkout</div>
+            <div class="page-card__title">Finalizar Compra</div>
+            <div class="page-card__desc">Dirección de entrega, Nequi / Daviplata / Efectivo, resumen y CTA de pago</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">checkout.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/seguimiento.html" class="page-card" style="--card-accent:#2DC653; --card-bg:rgba(45,198,83,0.10); --card-color:#2DC653;">
+          <div class="page-card__icon">🚚</div>
+          <div>
+            <div class="page-card__label">Tracking</div>
+            <div class="page-card__title">Seguimiento</div>
+            <div class="page-card__desc">Mapa, estado en tiempo real, datos del repartidor, línea de tiempo del pedido</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">seguimiento.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/calificacion.html" class="page-card" style="--card-accent:#FFB800; --card-bg:rgba(255,184,0,0.10); --card-color:#B8860B;">
+          <div class="page-card__icon">⭐</div>
+          <div>
+            <div class="page-card__label">Post-entrega</div>
+            <div class="page-card__title">Calificar Pedido</div>
+            <div class="page-card__desc">Confirmación de entrega, estrellas interactivas y comentario opcional</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">calificacion.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         FLUJO: PERFILES
+    ══════════════════════════════════════ -->
+    <section class="flow-section">
+      <div class="flow-title">3 · Perfiles de Usuario</div>
+      <div class="pages-grid">
+
+        <a href="pages/perfil-comprador.html" class="page-card" style="--card-accent:#008FFF; --card-bg:#E6F4FF; --card-color:#008FFF;">
+          <div class="page-card__icon">👩</div>
+          <div>
+            <div class="page-card__label">Comprador</div>
+            <div class="page-card__title">Perfil María Rodríguez</div>
+            <div class="page-card__desc">Editar perfil, modo oscuro, direcciones, soporte y pedidos recientes</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">perfil-comprador.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+        <a href="pages/perfil-productor.html" class="page-card" style="--card-accent:#2E7D32; --card-bg:rgba(46,125,50,0.10); --card-color:#2E7D32;">
+          <div class="page-card__icon">👨‍🌾</div>
+          <div>
+            <div class="page-card__label">Productor</div>
+            <div class="page-card__title">Perfil Don José</div>
+            <div class="page-card__desc">Estadísticas de ventas, cosechas activas, formulario para publicar producto</div>
+          </div>
+          <div class="page-card__footer">
+            <span class="page-card__file">perfil-productor.html</span>
+            <span class="page-card__arrow">→</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════
+         FOOTER
+    ══════════════════════════════════════ -->
+    <footer class="index-footer">
+      <strong style="color:var(--text-primary);">MercaJusto</strong> · Del campo directo a tu mesa ·
+      Hecho con ❤️ en Nariño, Colombia
+    </footer>
+
+  </div><!-- /index-shell -->
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute('data-theme') === 'dark';
+      html.setAttribute('data-theme', isDark ? '' : 'dark');
+      document.querySelector('.index-theme-btn').textContent = isDark ? '🌙' : '☀️';
+    }
+  </script>
+</body>
+</html>

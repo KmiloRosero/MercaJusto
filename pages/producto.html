@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>MercaJusto — Papa Pastusa</title>
+  <link rel="stylesheet" href="../css/global.css" />
+  <style>
+    body { background: var(--bg-primary); }
+
+    /* ── Hero image ── */
+    .product-hero {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background: linear-gradient(135deg, #8B6914 0%, #C4901A 50%, #A07830 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 110px;
+      overflow: hidden;
+    }
+
+    .product-hero__overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(to top, var(--bg-primary), transparent);
+    }
+
+    .product-hero__back {
+      position: absolute;
+      top: var(--space-4);
+      left: var(--space-4);
+      z-index: 10;
+    }
+
+    .product-hero__fav {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      z-index: 10;
+    }
+
+    .product-hero__share {
+      position: absolute;
+      top: var(--space-4);
+      right: calc(var(--space-4) + 44px);
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+      z-index: 10;
+    }
+
+    /* ── Product body ── */
+    .product-body {
+      padding: var(--space-4) var(--space-4) 140px;
+    }
+
+    /* ── Title row ── */
+    .product-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: var(--space-2);
+    }
+
+    .product-name {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+
+    .product-price-block { text-align: right; }
+
+    .product-price {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .product-unit {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      display: block;
+    }
+
+    /* ── Seller card ── */
+    .seller-card {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin: var(--space-3) 0;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .seller-card:hover { background: var(--primary-light); }
+
+    .seller-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      background: var(--primary-10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .seller-info { flex: 1; }
+
+    .seller-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .seller-location {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .seller-arrow {
+      font-size: 16px;
+      color: var(--text-tertiary);
+    }
+
+    /* ── Description ── */
+    .product-desc-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: var(--space-2);
+    }
+
+    .product-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: var(--space-4);
+    }
+
+    /* ── Tags ── */
+    .product-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-bottom: var(--space-5);
+    }
+
+    /* ── Bottom sheet fixed ── */
+    .product-bottom {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 390px;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      padding: var(--space-4);
+      z-index: 200;
+    }
+
+    .product-bottom__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+    }
+
+    /* ── Canasta preview ── */
+    .canasta-preview {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3) var(--space-4);
+      margin-top: var(--space-3);
+    }
+
+    .canasta-preview__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+
+    .canasta-preview__title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .canasta-preview__link {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .canasta-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-2) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .canasta-item:last-child { border-bottom: none; }
+
+    .canasta-item__img {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .canasta-item__name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .canasta-item__detail {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .canasta-item__price {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .canasta-item__remove {
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canasta-subtotal {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: var(--space-2);
+      margin-top: var(--space-2);
+      border-top: 1px solid var(--border);
+    }
+
+    .canasta-subtotal__label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .canasta-subtotal__value {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Sheet toggle */
+    .sheet-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-3);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- ═══════════════════════════════════════
+         HERO IMAGE
+    ═══════════════════════════════════════ -->
+    <div class="product-hero">
+      🥔
+      <div class="product-hero__overlay"></div>
+
+      <div class="product-hero__back">
+        <a href="home.html" class="back-btn" style="background:rgba(255,255,255,0.85); backdrop-filter:blur(4px);">←</a>
+      </div>
+
+      <button class="product-hero__share" aria-label="Compartir">↗</button>
+      <button class="product-hero__fav" onclick="toggleFav(this)" aria-label="Favorito">♡</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         CUERPO DEL PRODUCTO
+    ═══════════════════════════════════════ -->
+    <div class="product-body">
+
+      <!-- Título y precio -->
+      <div class="product-title-row">
+        <h1 class="product-name">Papa Pastusa</h1>
+        <div class="product-price-block">
+          <span class="product-price">$2.400</span>
+          <span class="product-unit">/ Kilo</span>
+        </div>
+      </div>
+
+      <!-- Vendedor -->
+      <a href="perfil-productor.html" class="seller-card">
+        <div class="seller-avatar">👨‍🌾</div>
+        <div class="seller-info">
+          <div class="seller-name">Don José · Finca El Bolso</div>
+          <div class="seller-location">📍 Vereda El Diviso, Pasto</div>
+        </div>
+        <span class="seller-arrow">›</span>
+      </a>
+
+      <!-- Tags -->
+      <div class="product-tags">
+        <span class="pill pill-success">🌿 Orgánico</span>
+        <span class="pill pill-primary">🏔️ De Nariño</span>
+        <span class="pill pill-accent">🔥 Cosecha nueva</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Descripción -->
+      <h3 class="product-desc-title">Descripción</h3>
+      <p class="product-desc">
+        Papa de semillero nativa, seleccionada a mano y despachada directamente desde la finca. Óptima para sopas, sancochos y frituras. Sin intermediarios, sin almacenaje excesivo. Cosechada hace menos de 48 horas.
+      </p>
+
+      <!-- Info adicional -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-3); margin-bottom:var(--space-5);">
+        <div style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:var(--space-3); text-align:center;">
+          <div style="font-size:20px; margin-bottom:4px;">⚖️</div>
+          <div style="font-size:11px; color:var(--text-tertiary);">Presentación</div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">Por Kilo</div>
+        </div>
+        <div style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:var(--space-3); text-align:center;">
+          <div style="font-size:20px; margin-bottom:4px;">📦</div>
+          <div style="font-size:11px; color:var(--text-tertiary);">Stock</div>
+          <div style="font-size:13px; font-weight:600; color:var(--success);">Disponible</div>
+        </div>
+        <div style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:var(--space-3); text-align:center;">
+          <div style="font-size:20px; margin-bottom:4px;">🚚</div>
+          <div style="font-size:11px; color:var(--text-tertiary);">Envío</div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">Mismo día</div>
+        </div>
+        <div style="background:var(--bg-secondary); border-radius:var(--radius-md); padding:var(--space-3); text-align:center;">
+          <div style="font-size:20px; margin-bottom:4px;">⭐</div>
+          <div style="font-size:11px; color:var(--text-tertiary);">Calificación</div>
+          <div style="font-size:13px; font-weight:600; color:var(--text-primary);">4.8 / 5</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════
+         BOTTOM PANEL FIJO
+    ═══════════════════════════════════════ -->
+    <div class="product-bottom">
+
+      <!-- Canasta preview toggle -->
+      <button class="sheet-toggle" onclick="toggleCanasta()" aria-expanded="false" id="canastaToggle">
+        <span>🛒</span>
+        <span>Mi Canasta — ahorro estimado: <strong style="color:var(--success)">$4.300</strong></span>
+        <span id="chevron">▾</span>
+      </button>
+
+      <!-- Canasta preview (collapsible) -->
+      <div id="canastaPanel" style="display:none;">
+        <div class="canasta-preview">
+          <div class="canasta-preview__header">
+            <span class="canasta-preview__title">Mi Canasta</span>
+            <a href="carrito.html" class="canasta-preview__link">Ver todo →</a>
+          </div>
+
+          <div class="canasta-item">
+            <div class="canasta-item__img">🥔</div>
+            <div>
+              <div class="canasta-item__name">Papa Pastusa</div>
+              <div class="canasta-item__detail">2 Kilos</div>
+            </div>
+            <div class="canasta-item__price">$4.800</div>
+            <button class="canasta-item__remove" aria-label="Eliminar">✕</button>
+          </div>
+
+          <div class="canasta-item">
+            <div class="canasta-item__img">🥬</div>
+            <div>
+              <div class="canasta-item__name">Cebolla Larga</div>
+              <div class="canasta-item__detail">1 Atado</div>
+            </div>
+            <div class="canasta-item__price">$1.500</div>
+            <button class="canasta-item__remove" aria-label="Eliminar">✕</button>
+          </div>
+
+          <div class="canasta-subtotal">
+            <span class="canasta-subtotal__label">Subtotal</span>
+            <span class="canasta-subtotal__value">$6.300</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controles: cantidad + botón añadir -->
+      <div class="product-bottom__top">
+        <div class="qty-counter">
+          <button class="qty-counter__btn" onclick="changeQty(-1)" aria-label="Reducir cantidad">−</button>
+          <span class="qty-counter__value" id="qty">2</span>
+          <button class="qty-counter__btn" onclick="changeQty(1)" aria-label="Aumentar cantidad">+</button>
+        </div>
+        <button class="btn btn-primary" style="flex:1; margin-left:var(--space-3);" onclick="addToCart()">
+          Añadir a canasta · <span id="totalPrice">$4.800</span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /app-shell -->
+
+  <script>
+    const PRICE = 2400;
+    let qty = 2;
+
+    function changeQty(delta) {
+      qty = Math.max(1, qty + delta);
+      document.getElementById('qty').textContent = qty;
+      document.getElementById('totalPrice').textContent = '$' + (PRICE * qty).toLocaleString('es-CO');
+    }
+
+    function toggleFav(btn) {
+      btn.classList.toggle('active');
+      btn.textContent = btn.textContent === '♡' ? '♥' : '♡';
+    }
+
+    function addToCart() {
+      const btn = event.currentTarget;
+      btn.textContent = '✓ Añadido';
+      btn.style.background = 'var(--success)';
+      setTimeout(() => {
+        btn.textContent = `Añadir a canasta · $${(PRICE * qty).toLocaleString('es-CO')}`;
+        btn.style.background = '';
+      }, 1500);
+    }
+
+    let canastaOpen = false;
+    function toggleCanasta() {
+      canastaOpen = !canastaOpen;
+      document.getElementById('canastaPanel').style.display = canastaOpen ? 'block' : 'none';
+      document.getElementById('chevron').textContent = canastaOpen ? '▴' : '▾';
+      document.getElementById('canastaToggle').setAttribute('aria-expanded', canastaOpen);
+    }
+  </script>
+</body>
+</html>
