@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
+import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { getProduct } from "../../src/api/client";
 import { useCart } from "../../src/store/cart";
@@ -28,7 +29,7 @@ export default function ProductDetail() {
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
         <TopBar showBack onBack={() => router.back()} title="Cargando..." />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={t.primary} />
+          <ActivityIndicator color={t.primary} size="large" />
         </View>
       </SafeAreaView>
     );
@@ -41,16 +42,17 @@ export default function ProductDetail() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
-      <TopBar showBack onBack={() => router.back()} title="Detalle" />
+      <TopBar showBack onBack={() => router.back()} title="Detalle del producto" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
-        {/* Hero */}
+        {/* Hero Image / Placeholder */}
         <View
           style={{
             aspectRatio: 1.3,
             backgroundColor: t.gray100,
             alignItems: "center",
             justifyContent: "center",
+            position: "relative",
           }}
         >
           {product.photoUrl ? (
@@ -60,27 +62,43 @@ export default function ProductDetail() {
               resizeMode="cover"
             />
           ) : (
-            <Text style={{ fontSize: 140 }}>{product.category?.icon || "🌾"}</Text>
+            <View
+              style={{
+                width: 100,
+                height: 100,
+                borderRadius: radius.full,
+                backgroundColor: t.primaryLight,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon name={product.category?.name || "leaf"} size={56} color={t.primary} />
+            </View>
           )}
+
           {product.isSurplus ? (
             <View style={{ position: "absolute", top: spacing[4], left: spacing[4] }}>
-              <Pill variant="accent" icon="🔥">
+              <Pill variant="accent" icon="sparkles">
                 Excedente -{product.discountPct}%
               </Pill>
             </View>
           ) : null}
         </View>
 
-        <View style={{ padding: spacing[4], gap: spacing[3] }}>
+        <View style={{ padding: spacing[4], gap: spacing[4] }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: spacing[3] }}>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
                 {product.name}
               </Text>
-              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginTop: 4 }}>
-                📍 {product.vereda ? `${product.vereda}, ` : ""}{product.municipio}, Nariño
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}>
+                <Icon name="location" size={14} color={t.textSecondary} />
+                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>
+                  {product.vereda ? `${product.vereda}, ` : ""}{product.municipio}, Nariño
+                </Text>
+              </View>
             </View>
+
             <View style={{ alignItems: "flex-end" }}>
               <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.primary }}>
                 {formatCOP(finalPrice)}
@@ -95,58 +113,76 @@ export default function ProductDetail() {
           </View>
 
           <View style={{ flexDirection: "row", gap: spacing[2], flexWrap: "wrap" }}>
-            <Pill variant="success">✓ Disponible: {product.stock} {product.unit}</Pill>
+            <Pill variant="success" icon="checkmark-circle">
+              Disponible: {product.stock} {product.unit}
+            </Pill>
             {product.harvestDate ? (
-              <Pill variant="primary">
-                🌱 Cosechado {new Date(product.harvestDate).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+              <Pill variant="primary" icon="time-outline">
+                Cosechado {new Date(product.harvestDate).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
               </Pill>
             ) : null}
           </View>
 
           {product.description ? (
-            <Text style={{ fontSize: fontSize.base, color: t.textSecondary, lineHeight: 22 }}>
-              {product.description}
-            </Text>
+            <View
+              style={{
+                backgroundColor: t.bgSecondary,
+                padding: spacing[3],
+                borderRadius: radius.md,
+                borderWidth: 1,
+                borderColor: t.border,
+              }}
+            >
+              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, lineHeight: 22 }}>
+                {product.description}
+              </Text>
+            </View>
           ) : null}
 
           {/* Productor */}
           <Pressable
             onPress={() => product.producer && router.push(`/(tabs)/profile`)}
-            style={{
+            style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
               gap: spacing[3],
-              padding: spacing[3],
-              borderRadius: radius.md,
-              backgroundColor: t.bgSecondary,
-            }}
+              padding: spacing[4],
+              borderRadius: radius.lg,
+              backgroundColor: t.bgCard,
+              borderWidth: 1,
+              borderColor: t.border,
+              opacity: pressed ? 0.9 : 1,
+            })}
           >
             <View
               style={{
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 borderRadius: radius.full,
                 backgroundColor: t.primaryLight,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontSize: 20 }}>👨‍🌾</Text>
+              <Icon name="storefront" size={24} color={t.primary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
-                {product.producer?.name}
+                {product.producer?.name || "Productor campesino"}
               </Text>
-              <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
-                ⭐ {product.producer?.rating.toFixed(1)} · {product.producer?.ratingCount || 0} reseñas
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
+                <Icon name="star" size={13} color="#FFB800" />
+                <Text style={{ fontSize: fontSize.xs, color: t.textSecondary, fontWeight: "600" }}>
+                  {product.producer?.rating.toFixed(1) || "5.0"} · {product.producer?.ratingCount || 0} calificaciones
+                </Text>
+              </View>
             </View>
-            <Text style={{ color: t.textTertiary }}>›</Text>
+            <Icon name="chevron-forward" size={18} color={t.textTertiary} />
           </Pressable>
         </View>
       </ScrollView>
 
-      {/* Bottom action bar */}
+      {/* Barra de acción fija */}
       <View
         style={{
           position: "absolute",
@@ -171,25 +207,30 @@ export default function ProductDetail() {
             paddingHorizontal: spacing[3],
             paddingVertical: 6,
             gap: spacing[3],
+            borderWidth: 1,
+            borderColor: t.border,
           }}
         >
-          <Pressable onPress={() => setQty((q) => Math.max(1, q - 1))}>
-            <Text style={{ fontSize: 18, fontWeight: "700", color: t.textPrimary }}>−</Text>
+          <Pressable onPress={() => setQty((q) => Math.max(1, q - 1))} hitSlop={6}>
+            <Icon name="remove" size={16} color={t.textPrimary} />
           </Pressable>
-          <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary, minWidth: 20, textAlign: "center" }}>
+          <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary, minWidth: 20, textAlign: "center" }}>
             {qty}
           </Text>
-          <Pressable onPress={() => setQty((q) => Math.min(product.stock, q + 1))}>
-            <Text style={{ fontSize: 18, fontWeight: "700", color: t.textPrimary }}>+</Text>
+          <Pressable onPress={() => setQty((q) => Math.min(product.stock, q + 1))} hitSlop={6}>
+            <Icon name="add" size={16} color={t.textPrimary} />
           </Pressable>
         </View>
+
         <Button
           title={`Agregar · ${formatCOP(finalPrice * qty)}`}
+          icon={<Icon name="cart" size={18} color="#FFFFFF" />}
           onPress={async () => {
             await addToCart(product.id, qty);
             router.push("/(tabs)/cart");
           }}
           style={{ flex: 1 }}
+          size="lg"
         />
       </View>
     </SafeAreaView>

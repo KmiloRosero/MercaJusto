@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
+import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { requestOtp, verifyOtp, apiErrorMessage } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
@@ -101,7 +102,19 @@ export default function Login() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={{ alignItems: "center", gap: spacing[2], marginTop: spacing[4] }}>
-            <Text style={{ fontSize: 64 }}>{step === "phone" ? "📱" : "🔐"}</Text>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: radius.full,
+                backgroundColor: t.primaryLight,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: spacing[2],
+              }}
+            >
+              <Icon name={step === "phone" ? "call" : "shield-checkmark-outline"} size={36} color={t.primary} />
+            </View>
             <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
               {step === "phone"
                 ? "Ingresa tu celular"

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { AddressSheet } from "../src/components/AddressSheet";
+import { Icon, IconName } from "../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../src/theme";
 import { Address, PaymentMethod } from "../src/api/types";
 import { createOrder, apiErrorMessage } from "../src/api/client";
@@ -21,13 +22,13 @@ import { cartSavings } from "../src/lib/savings";
 
 const PAYMENT_METHODS: Array<{
   key: PaymentMethod;
-  icon: string;
+  icon: IconName;
   name: string;
   desc: string;
 }> = [
-  { key: "NEQUI", icon: "📱", name: "Nequi", desc: "Pago instantáneo" },
-  { key: "DAVIPLATA", icon: "💳", name: "Daviplata", desc: "Billetera digital" },
-  { key: "CASH", icon: "💵", name: "Efectivo contraentrega", desc: "Pagas al recibir tu pedido" },
+  { key: "NEQUI", icon: "wallet-outline", name: "Nequi", desc: "Pago instantáneo sin recargo" },
+  { key: "DAVIPLATA", icon: "card-outline", name: "Daviplata", desc: "Billetera digital rápida" },
+  { key: "CASH", icon: "cash-outline", name: "Efectivo contraentrega", desc: "Pagas al recibir tu cosecha" },
 ];
 
 const DELIVERY_FEE = 3500;
@@ -51,7 +52,6 @@ export default function Checkout() {
     fetchCart();
   }, [fetchCart]);
 
-  // Auto-seleccionar dirección por defecto
   useEffect(() => {
     if (!selectedAddress && addresses.length > 0) {
       const def = addresses.find((a) => a.isDefault) || addresses[0];
@@ -59,13 +59,11 @@ export default function Checkout() {
     }
   }, [addresses, selectedAddress]);
 
-  // Si el carrito está vacío y no estamos cargando, devolver
   useEffect(() => {
     if (items.length === 0 && !submitting) {
-      // Pequeño delay para permitir que fetchCart termine
       const id = setTimeout(() => {
         if (useCart.getState().items.length === 0) {
-          Alert.alert("Carrito vacío", "Agrega productos antes de finalizar la compra.", [
+          Alert.alert("Canasta vacía", "Agrega productos antes de finalizar la compra.", [
             { text: "OK", onPress: () => router.replace("/(tabs)/home") },
           ]);
         }
@@ -89,7 +87,6 @@ export default function Checkout() {
         paymentMethod: payment,
         notes: notes.trim() || undefined,
       });
-      // El backend ya vació el carrito y descontó stock; sincronizamos el store local
       await clearCart();
       await refresh();
       router.replace(`/seguimiento/${order.id}`);
@@ -109,30 +106,36 @@ export default function Checkout() {
       <TopBar showBack onBack={() => router.back()} title="Finalizar compra" />
 
       <ScrollView
-        contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: 120 }}
+        contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: 130 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ═══ Dirección de entrega ═══ */}
-        <SectionCard title="📍 Entregar en">
+        {/* Dirección de entrega */}
+        <SectionCard title="Dirección de entrega" icon="location">
           {selectedAddress ? (
             <Pressable
               onPress={() => setAddressSheetOpen(true)}
-              style={{ flexDirection: "row", alignItems: "center", gap: spacing[3], paddingVertical: spacing[2] }}
+              style={({ pressed }) => ({
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing[3],
+                paddingVertical: spacing[2],
+                opacity: pressed ? 0.8 : 1,
+              })}
             >
               <View
                 style={{
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   borderRadius: radius.md,
                   backgroundColor: t.primaryLight,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ fontSize: 20 }}>📍</Text>
+                <Icon name="location" size={22} color={t.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: t.textPrimary }}>
+                <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
                   {selectedAddress.vereda ? `${selectedAddress.vereda}, ` : ""}
                   {selectedAddress.municipio}
                 </Text>
@@ -140,7 +143,7 @@ export default function Checkout() {
                   {[selectedAddress.label, selectedAddress.detail].filter(Boolean).join(" — ")}
                 </Text>
               </View>
-              <Text style={{ fontSize: 12, color: t.primary, fontWeight: "600" }}>Cambiar</Text>
+              <Text style={{ fontSize: 12, color: t.primary, fontWeight: "700" }}>Cambiar</Text>
             </Pressable>
           ) : (
             <Button
@@ -152,8 +155,8 @@ export default function Checkout() {
           )}
         </SectionCard>
 
-        {/* ═══ Método de pago ═══ */}
-        <SectionCard title="💳 Método de pago">
+        {/* Método de pago */}
+        <SectionCard title="Método de pago" icon="wallet-outline">
           <View style={{ gap: spacing[2] }}>
             {PAYMENT_METHODS.map((m) => {
               const selected = payment === m.key;
@@ -177,15 +180,15 @@ export default function Checkout() {
                       width: 40,
                       height: 40,
                       borderRadius: radius.md,
-                      backgroundColor: t.bgSecondary,
+                      backgroundColor: selected ? t.primary : t.bgSecondary,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
                   >
-                    <Text style={{ fontSize: 20 }}>{m.icon}</Text>
+                    <Icon name={m.icon} size={20} color={selected ? "#FFFFFF" : t.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: t.textPrimary }}>{m.name}</Text>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{m.name}</Text>
                     <Text style={{ fontSize: 12, color: t.textSecondary }}>{m.desc}</Text>
                   </View>
                   <View
@@ -210,8 +213,8 @@ export default function Checkout() {
           </View>
         </SectionCard>
 
-        {/* ═══ Resumen del pedido ═══ */}
-        <SectionCard title="🧺 Resumen">
+        {/* Resumen del pedido */}
+        <SectionCard title="Resumen del pedido" icon="cart">
           <View style={{ gap: spacing[1] }}>
             {items.map((it) => (
               <View
@@ -235,17 +238,17 @@ export default function Checkout() {
                     justifyContent: "center",
                   }}
                 >
-                  <Text style={{ fontSize: 22 }}>{it.product.category?.icon || "🌾"}</Text>
+                  <Icon name={it.product.category?.name || "leaf"} size={20} color={t.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, fontWeight: "500", color: t.textPrimary }}>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
                     {it.product.name}
                   </Text>
                   <Text style={{ fontSize: 11, color: t.textTertiary }}>
                     {it.quantity} {it.product.unit} · {it.product.producer?.name}
                   </Text>
                 </View>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
+                <Text style={{ fontSize: 13, fontWeight: "800", color: t.textPrimary }}>
                   {formatCOP(it.product.price * it.quantity)}
                 </Text>
               </View>
@@ -254,7 +257,7 @@ export default function Checkout() {
 
           <View style={{ marginTop: spacing[3], gap: spacing[1] }}>
             <TotalRow label="Subtotal" value={formatCOP(subtotal)} color={t.textSecondary} />
-            <TotalRow label="Envío" value={formatCOP(DELIVERY_FEE)} color={t.textSecondary} />
+            <TotalRow label="Envío agrupado" value={formatCOP(DELIVERY_FEE)} color={t.textSecondary} />
             <TotalRow
               label="Comisión plataforma (5%)"
               value={formatCOP(platformFee)}
@@ -262,7 +265,7 @@ export default function Checkout() {
               small
             />
             <TotalRow
-              label="💚 Ahorro vs. tienda"
+              label="Ahorro directo vs. tienda"
               value={`− ${formatCOP(savings)}`}
               color={t.success}
               small
@@ -278,16 +281,16 @@ export default function Checkout() {
                 borderTopColor: t.border,
               }}
             >
-              <Text style={{ fontSize: 16, fontWeight: "700", color: t.textPrimary }}>Total</Text>
-              <Text style={{ fontSize: 20, fontWeight: "800", color: t.primary }}>
+              <Text style={{ fontSize: 16, fontWeight: "800", color: t.textPrimary }}>Total a pagar</Text>
+              <Text style={{ fontSize: 22, fontWeight: "800", color: t.primary }}>
                 {formatCOP(total)}
               </Text>
             </View>
           </View>
         </SectionCard>
 
-        {/* ═══ Notas ═══ */}
-        <SectionCard title="📝 Notas para el productor o repartidor (opcional)">
+        {/* Notas adicionales */}
+        <SectionCard title="Notas de entrega (opcional)" icon="create-outline">
           <TextInput
             value={notes}
             onChangeText={setNotes}
@@ -313,7 +316,7 @@ export default function Checkout() {
         </SectionCard>
       </ScrollView>
 
-      {/* ═══ CTA fijo ═══ */}
+      {/* CTA Fijo */}
       <View
         style={{
           position: "absolute",
@@ -328,7 +331,8 @@ export default function Checkout() {
         }}
       >
         <Button
-          title={submitting ? "Procesando..." : `Pagar ${formatCOP(total)}`}
+          title={submitting ? "Procesando..." : `Confirmar pedido · ${formatCOP(total)}`}
+          icon={<Icon name="checkmark-circle" size={20} color="#FFFFFF" />}
           onPress={onConfirm}
           disabled={!canSubmit}
           loading={submitting}
@@ -336,7 +340,7 @@ export default function Checkout() {
           size="lg"
         />
         {!selectedAddress ? (
-          <Text style={{ fontSize: 11, color: t.danger, textAlign: "center", marginTop: 6 }}>
+          <Text style={{ fontSize: 11, color: t.danger, textAlign: "center", marginTop: 6, fontWeight: "600" }}>
             Selecciona una dirección de entrega para continuar
           </Text>
         ) : null}
@@ -354,7 +358,7 @@ export default function Checkout() {
   );
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({ title, icon, children }: { title: string; icon?: IconName; children: React.ReactNode }) {
   const t = useTheme();
   return (
     <View
@@ -362,21 +366,25 @@ function SectionCard({ title, children }: { title: string; children: React.React
         backgroundColor: t.bgPrimary,
         borderRadius: radius.lg,
         padding: spacing[4],
+        borderWidth: 1,
+        borderColor: t.border,
         ...shadow.sm,
       }}
     >
-      <Text
-        style={{
-          fontSize: 13,
-          fontWeight: "600",
-          color: t.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.5,
-          marginBottom: spacing[3],
-        }}
-      >
-        {title}
-      </Text>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[3] }}>
+        {icon ? <Icon name={icon} size={16} color={t.primary} /> : null}
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: "800",
+            color: t.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          {title}
+        </Text>
+      </View>
       {children}
     </View>
   );
@@ -396,7 +404,7 @@ function TotalRow({
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 }}>
       <Text style={{ fontSize: small ? 12 : 13, color }}>{label}</Text>
-      <Text style={{ fontSize: small ? 12 : 13, fontWeight: "600", color }}>{value}</Text>
+      <Text style={{ fontSize: small ? 12 : 13, fontWeight: "700", color }}>{value}</Text>
     </View>
   );
 }

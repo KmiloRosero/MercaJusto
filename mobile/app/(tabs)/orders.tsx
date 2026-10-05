@@ -5,23 +5,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Pill } from "../../src/components/Pill";
+import { Icon, IconName } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { getMyOrders } from "../../src/api/client";
 import { OrderStatus } from "../../src/api/types";
 
-const statusMap: Record<OrderStatus, { label: string; variant: "primary" | "success" | "warning" | "danger" | "accent" }> = {
-  PENDING: { label: "⏳ Pendiente", variant: "warning" },
-  CONFIRMED: { label: "✓ Confirmado", variant: "primary" },
-  PREPARING: { label: "👨‍🌾 Preparando", variant: "accent" },
-  IN_TRANSIT: { label: "🚚 En camino", variant: "accent" },
-  DELIVERED: { label: "✓ Entregado", variant: "success" },
-  CANCELLED: { label: "✗ Cancelado", variant: "danger" },
+const statusMap: Record<OrderStatus, { label: string; icon: IconName; variant: "primary" | "success" | "warning" | "danger" | "accent" }> = {
+  PENDING: { label: "Pendiente", icon: "time-outline", variant: "warning" },
+  CONFIRMED: { label: "Confirmado", icon: "checkmark-circle", variant: "primary" },
+  PREPARING: { label: "Preparando", icon: "preparing", variant: "accent" },
+  IN_TRANSIT: { label: "En camino", icon: "in_transit", variant: "accent" },
+  DELIVERED: { label: "Entregado", icon: "delivered", variant: "success" },
+  CANCELLED: { label: "Cancelado", icon: "close", variant: "danger" },
 };
 
 export default function Orders() {
   const router = useRouter();
   const t = useTheme();
-  const { data = [], isLoading } = useQuery({ queryKey: ["orders"], queryFn: getMyOrders });
+  const { data = [] } = useQuery({ queryKey: ["orders"], queryFn: getMyOrders });
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
@@ -32,13 +33,24 @@ export default function Orders() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ padding: spacing[4], gap: spacing[3] }}
         ListEmptyComponent={
-          <View style={{ padding: spacing[8], alignItems: "center" }}>
-            <Text style={{ fontSize: 64, marginBottom: spacing[3] }}>📦</Text>
-            <Text style={{ fontSize: fontSize.lg, fontWeight: "700", color: t.textPrimary, marginBottom: spacing[2] }}>
+          <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: radius.full,
+                backgroundColor: t.bgPrimary,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon name="receipt-outline" size={36} color={t.textTertiary} />
+            </View>
+            <Text style={{ fontSize: fontSize.lg, fontWeight: "800", color: t.textPrimary }}>
               Aún no tienes pedidos
             </Text>
-            <Text style={{ color: t.textSecondary, textAlign: "center" }}>
-              Cuando compres algo, aparecerá aquí con seguimiento en tiempo real.
+            <Text style={{ color: t.textSecondary, textAlign: "center", fontSize: fontSize.sm }}>
+              Tus pedidos realizados aparecerán aquí con seguimiento en tiempo real.
             </Text>
           </View>
         }
@@ -47,23 +59,30 @@ export default function Orders() {
           return (
             <Pressable
               onPress={() => router.push(`/seguimiento/${item.id}`)}
-              style={{
+              style={({ pressed }) => ({
                 backgroundColor: t.bgCard,
                 borderRadius: radius.lg,
                 padding: spacing[4],
                 gap: spacing[2],
-              }}
+                borderWidth: 1,
+                borderColor: t.border,
+                opacity: pressed ? 0.92 : 1,
+              })}
             >
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>
+                <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, fontWeight: "700" }}>
                   #{item.id.slice(-8).toUpperCase()}
                 </Text>
-                <Pill variant={status.variant}>{status.label}</Pill>
+                <Pill variant={status.variant} icon={status.icon}>
+                  {status.label}
+                </Pill>
               </View>
+
               <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
                 {item.items.length} producto{item.items.length !== 1 ? "s" : ""}
               </Text>
-              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>
+
+              <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
                 {new Date(item.createdAt).toLocaleDateString("es-CO", {
                   day: "numeric",
                   month: "short",
@@ -71,13 +90,28 @@ export default function Orders() {
                   minute: "2-digit",
                 })}
               </Text>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: spacing[2] }}>
-                <Text style={{ fontSize: fontSize.lg, fontWeight: "800", color: t.primary }}>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: spacing[2],
+                  paddingTop: spacing[2],
+                  borderTopWidth: 1,
+                  borderTopColor: t.border,
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: "800", color: t.primary }}>
                   {formatCOP(item.total)}
                 </Text>
-                <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: "600" }}>
-                  Ver detalle →
-                </Text>
+
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: "700" }}>
+                    Seguimiento
+                  </Text>
+                  <Icon name="arrow-forward" size={14} color={t.primary} />
+                </View>
               </View>
             </Pressable>
           );

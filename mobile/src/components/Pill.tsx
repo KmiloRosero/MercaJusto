@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { fontSize, radius, useTheme } from "../theme";
+import { Icon } from "./Icon";
 
 type Variant = "primary" | "accent" | "success" | "warning" | "danger";
 
@@ -19,7 +20,7 @@ export function Pill({
 }: {
   children: React.ReactNode;
   variant?: Variant;
-  icon?: string;
+  icon?: React.ReactNode | string;
 }) {
   const t = useTheme();
   const { bg, fg } = colorMap[variant];
@@ -28,7 +29,7 @@ export function Pill({
       style={{
         backgroundColor: bg(t),
         paddingHorizontal: 10,
-        paddingVertical: 3,
+        paddingVertical: 4,
         borderRadius: radius.full,
         flexDirection: "row",
         alignItems: "center",
@@ -36,8 +37,12 @@ export function Pill({
         alignSelf: "flex-start",
       }}
     >
-      {icon ? <Text style={{ fontSize: 11 }}>{icon}</Text> : null}
-      <Text style={{ fontSize: fontSize.xs, fontWeight: "600", color: fg(t) }}>
+      {typeof icon === "string" ? (
+        <Icon name={icon} size={12} color={fg(t)} />
+      ) : (
+        icon
+      )}
+      <Text style={{ fontSize: fontSize.xs, fontWeight: "700", color: fg(t) }}>
         {children}
       </Text>
     </View>

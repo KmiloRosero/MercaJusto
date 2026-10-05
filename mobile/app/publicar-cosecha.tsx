@@ -19,6 +19,7 @@ import * as Location from "expo-location";
 import * as ImagePicker from "expo-image-picker";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
+import { Icon, IconName } from "../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../src/theme";
 import { apiErrorMessage, createProduct, getCategories, uploadImage } from "../src/api/client";
 
@@ -58,37 +59,36 @@ export default function PublicarCosecha() {
       if (!perm.granted) {
         Alert.alert(
           "Permiso denegado",
-          useCamera
-            ? "Necesitamos acceso a la cámara para tomar la foto."
-            : "Necesitamos acceso a tu galería para elegir una foto."
+          "Necesitamos permiso para acceder a la cámara/galería para subir la foto."
         );
         return;
       }
       const result = useCamera
         ? await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.6,
+            quality: 0.8,
             allowsEditing: true,
             aspect: [4, 3],
           })
         : await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 0.6,
+            quality: 0.8,
             allowsEditing: true,
             aspect: [4, 3],
           });
+
       if (!result.canceled && result.assets[0]?.uri) {
         setPhotoUri(result.assets[0].uri);
       }
     } catch (err) {
-      Alert.alert("Error", apiErrorMessage(err));
+      Alert.alert("Error", "No se pudo cargar la imagen.");
     }
   };
 
   const choosePhotoSource = () => {
-    Alert.alert("Foto de la cosecha", "¿De dónde quieres obtener la foto?", [
-      { text: "📷 Cámara", onPress: () => pickPhoto(true) },
-      { text: "🖼️ Galería", onPress: () => pickPhoto(false) },
+    Alert.alert("Foto de cosecha", "Selecciona el origen", [
+      { text: "Tomar foto con cámara", onPress: () => pickPhoto(true) },
+      { text: "Elegir de galería", onPress: () => pickPhoto(false) },
       { text: "Cancelar", style: "cancel" },
     ]);
   };
@@ -98,77 +98,68 @@ export default function PublicarCosecha() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permiso denegado", "Necesitamos tu ubicación para mostrar la cosecha a compradores cercanos.");
+        Alert.alert("Permiso denegado", "Se necesita permiso de ubicación.");
+        setLocating(false);
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
       setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+
       try {
-        const [geo] = await Location.reverseGeocodeAsync({
+        const [rev] = await Location.reverseGeocodeAsync({
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
         });
-        if (geo?.city) setMunicipio(geo.city);
-      } catch {
-        // sin red no es crítico
-      }
+        if (rev?.city) setMunicipio(rev.city);
+        if (rev?.subregion && !vereda) setVereda(rev.subregion);
+      } catch {}
     } catch (err) {
-      Alert.alert("Error", apiErrorMessage(err));
+      Alert.alert("Error", "No se pudo obtener la ubicación actual.");
     } finally {
       setLocating(false);
     }
   };
 
   const submit = async () => {
-    const priceNum = parseInt(price.replace(/\D/g, ""), 10);
-    const stockNum = parseInt(stock.replace(/\D/g, ""), 10);
-
-    if (!name.trim() || name.trim().length < 2) {
-      Alert.alert("Faltan datos", "Escribe el nombre del producto.");
-      return;
-    }
-    if (!categoryId) {
-      Alert.alert("Faltan datos", "Selecciona una categoría.");
-      return;
-    }
-    if (!priceNum || priceNum <= 0) {
-      Alert.alert("Faltan datos", "Escribe un precio válido.");
-      return;
-    }
-    if (Number.isNaN(stockNum) || stockNum < 0) {
-      Alert.alert("Faltan datos", "Escribe la cantidad disponible.");
-      return;
-    }
-    if (!municipio.trim()) {
-      Alert.alert("Faltan datos", "El municipio es obligatorio.");
-      return;
-    }
-    if (!coords) {
-      Alert.alert("Ubicación requerida", "Usa el botón 'Usar mi ubicación de la finca' para georreferenciar la cosecha.");
-      return;
-    }
+    if (!name.trim()) return Alert.alert("Falta información", "Ingresa el nombre del producto.");
+    if (!categoryId) return Alert.alert("Falta información", "Selecciona una categoría.");
+    const numPrice = Number(price);
+    if (!numPrice || numPrice <= 0) return Alert.alert("Precio inválido", "Ingresa un precio mayor a 0.");
+    const numStock = Number(stock);
+    if (!numStock || numStock <= 0) return Alert.alert("Stock inválido", "Ingresa la cantidad disponible.");
+    if (!municipio.trim()) return Alert.alert("Falta información", "Ingresa el municipio de la finca.");
 
     setSaving(true);
     try {
-      const photoUrl = photoUri ? await uploadImage(photoUri) : undefined;
+      let serverPhotoUrl: string | undefined = undefined;
+      if (photoUri && !photoUri.startsWith("http")) {
+        serverPhotoUrl = await uploadImage(photoUri);
+      } else if (photoUri) {
+        serverPhotoUrl = photoUri;
+      }
+
+      const defaultCoords = coords || { lat: 1.2136, lng: -77.2811 };
       await createProduct({
         categoryId,
         name: name.trim(),
         description: description.trim() || undefined,
-        price: priceNum,
+        price: numPrice,
         unit,
-        stock: stockNum,
-        photoUrl,
+        stock: numStock,
+        photoUrl: serverPhotoUrl,
         isSurplus,
         discountPct: isSurplus ? discountPct : 0,
-        vereda: vereda.trim() || undefined,
         municipio: municipio.trim(),
-        latitude: coords.lat,
-        longitude: coords.lng,
+        vereda: vereda.trim() || undefined,
+        latitude: defaultCoords.lat,
+        longitude: defaultCoords.lng,
       });
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      Alert.alert("¡Cosecha publicada! 🎉", "Tu producto ya está visible en el catálogo.", [
-        { text: "Listo", onPress: () => router.back() },
+
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      Alert.alert("¡Publicación exitosa!", "Tu cosecha ya está disponible en MercaJusto.", [
+        { text: "Ver en catálogo", onPress: () => router.replace("/(tabs)/home") },
       ]);
     } catch (err) {
       Alert.alert("Error al publicar", apiErrorMessage(err));
@@ -179,7 +170,7 @@ export default function PublicarCosecha() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
-      <TopBar title="Publicar cosecha" showBack onBack={() => router.back()} />
+      <TopBar showBack onBack={() => router.back()} title="Publicar cosecha" />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -189,11 +180,9 @@ export default function PublicarCosecha() {
           contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: spacing[10] }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Producto */}
+          {/* Foto del producto */}
           <Card>
-            <Title>🌾 Producto</Title>
-
-            {/* Foto de la cosecha */}
+            <Title icon="camera">Foto de la cosecha</Title>
             <Pressable
               onPress={choosePhotoSource}
               style={{
@@ -212,12 +201,12 @@ export default function PublicarCosecha() {
                 <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
               ) : (
                 <View style={{ alignItems: "center", gap: spacing[2] }}>
-                  <Text style={{ fontSize: 40 }}>📷</Text>
-                  <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>
-                    Agregar foto de la cosecha
+                  <Icon name="camera" size={36} color={t.primary} />
+                  <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.textSecondary }}>
+                    Tomar foto o subir de galería
                   </Text>
                   <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
-                    Una buena foto vende hasta 3 veces más
+                    Una buena foto incrementa tus ventas
                   </Text>
                 </View>
               )}
@@ -229,11 +218,11 @@ export default function PublicarCosecha() {
               </View>
             ) : null}
 
-            <Field label="Nombre">
+            <Field label="Nombre del producto">
               <TextInput
                 value={name}
                 onChangeText={setName}
-                placeholder="Ej. Papa criolla"
+                placeholder="Ej. Papa criolla limpia"
                 placeholderTextColor={t.textTertiary}
                 style={inputStyle(t)}
               />
@@ -259,11 +248,11 @@ export default function PublicarCosecha() {
                         backgroundColor: selected ? t.primaryLight : t.bgPrimary,
                       }}
                     >
-                      <Text style={{ fontSize: 14 }}>{c.icon}</Text>
+                      <Icon name={c.name} size={16} color={selected ? t.primary : t.textSecondary} />
                       <Text
                         style={{
                           fontSize: fontSize.sm,
-                          fontWeight: "600",
+                          fontWeight: "700",
                           color: selected ? t.primary : t.textSecondary,
                         }}
                       >
@@ -279,7 +268,7 @@ export default function PublicarCosecha() {
               <TextInput
                 value={description}
                 onChangeText={setDescription}
-                placeholder="Cosechada esta mañana, libre de pesticidas..."
+                placeholder="Cosechada esta mañana, fresca y seleccionada..."
                 placeholderTextColor={t.textTertiary}
                 multiline
                 style={[inputStyle(t), { height: 72, paddingTop: 12, textAlignVertical: "top" }]}
@@ -289,7 +278,7 @@ export default function PublicarCosecha() {
 
           {/* Precio y stock */}
           <Card>
-            <Title>💰 Precio y disponibilidad</Title>
+            <Title icon="cash-outline">Precio y disponibilidad</Title>
 
             <View style={{ flexDirection: "row", gap: spacing[3] }}>
               <View style={{ flex: 2 }}>
@@ -338,7 +327,7 @@ export default function PublicarCosecha() {
                       <Text
                         style={{
                           fontSize: fontSize.sm,
-                          fontWeight: "600",
+                          fontWeight: "700",
                           color: selected ? t.accent : t.textSecondary,
                         }}
                       >
@@ -355,11 +344,14 @@ export default function PublicarCosecha() {
           <Card>
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
-                  ♻️ Modo excedente
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Icon name="sparkles" size={18} color={t.accent} />
+                  <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>
+                    Modo excedente
+                  </Text>
+                </View>
                 <Text style={{ fontSize: fontSize.xs, color: t.textSecondary, marginTop: 2 }}>
-                  Vende más rápido con descuento y evita que se pierda.
+                  Vende más rápido aplicando un descuento por sobreproducción.
                 </Text>
               </View>
               <Switch
@@ -372,8 +364,8 @@ export default function PublicarCosecha() {
 
             {isSurplus ? (
               <View style={{ marginTop: spacing[3], gap: spacing[2] }}>
-                <Text style={{ fontSize: fontSize.sm, fontWeight: "500", color: t.textSecondary }}>
-                  Descuento
+                <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>
+                  Descuento a aplicar
                 </Text>
                 <View style={{ flexDirection: "row", gap: spacing[2] }}>
                   {DISCOUNTS.map((d) => {
@@ -395,11 +387,11 @@ export default function PublicarCosecha() {
                         <Text
                           style={{
                             fontSize: fontSize.base,
-                            fontWeight: "700",
+                            fontWeight: "800",
                             color: selected ? t.success : t.textSecondary,
                           }}
                         >
-                          {d}%
+                          -{d}%
                         </Text>
                       </Pressable>
                     );
@@ -411,7 +403,7 @@ export default function PublicarCosecha() {
 
           {/* Ubicación */}
           <Card>
-            <Title>📍 Ubicación de la finca</Title>
+            <Title icon="location">Ubicación de la finca</Title>
 
             <Field label="Municipio">
               <TextInput
@@ -450,26 +442,34 @@ export default function PublicarCosecha() {
               {locating ? (
                 <ActivityIndicator size="small" color={t.primary} />
               ) : (
-                <Text style={{ fontSize: 20 }}>{coords ? "✅" : "📡"}</Text>
+                <Icon name={coords ? "checkmark-circle" : "location"} size={20} color={coords ? t.success : t.primary} />
               )}
               <Text
                 style={{
                   flex: 1,
                   fontSize: fontSize.sm,
-                  fontWeight: "600",
+                  fontWeight: "700",
                   color: coords ? t.success : t.primary,
                 }}
               >
                 {locating
-                  ? "Obteniendo ubicación..."
+                  ? "Obteniendo coordenadas GPS..."
                   : coords
-                  ? `Ubicación guardada (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
-                  : "Usar mi ubicación de la finca"}
+                  ? `Ubicación GPS guardada (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
+                  : "Obtener ubicación GPS de la finca"}
               </Text>
             </Pressable>
           </Card>
 
-          <Button title="Publicar cosecha" variant="accent" size="lg" full loading={saving} onPress={submit} />
+          <Button
+            title="Publicar cosecha"
+            variant="accent"
+            size="lg"
+            full
+            icon={<Icon name="checkmark-circle" size={20} color="#FFFFFF" />}
+            loading={saving}
+            onPress={submit}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -485,6 +485,8 @@ function Card({ children }: { children: React.ReactNode }) {
         borderRadius: radius.lg,
         padding: spacing[4],
         gap: spacing[3],
+        borderWidth: 1,
+        borderColor: t.border,
       }}
     >
       {children}
@@ -492,12 +494,15 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Title({ children }: { children: React.ReactNode }) {
+function Title({ icon, children }: { icon?: IconName; children: React.ReactNode }) {
   const t = useTheme();
   return (
-    <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
-      {children}
-    </Text>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+      {icon ? <Icon name={icon} size={18} color={t.primary} /> : null}
+      <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>
+        {children}
+      </Text>
+    </View>
   );
 }
 
@@ -505,7 +510,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   const t = useTheme();
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ fontSize: fontSize.sm, fontWeight: "500", color: t.textSecondary }}>{label}</Text>
+      <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>{label}</Text>
       {children}
     </View>
   );

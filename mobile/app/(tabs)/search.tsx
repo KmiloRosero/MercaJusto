@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Chip } from "../../src/components/Chip";
 import { ProductCard } from "../../src/components/ProductCard";
+import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { getCategories, getProducts } from "../../src/api/client";
 import { useCart } from "../../src/store/cart";
@@ -43,31 +44,37 @@ export default function Search() {
       <TopBar showBack onBack={() => router.back()} title="Buscar productos" />
 
       <View style={{ padding: spacing[4], gap: spacing[3] }}>
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Buscar papa, café, huevos..."
-          placeholderTextColor={t.textTertiary}
-          style={{
-            height: 44,
-            paddingHorizontal: spacing[4],
-            borderRadius: radius.full,
-            backgroundColor: t.bgInput,
-            borderWidth: 1.5,
-            borderColor: t.border,
-            fontSize: 14,
-            color: t.textPrimary,
-          }}
-        />
+        <View style={{ position: "relative", justifyContent: "center" }}>
+          <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
+            <Icon name="search" size={18} color={t.textTertiary} />
+          </View>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Buscar papa criolla, café, fresas..."
+            placeholderTextColor={t.textTertiary}
+            style={{
+              height: 46,
+              paddingLeft: 42,
+              paddingRight: spacing[4],
+              borderRadius: radius.full,
+              backgroundColor: t.bgInput,
+              borderWidth: 1.5,
+              borderColor: t.border,
+              fontSize: 14,
+              color: t.textPrimary,
+            }}
+          />
+        </View>
 
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: spacing[2] }}
         >
-          <Chip icon="🌟" label="Todo" active={!category} onPress={() => setCategory(null)} />
+          <Chip icon="sparkles" label="Todo" active={!category && !surplusOnly} onPress={() => { setCategory(null); setSurplusOnly(false); }} />
           <Chip
-            icon="🔥"
+            icon="sparkles"
             label="Excedente"
             active={surplusOnly}
             onPress={() => setSurplusOnly((s) => !s)}
@@ -75,7 +82,7 @@ export default function Search() {
           {categories.map((c) => (
             <Chip
               key={c.id}
-              icon={c.icon}
+              icon={c.name}
               label={c.name}
               active={category === c.slug}
               onPress={() => setCategory(c.slug)}
@@ -89,13 +96,13 @@ export default function Search() {
           contentContainerStyle={{ gap: spacing[2] }}
         >
           {[
-            { key: "recent", label: "Más recientes" },
-            { key: "price_asc", label: "Precio ↑" },
-            { key: "price_desc", label: "Precio ↓" },
+            { key: "recent", label: "Más recientes", icon: "time-outline" },
+            { key: "price_asc", label: "Menor precio", icon: "trending-down" },
+            { key: "price_desc", label: "Mayor precio", icon: "pricetag-outline" },
           ].map((s) => (
             <Chip
               key={s.key}
-              icon="↕️"
+              icon={s.icon}
               label={s.label}
               active={sort === s.key}
               onPress={() => setSort(s.key as typeof sort)}
@@ -113,10 +120,21 @@ export default function Search() {
         refreshing={isFetching}
         onRefresh={() => {}}
         ListEmptyComponent={
-          <View style={{ padding: spacing[8], alignItems: "center" }}>
-            <Text style={{ fontSize: 48, marginBottom: spacing[2] }}>🔍</Text>
-            <Text style={{ color: t.textSecondary, textAlign: "center" }}>
-              No encontramos productos con esos filtros.
+          <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: radius.full,
+                backgroundColor: t.bgSecondary,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon name="search-outline" size={32} color={t.textTertiary} />
+            </View>
+            <Text style={{ color: t.textSecondary, textAlign: "center", fontSize: fontSize.sm }}>
+              No se encontraron productos con estos criterios.
             </Text>
           </View>
         }

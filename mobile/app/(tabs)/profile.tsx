@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
+import { Icon, IconName } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { useAuth } from "../../src/store/auth";
 import { getProducts } from "../../src/api/client";
@@ -56,6 +57,8 @@ export default function Profile() {
             padding: spacing[5],
             alignItems: "center",
             gap: spacing[2],
+            borderWidth: 1,
+            borderColor: t.border,
           }}
         >
           <View
@@ -67,54 +70,70 @@ export default function Profile() {
               alignItems: "center",
               justifyContent: "center",
               marginBottom: spacing[2],
+              borderWidth: 2,
+              borderColor: t.primary,
             }}
           >
-            <Text style={{ fontSize: 40 }}>
+            <Text style={{ fontSize: 36, fontWeight: "800", color: t.primary }}>
               {user.name.charAt(0).toUpperCase()}
             </Text>
           </View>
+
           <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary }}>
             {user.name}
           </Text>
-          <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{user.phone}</Text>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <Icon name="call" size={14} color={t.textSecondary} />
+            <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{user.phone}</Text>
+          </View>
+
           <View style={{ flexDirection: "row", gap: spacing[2], marginTop: spacing[2] }}>
-            <Pill variant={isProducer ? "success" : "primary"}>
-              {isProducer ? "👨‍🌾 Productor" : user.role === "COURIER" ? "🚚 Repartidor" : "🛍️ Comprador"}
+            <Pill variant={isProducer ? "success" : "primary"} icon={isProducer ? "preparing" : "cart"}>
+              {isProducer ? "Productor" : user.role === "COURIER" ? "Repartidor" : "Comprador"}
             </Pill>
-            <Pill variant="warning">⭐ {user.rating.toFixed(1)} ({user.ratingCount})</Pill>
+            <Pill variant="warning" icon="star">
+              {user.rating.toFixed(1)} ({user.ratingCount})
+            </Pill>
           </View>
         </View>
 
         {isProducer ? (
-          <View style={{ backgroundColor: t.bgCard, borderRadius: radius.lg, padding: spacing[4] }}>
-            <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary, marginBottom: spacing[3] }}>
-              📊 Resumen de ventas
-            </Text>
+          <View style={{ backgroundColor: t.bgCard, borderRadius: radius.lg, padding: spacing[4], borderWidth: 1, borderColor: t.border }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[3] }}>
+              <Icon name="sparkles" size={18} color={t.primary} />
+              <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
+                Resumen de productor
+              </Text>
+            </View>
+
             <View style={{ flexDirection: "row", gap: spacing[3] }}>
               <StatBox label="Productos activos" value={String(activeCount)} color={t.primary} />
-              <StatBox label="Pedidos este mes" value="—" color={t.success} />
               <StatBox label="Calificación" value={user.rating.toFixed(1)} color={t.warning} />
             </View>
+
             <Button
-              title="+ Publicar nueva cosecha"
+              title="Publicar nueva cosecha"
               variant="accent"
               full
+              icon={<Icon name="add" size={20} color="#FFFFFF" />}
               style={{ marginTop: spacing[3] }}
               onPress={() => router.push("/publicar-cosecha")}
             />
           </View>
         ) : null}
 
-        <MenuItem icon="📍" label="Mis direcciones" onPress={() => Alert.alert("Próximamente")} />
-        <MenuItem icon="💳" label="Métodos de pago" onPress={() => Alert.alert("Próximamente")} />
-        <MenuItem icon="🌙" label="Modo oscuro" onPress={() => Alert.alert("Se activa según tu sistema")} />
-        <MenuItem icon="❓" label="Ayuda y soporte" onPress={() => Alert.alert("Próximamente")} />
-        <MenuItem icon="📜" label="Términos y privacidad" onPress={() => Alert.alert("Próximamente")} />
+        <View style={{ gap: spacing[2] }}>
+          <MenuItem icon="location-outline" label="Mis direcciones de entrega" onPress={() => Alert.alert("MercaJusto", "Gestión de direcciones de entrega activa")} />
+          <MenuItem icon="card-outline" label="Métodos de pago" onPress={() => Alert.alert("MercaJusto", "Soporta Nequi, Daviplata y Efectivo")} />
+          <MenuItem icon="shield-checkmark-outline" label="Garantía de precio justo" onPress={() => Alert.alert("MercaJusto", "Conexión directa sin intermediarios")} />
+          <MenuItem icon="options" label="Términos y condiciones" onPress={() => Alert.alert("MercaJusto", "Sistema MercaJusto Nariño")} />
+        </View>
 
-        <Button title="Cerrar sesión" variant="outline" full onPress={onLogout} />
+        <Button title="Cerrar sesión" variant="outline" full icon={<Icon name="close" size={18} color={t.primary} />} onPress={onLogout} />
 
         <Text style={{ textAlign: "center", color: t.textTertiary, fontSize: fontSize.xs, marginTop: spacing[2] }}>
-          MercaJusto v0.1.0 · Hecho con ❤️ en Nariño
+          MercaJusto v0.1.0 · Hecho en Nariño, Colombia
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -134,32 +153,35 @@ function StatBox({ label, value, color }: { label: string; value: string; color:
       }}
     >
       <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color }}>{value}</Text>
-      <Text style={{ fontSize: 10, color: t.textTertiary, textAlign: "center", marginTop: 2 }}>
+      <Text style={{ fontSize: 10, color: t.textTertiary, textAlign: "center", marginTop: 2, fontWeight: "600" }}>
         {label}
       </Text>
     </View>
   );
 }
 
-function MenuItem({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+function MenuItem({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const t = useTheme();
   return (
     <Pressable
       onPress={onPress}
-      style={{
+      style={({ pressed }) => ({
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: t.bgCard,
         borderRadius: radius.md,
         padding: spacing[4],
         gap: spacing[3],
-      }}
+        borderWidth: 1,
+        borderColor: t.border,
+        opacity: pressed ? 0.9 : 1,
+      })}
     >
-      <Text style={{ fontSize: 20 }}>{icon}</Text>
-      <Text style={{ flex: 1, fontSize: fontSize.base, color: t.textPrimary, fontWeight: "500" }}>
+      <Icon name={icon} size={20} color={t.primary} />
+      <Text style={{ flex: 1, fontSize: fontSize.base, color: t.textPrimary, fontWeight: "600" }}>
         {label}
       </Text>
-      <Text style={{ color: t.textTertiary }}>›</Text>
+      <Icon name="chevron-forward" size={18} color={t.textTertiary} />
     </Pressable>
   );
 }

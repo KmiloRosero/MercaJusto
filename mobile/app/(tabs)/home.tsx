@@ -15,7 +15,7 @@ import { TopBar, SectionHeader } from "../../src/components/TopBar";
 import { Banner } from "../../src/components/Banner";
 import { Chip } from "../../src/components/Chip";
 import { ProductCard } from "../../src/components/ProductCard";
-import { Pill } from "../../src/components/Pill";
+import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
@@ -29,7 +29,7 @@ export default function Home() {
 
   const [category, setCategory] = useState<string | null>(null);
 
-  const { data: categories = [], isLoading: loadingCats } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
   });
@@ -63,38 +63,43 @@ export default function Home() {
         right={
           <Pressable
             onPress={() => router.push("/(tabs)/profile")}
-            style={{
-              width: 34,
-              height: 34,
+            style={({ pressed }) => ({
+              width: 36,
+              height: 36,
               borderRadius: radius.full,
-              backgroundColor: t.gray200,
+              backgroundColor: t.primaryLight,
               alignItems: "center",
               justifyContent: "center",
-            }}
+              borderWidth: 1.5,
+              borderColor: t.primary,
+              opacity: pressed ? 0.8 : 1,
+            })}
           >
-            <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
-              {user?.name?.charAt(0).toUpperCase() || "?"}
+            <Text style={{ fontSize: 14, fontWeight: "800", color: t.primary }}>
+              {user?.name?.charAt(0).toUpperCase() || "U"}
             </Text>
           </Pressable>
         }
       />
 
-      {/* Location bar */}
+      {/* Selector de Ubicación */}
       <View
         style={{
           paddingHorizontal: spacing[4],
-          paddingVertical: spacing[2],
+          paddingVertical: spacing[3],
           flexDirection: "row",
           alignItems: "center",
           gap: 6,
           backgroundColor: t.bgPrimary,
+          borderBottomWidth: 1,
+          borderBottomColor: t.border,
         }}
       >
-        <Text style={{ fontSize: 14 }}>📍</Text>
+        <Icon name="location" size={16} color={t.primary} />
         <Text style={{ flex: 1, fontSize: fontSize.sm, color: t.textSecondary }}>
-          Entregar en <Text style={{ color: t.textPrimary, fontWeight: "600" }}>Pasto, Nariño</Text>
+          Entregar en <Text style={{ color: t.textPrimary, fontWeight: "700" }}>Pasto, Nariño</Text>
         </Text>
-        <Text style={{ fontSize: 12, color: t.textTertiary }}>▼</Text>
+        <Icon name="chevron-down" size={16} color={t.textTertiary} />
       </View>
 
       <FlatList
@@ -107,26 +112,26 @@ export default function Home() {
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.primary} />
         }
         ListHeaderComponent={
-          <View>
+          <View style={{ paddingTop: spacing[4] }}>
             <Banner
               tag="Modo Excedente"
               title="Cosecha que no se pierde"
-              subtitle="Productos con descuento porque al productor le sobra. Cómelos frescos y evita el desperdicio."
+              subtitle="Productos con descuento directo porque al productor le sobra. Apoya el campo y ahorra."
               cta="Ver ofertas"
-              graphic="🌽"
+              iconName="leaf"
               onCta={() => router.push("/(tabs)/search?surplus=true")}
             />
 
             {surplus.length > 0 ? (
               <View style={{ marginBottom: spacing[5] }}>
-                <SectionHeader title="🔥 Excedentes de hoy" action="Ver todo" />
+                <SectionHeader title="Excedentes de hoy" action="Ver todo" />
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ paddingHorizontal: spacing[4], gap: spacing[3] }}
                 >
                   {surplus.map((p) => (
-                    <View key={p.id} style={{ width: 150 }}>
+                    <View key={p.id} style={{ width: 160 }}>
                       <ProductCard
                         product={p}
                         onPress={() => router.push(`/producto/${p.id}`)}
@@ -146,7 +151,7 @@ export default function Home() {
                 contentContainerStyle={{ paddingHorizontal: spacing[4], gap: spacing[2] }}
               >
                 <Chip
-                  icon="🌟"
+                  icon="sparkles"
                   label="Todo"
                   active={category === null}
                   onPress={() => setCategory(null)}
@@ -154,7 +159,7 @@ export default function Home() {
                 {categories.map((c) => (
                   <Chip
                     key={c.id}
-                    icon={c.icon}
+                    icon={c.name}
                     label={c.name}
                     active={category === c.slug}
                     onPress={() => setCategory(c.slug)}
@@ -164,7 +169,7 @@ export default function Home() {
             </View>
 
             <SectionHeader
-              title={category ? `Productos: ${category}` : "Cosechas frescas"}
+              title={category ? `Categoría: ${category}` : "Cosechas frescas"}
               action="Ver todo"
               onAction={() => router.push("/(tabs)/search")}
             />
@@ -173,16 +178,27 @@ export default function Home() {
         ListEmptyComponent={
           loadingProds ? (
             <View style={{ padding: spacing[8], alignItems: "center" }}>
-              <ActivityIndicator color={t.primary} />
-              <Text style={{ color: t.textSecondary, marginTop: spacing[2] }}>
-                Cargando productos...
+              <ActivityIndicator color={t.primary} size="large" />
+              <Text style={{ color: t.textSecondary, marginTop: spacing[3], fontWeight: "500" }}>
+                Cargando productos del campo...
               </Text>
             </View>
           ) : (
-            <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[2] }}>
-              <Text style={{ fontSize: 48 }}>🌾</Text>
-              <Text style={{ color: t.textSecondary, textAlign: "center" }}>
-                No hay productos en esta categoría.{"\n"}¿Quieres ser el primero en publicar?
+            <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
+              <View
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: radius.full,
+                  backgroundColor: t.bgSecondary,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon name="leaf-outline" size={32} color={t.textTertiary} />
+              </View>
+              <Text style={{ color: t.textSecondary, textAlign: "center", fontSize: fontSize.sm }}>
+                No hay productos disponibles en esta categoría.{"\n"}Sé el primero en publicar una cosecha.
               </Text>
             </View>
           )

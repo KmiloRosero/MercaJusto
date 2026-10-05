@@ -14,15 +14,16 @@ import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
+import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../../src/theme";
 import { getOrder } from "../../src/api/client";
 import { OrderStatus } from "../../src/api/types";
 
 const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string }> = [
-  { key: "CONFIRMED", label: "Pedido confirmado", icon: "✓", desc: "El productor recibió tu pedido" },
-  { key: "PREPARING", label: "Preparando", icon: "👨‍🌾", desc: "Están alistando tus productos" },
-  { key: "IN_TRANSIT", label: "En camino", icon: "🚚", desc: "El repartidor va hacia tu dirección" },
-  { key: "DELIVERED", label: "Entregado", icon: "🏠", desc: "¡Disfruta tu cosecha fresca!" },
+  { key: "CONFIRMED", label: "Pedido confirmado", icon: "checkmark-circle", desc: "El productor recibió tu pedido" },
+  { key: "PREPARING", label: "Preparando", icon: "preparing", desc: "Están alistando tus productos" },
+  { key: "IN_TRANSIT", label: "En camino", icon: "in_transit", desc: "El repartidor va hacia tu dirección" },
+  { key: "DELIVERED", label: "Entregado", icon: "delivered", desc: "¡Disfruta tu cosecha fresca!" },
 ];
 
 const STATUS_INDEX: Record<OrderStatus, number> = {
@@ -244,7 +245,7 @@ export default function Seguimiento() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ fontSize: 24 }}>🚚</Text>
+                <Icon name="in_transit" size={24} color={t.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
@@ -257,16 +258,17 @@ export default function Seguimiento() {
               {order.courier.phone ? (
                 <Pressable
                   onPress={() => Linking.openURL(`tel:${order.courier!.phone}`)}
-                  style={{
+                  style={({ pressed }) => ({
                     width: 40,
                     height: 40,
                     borderRadius: radius.full,
                     backgroundColor: t.success,
                     alignItems: "center",
                     justifyContent: "center",
-                  }}
+                    opacity: pressed ? 0.8 : 1,
+                  })}
                 >
-                  <Text style={{ fontSize: 18 }}>📞</Text>
+                  <Icon name="call" size={18} color="#FFFFFF" />
                 </Pressable>
               ) : null}
             </View>

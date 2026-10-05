@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, View, Pressable } from "react-native";
 import { fontSize, radius, spacing, useTheme } from "../theme";
+import { Icon } from "./Icon";
 
 interface TopBarProps {
   title?: string;
@@ -25,36 +26,37 @@ export function TopBar({ title, showBack, onBack, right }: TopBarProps) {
         borderBottomColor: t.border,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], flex: 1 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3], flex: 1 }}>
         {showBack ? (
           <Pressable
             onPress={onBack}
-            style={{
+            style={({ pressed }) => ({
               width: 36,
               height: 36,
               borderRadius: radius.full,
               backgroundColor: t.bgSecondary,
               alignItems: "center",
               justifyContent: "center",
-            }}
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
-            <Text style={{ fontSize: 18, color: t.textPrimary }}>←</Text>
+            <Icon name="chevron-back" size={20} color={t.textPrimary} />
           </Pressable>
         ) : (
           <View
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: radius.sm,
+              width: 34,
+              height: 34,
+              borderRadius: radius.md,
               backgroundColor: t.primary,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 16 }}>🛒</Text>
+            <Icon name="cart" size={18} color="#FFFFFF" />
           </View>
         )}
-        <Text style={{ fontSize: 18, fontWeight: "700", color: showBack ? t.textPrimary : t.primary }}>
+        <Text style={{ fontSize: 18, fontWeight: "800", color: showBack ? t.textPrimary : t.primary }}>
           {title || "MercaJusto"}
         </Text>
       </View>
@@ -83,8 +85,8 @@ export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
     >
       <Text style={{ fontSize: 16, fontWeight: "700", color: t.textPrimary }}>{title}</Text>
       {action ? (
-        <Pressable onPress={onAction}>
-          <Text style={{ fontSize: fontSize.sm, fontWeight: "500", color: t.primary }}>
+        <Pressable onPress={onAction} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
+          <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.primary }}>
             {action}
           </Text>
         </Pressable>

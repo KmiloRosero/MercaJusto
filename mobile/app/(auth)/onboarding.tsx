@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import {
-  Dimensions,
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -12,25 +11,26 @@ import {
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../src/components/Button";
+import { Icon, IconName } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 
 type Role = "BUYER" | "PRODUCER";
 
-const slides = [
+const slides: Array<{ icon: IconName; title: string; body: string }> = [
   {
-    emoji: "🌾",
+    icon: "leaf",
     title: "Del campo directo\na tu mesa",
-    body: "Conectamos campesinos de Nariño con compradores de la ciudad. Sin intermediarios.",
+    body: "Conectamos pequeños productores campesinos de Nariño con compradores de la ciudad. Sin intermediarios.",
   },
   {
-    emoji: "🚚",
+    icon: "in_transit",
     title: "Rutas de entrega\ninteligentes",
-    body: "Agrupamos pedidos por zona para que un solo repartidor entregue varios y el envío sea barato.",
+    body: "Agrupamos pedidos por zona geográfica para que la entrega sea rápida, eficiente y muy económica.",
   },
   {
-    emoji: "💚",
+    icon: "shield-checkmark-outline",
     title: "Precio justo,\nconfianza real",
-    body: "El productor recibe hasta 4 veces más que con el intermediario. Tú pagas menos que en la tienda.",
+    body: "El productor recibe una retribución digna y tú pagas menos que en las tiendas y mercados tradicionales.",
   },
 ];
 
@@ -76,7 +76,20 @@ export default function Onboarding() {
               gap: spacing[5],
             }}
           >
-            <Text style={{ fontSize: 100 }}>{item.emoji}</Text>
+            <View
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: radius.full,
+                backgroundColor: t.primaryLight,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 2,
+                borderColor: t.primary,
+              }}
+            >
+              <Icon name={item.icon} size={64} color={t.primary} />
+            </View>
             <Text
               style={{
                 fontSize: 28,
@@ -133,21 +146,21 @@ export default function Onboarding() {
               fontSize: fontSize.sm,
               color: t.textSecondary,
               textAlign: "center",
-              fontWeight: "600",
+              fontWeight: "700",
             }}
           >
-            ¿Cómo quieres usar MercaJusto?
+            ¿Cómo deseas ingresar a MercaJusto?
           </Text>
           <View style={{ flexDirection: "row", gap: spacing[3] }}>
             <RoleCard
-              icon="🛍️"
+              icon="cart"
               title="Comprar"
               subtitle="Soy comprador"
               active={role === "BUYER"}
               onPress={() => setRole("BUYER")}
             />
             <RoleCard
-              icon="👨‍🌾"
+              icon="preparing"
               title="Vender"
               subtitle="Soy productor"
               active={role === "PRODUCER"}
@@ -160,6 +173,7 @@ export default function Onboarding() {
       <View style={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}>
         <Button
           title={index === slides.length - 1 ? "Continuar" : "Siguiente"}
+          icon={<Icon name="arrow-forward" size={18} color="#FFFFFF" />}
           onPress={next}
           full
           disabled={index === slides.length - 1 && !role}
@@ -169,7 +183,7 @@ export default function Onboarding() {
           onPress={() => router.push({ pathname: "/(auth)/login", params: { role: role || "BUYER" } })}
           style={{ padding: spacing[3], alignItems: "center" }}
         >
-          <Text style={{ color: t.textTertiary, fontSize: fontSize.sm }}>Ya tengo cuenta</Text>
+          <Text style={{ color: t.textTertiary, fontSize: fontSize.sm, fontWeight: "600" }}>Ya tengo una cuenta</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -183,7 +197,7 @@ function RoleCard({
   active,
   onPress,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   subtitle: string;
   active: boolean;
@@ -201,14 +215,14 @@ function RoleCard({
         borderColor: active ? t.primary : t.border,
         backgroundColor: active ? t.primaryLight : t.bgPrimary,
         alignItems: "center",
-        gap: 4,
+        gap: 6,
       }}
     >
-      <Text style={{ fontSize: 32 }}>{icon}</Text>
-      <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
+      <Icon name={icon} size={32} color={active ? t.primary : t.textSecondary} />
+      <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>
         {title}
       </Text>
-      <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>{subtitle}</Text>
+      <Text style={{ fontSize: fontSize.xs, color: t.textSecondary, fontWeight: "600" }}>{subtitle}</Text>
     </Pressable>
   );
 }

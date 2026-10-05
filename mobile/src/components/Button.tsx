@@ -1,12 +1,9 @@
 import React from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleProp,
-  Text,
-  ViewStyle,
-} from "react-native";
-import { fontSize, radius, spacing, useTheme } from "../theme";
+import { ActivityIndicator, Pressable, StyleProp, Text, ViewStyle } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { radius, useTheme } from "../theme";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Variant = "primary" | "accent" | "outline" | "ghost";
 type Size = "sm" | "md" | "lg";
@@ -39,6 +36,23 @@ export function Button({
   style,
 }: ButtonProps) {
   const t = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (!disabled && !loading) {
+      scale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
+    }
+  };
+
+  const handlePressOut = () => {
+    if (!disabled && !loading) {
+      scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+    }
+  };
 
   const bg =
     disabled ? t.gray200 :
@@ -52,9 +66,12 @@ export function Button({
     "#FFFFFF";
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={disabled || loading ? undefined : onPress}
-      style={({ pressed }) => [
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      style={[
+        animatedStyle,
         {
           height: heights[size],
           borderRadius: radius.full,
@@ -67,7 +84,6 @@ export function Button({
           justifyContent: "center",
           gap: 8,
           alignSelf: full ? "stretch" : "auto",
-          opacity: pressed && !disabled ? 0.85 : 1,
         },
         style,
       ]}
@@ -77,11 +93,11 @@ export function Button({
       ) : (
         <>
           {icon}
-          <Text style={{ color, fontSize: fontSizes[size], fontWeight: "600" }}>
+          <Text style={{ color, fontSize: fontSizes[size], fontWeight: "700" }}>
             {title}
           </Text>
         </>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }

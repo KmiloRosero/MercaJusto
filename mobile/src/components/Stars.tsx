@@ -1,6 +1,10 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useTheme } from "../theme";
+import { Icon } from "./Icon";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface StarsProps {
   rating: number;
@@ -9,45 +13,74 @@ interface StarsProps {
   readOnly?: boolean;
 }
 
-export function Stars({ rating, onChange, size = 40, readOnly = false }: StarsProps) {
+function StarItem({
+  star,
+  rating,
+  onChange,
+  size,
+  readOnly,
+}: {
+  star: number;
+  rating: number;
+  onChange?: (rating: number) => void;
+  size: number;
+  readOnly: boolean;
+}) {
   const t = useTheme();
+  const scale = useSharedValue(1);
+  const filled = star <= rating;
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePress = () => {
+    if (readOnly) return;
+    scale.value = withSpring(1.3, { damping: 10, stiffness: 400 }, () => {
+      scale.value = withSpring(1);
+    });
+    onChange?.(star);
+  };
 
   return (
-    <View style={{ flexDirection: "row", justifyContent: "center", gap: 12 }}>
-      {[1, 2, 3, 4, 5].map((star) => {
-        const filled = star <= rating;
-        return (
-          <Pressable
-            key={star}
-            disabled={readOnly}
-            onPress={() => onChange?.(star)}
-            hitSlop={4}
-            style={({ pressed }) => ({
-              transform: [{ scale: pressed && !readOnly ? 1.2 : filled && !readOnly ? 1.1 : 1 }],
-            })}
-          >
-            <Text
-              style={{
-                fontSize: size,
-                color: filled ? t.warning : t.gray200,
-                opacity: filled ? 1 : 0.5,
-              }}
-            >
-              ★
-            </Text>
-          </Pressable>
-        );
-      })}
+    <AnimatedPressable
+      disabled={readOnly}
+      onPress={handlePress}
+      hitSlop={6}
+      style={[animatedStyle, { padding: 4 }]}
+    >
+      <Icon
+        name={filled ? "star" : "star-outline"}
+        size={size}
+        color={filled ? "#FFB800" : t.gray300}
+      />
+    </AnimatedPressable>
+  );
+}
+
+export function Stars({ rating, onChange, size = 32, readOnly = false }: StarsProps) {
+  return (
+    <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center", gap: 6 }}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <StarItem
+          key={star}
+          star={star}
+          rating={rating}
+          onChange={onChange}
+          size={size}
+          readOnly={readOnly}
+        />
+      ))}
     </View>
   );
 }
 
 const FEEDBACK: Record<number, string> = {
-  1: "😞 Muy malo",
-  2: "😕 Malo",
-  3: "😐 Aceptable",
-  4: "😊 Bueno",
-  5: "🤩 ¡Excelente!",
+  1: "Muy deficiente",
+  2: "Regular",
+  3: "Aceptable",
+  4: "Muy bueno",
+  5: "¡Excelente!",
 };
 
 export function starFeedback(rating: number): string {
