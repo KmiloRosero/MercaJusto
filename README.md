@@ -159,8 +159,9 @@ Ver `backend/prisma/schema.prisma`. Entidades principales:
 - [x] **Checkout completo** — selector de dirección con bottom sheet, métodos de pago (Nequi/Daviplata/Efectivo), resumen con ahorro estimado, notas, CTA fijo, POST /orders → navegación a seguimiento
 - [x] **Gestión de direcciones** — listar, seleccionar, crear nueva con GPS (expo-location + reverse geocode)
 - [x] **Seguimiento funcional** — tarjeta de estado en tiempo real (refetch 15s), línea de tiempo de 4 pasos, tarjeta del repartidor con botón de llamada, resumen del pedido, dirección de entrega, CTA de calificación al entregar
-- [ ] Calificación con estrellas interactivas
-- [ ] Perfil productor: publicar cosecha con foto (`expo-image-picker`)
+- [x] **Calificación con estrellas interactivas** — tras la entrega, califica a cada productor y al repartidor con estrellas + comentario, y muestra el ahorro estimado del pedido
+- [x] **Perfil productor: publicar cosecha** — formulario con categoría, precio, unidad, stock, modo excedente (descuento 10/20/30%) y georreferenciación de la finca (expo-location). Contador real de productos activos en el perfil
+- [ ] Subida de fotos de cosecha (`expo-image-picker` + endpoint de almacenamiento)
 - [ ] Notificaciones push cuando cambia estado del pedido
 - [ ] Mapa real en seguimiento (`react-native-maps`)
 
