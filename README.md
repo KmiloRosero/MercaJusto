@@ -170,8 +170,8 @@ Ver `backend/prisma/schema.prisma`. Entidades principales:
 
 ### 🔬 Fase 3 — diferenciador técnico
 - [ ] Migrar SQLite → PostgreSQL + PostGIS
-- [ ] Agrupación geográfica de pedidos (k-means o DBSCAN sobre lat/lng)
-- [ ] VRP simplificado (nearest neighbor + 2-opt) para rutas del repartidor
+- [x] Agrupación geográfica de pedidos (k-means o DBSCAN sobre lat/lng)
+- [x] VRP simplificado (nearest neighbor + 2-opt) para rutas del repartidor — `backend/src/lib/routing.ts` + `POST /api/routes/optimize`
 - [ ] Dashboard de "precio justo" — métricas comparativas vs. tiendas tradicionales
 - [ ] Integración real con Nequi / Daviplata (o pasarela Wompi)
 
