@@ -29,14 +29,6 @@ MercaJusto/
 │
 └── docs/                   # (pendiente) diagramas, acta de sustentación
 
-
-### Backend
-```bash
-cd backend
-npm run dev              # Servidor con hot-reload
-npm run prisma:studio    # GUI de la base de datos
-npm run db:seed          # Repoblar con datos demo
-npm run db:reset         # Borrar y recrear DB + seed
 ```
 
 ### Mobile
@@ -49,6 +41,14 @@ npm run typecheck        # Verificar tipos TypeScript
 ```
 
 ---
+### Backend
+```bash
+cd backend
+npm run dev              # Servidor con hot-reload
+npm run prisma:studio    # GUI de la base de datos
+npm run db:seed          # Repoblar con datos demo
+npm run db:reset         # Borrar y recrear DB + seed
+```
 
 ## 📄 Licencia
 
