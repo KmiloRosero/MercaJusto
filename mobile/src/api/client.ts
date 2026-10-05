@@ -142,6 +142,31 @@ export async function getProduct(id: string): Promise<Product & { reviews?: unkn
   return data;
 }
 
+export interface CreateProductInput {
+  categoryId: string;
+  name: string;
+  description?: string;
+  price: number;
+  unit: string;
+  stock: number;
+  photoUrl?: string;
+  isSurplus?: boolean;
+  discountPct?: number;
+  vereda?: string;
+  municipio: string;
+  latitude: number;
+  longitude: number;
+}
+
+export async function createProduct(input: CreateProductInput): Promise<Product> {
+  const { data } = await api.post("/products", input);
+  return data;
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await api.delete(`/products/${id}`);
+}
+
 // ═══════════════════════════════════════════
 // CART
 // ═══════════════════════════════════════════
@@ -185,6 +210,22 @@ export async function createOrder(input: {
   notes?: string;
 }): Promise<Order> {
   const { data } = await api.post("/orders", input);
+  return data;
+}
+
+export async function createReview(
+  orderId: string,
+  input: { rating: number; comment?: string; toUserId: string }
+): Promise<unknown> {
+  const { data } = await api.post(`/orders/${orderId}/reviews`, input);
+  return data;
+}
+
+export async function updateOrderStatus(
+  orderId: string,
+  status: Order["status"]
+): Promise<Order> {
+  const { data } = await api.patch(`/orders/${orderId}/status`, { status });
   return data;
 }
 

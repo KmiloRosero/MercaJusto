@@ -2,16 +2,29 @@ import React from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { useAuth } from "../../src/store/auth";
+import { getProducts } from "../../src/api/client";
 
 export default function Profile() {
   const router = useRouter();
   const t = useTheme();
   const { user, logout } = useAuth();
+
+  const isProducerUser = user?.role === "PRODUCER";
+  const { data: myProducts } = useQuery({
+    queryKey: ["products", "mine", user?.id],
+    queryFn: () => getProducts({ limit: 100 }),
+    enabled: isProducerUser,
+  });
+
+  const activeCount = isProducerUser
+    ? (myProducts?.products ?? []).filter((p) => p.producerId === user?.id && p.isActive).length
+    : 0;
 
   const onLogout = () => {
     Alert.alert("Cerrar sesión", "¿Seguro que quieres salir?", [
@@ -78,7 +91,7 @@ export default function Profile() {
               📊 Resumen de ventas
             </Text>
             <View style={{ flexDirection: "row", gap: spacing[3] }}>
-              <StatBox label="Productos activos" value="—" color={t.primary} />
+              <StatBox label="Productos activos" value={String(activeCount)} color={t.primary} />
               <StatBox label="Pedidos este mes" value="—" color={t.success} />
               <StatBox label="Calificación" value={user.rating.toFixed(1)} color={t.warning} />
             </View>
@@ -87,7 +100,7 @@ export default function Profile() {
               variant="accent"
               full
               style={{ marginTop: spacing[3] }}
-              onPress={() => Alert.alert("Próximamente", "Formulario de publicación en la fase 2")}
+              onPress={() => router.push("/publicar-cosecha")}
             />
           </View>
         ) : null}
