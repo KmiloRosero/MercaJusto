@@ -18,10 +18,17 @@ import {
 // CONFIG
 // ═══════════════════════════════════════════
 // - Android Emulator: usa 10.0.2.2 en vez de localhost
-// - iOS Simulator: localhost funciona
-// - Dispositivo físico: usa la IP LAN de tu máquina (ej. 192.168.0.x)
-
-const DEFAULT_API = Constants.expoConfig?.extra?.apiUrl || "http://localhost:4000";
+// - Dispositivo físico: usa la IP LAN del servidor Expo
+const expoHost = Constants.expoConfig?.hostUri?.split(":")[0];
+const defaultHost =
+  Platform.OS === "android"
+    ? Constants.isDevice && expoHost
+      ? expoHost
+      : "10.0.2.2"
+    : Platform.OS === "ios" && Constants.isDevice && expoHost
+      ? expoHost
+      : "localhost";
+const DEFAULT_API = Constants.expoConfig?.extra?.apiUrl || `http://${defaultHost}:4000`;
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API;
 

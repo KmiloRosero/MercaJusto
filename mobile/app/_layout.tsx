@@ -57,7 +57,6 @@ export default function RootLayout() {
               contentStyle: { backgroundColor: "#FFFFFF" },
             }}
           >
-            <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="producto/[id]" />
             <Stack.Screen name="checkout" />
