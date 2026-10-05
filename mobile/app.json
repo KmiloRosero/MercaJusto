@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "MercaJusto",
+    "slug": "mercajusto",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "mercajusto",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#008FFF",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "co.mercajusto.app"
+    },
+    "android": {
+      "package": "co.mercajusto.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#008FFF"
+      },
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "MercaJusto necesita tu ubicación para mostrarte productores cercanos y calcular rutas de entrega."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiUrl": "http://localhost:4000"
+    }
+  }
+}

@@ -1,0 +1,251 @@
+// MercaJusto — Esquema de base de datos
+//
+// NOTA SOBRE MIGRACIÓN A POSTGRES+POSTGIS:
+// Actualmente usamos SQLite para desarrollo rápido. Cuando toque implementar
+// optimización de rutas reales (fase 3), cambiar:
+//   provider = "postgresql"
+// y convertir los campos `latitude`/`longitude` a tipo `Unsupported("geometry(Point,4326)")`
+// para habilitar consultas espaciales (ST_DWithin, ST_Distance).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════
+// USUARIOS
+// ═══════════════════════════════════════════
+// Nota: SQLite no soporta enums nativos en Prisma; usamos String con
+// valores canónicos documentados arriba de cada campo.
+
+model User {
+  id           String   @id @default(cuid())
+  phone        String   @unique
+  name         String
+  role         String   @default("BUYER") // "BUYER" | "PRODUCER" | "COURIER"
+  avatarUrl    String?
+  email        String?
+  rating       Float    @default(0)
+  ratingCount  Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses    Address[]
+  products     Product[]   @relation("ProducerProducts")
+  ordersAsBuyer   Order[]  @relation("BuyerOrders")
+  ordersAsCourier Order[]  @relation("CourierOrders")
+  reviewsGiven    Review[] @relation("ReviewsGiven")
+  reviewsReceived Review[] @relation("ReviewsReceived")
+  routes       DeliveryRoute[]
+  cartItems    CartItem[]
+  otpCodes     OtpCode[]
+
+  @@index([role])
+  @@index([phone])
+}
+
+model Address {
+  id           String  @id @default(cuid())
+  userId       String
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  label        String  @default("Casa") // "Casa", "Trabajo", "Finca"...
+  vereda       String?
+  municipio    String
+  departamento String  @default("Nariño")
+  detail       String? // dirección textual
+  latitude     Float
+  longitude    Float
+  isDefault    Boolean @default(false)
+
+  orders       Order[]
+
+  @@index([userId])
+  @@index([municipio])
+}
+
+model OtpCode {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone      String
+  code       String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([phone, consumedAt])
+}
+
+// ═══════════════════════════════════════════
+// CATÁLOGO
+// ═══════════════════════════════════════════
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  icon     String    // emoji
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id           String    @id @default(cuid())
+  producerId   String
+  producer     User      @relation("ProducerProducts", fields: [producerId], references: [id], onDelete: Cascade)
+
+  categoryId   String
+  category     Category  @relation(fields: [categoryId], references: [id])
+
+  name         String
+  description  String?
+  price        Int       // en pesos colombianos, entero
+  unit         String    // "kg", "lb", "unidad", "docena", "bulto"
+  stock        Int       // cantidad disponible
+  photoUrl     String?
+  isSurplus    Boolean   @default(false) // modo excedente = descuento
+  discountPct  Int       @default(0)     // 0-70
+  harvestDate  DateTime?
+
+  // Ubicación del producto (aprox. a la del productor, pero se puede
+  // ajustar si la finca está en otra vereda)
+  vereda       String?
+  municipio    String
+  latitude     Float
+  longitude    Float
+
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  reviews      Review[]
+
+  @@index([producerId])
+  @@index([categoryId])
+  @@index([municipio])
+  @@index([isSurplus])
+  @@index([isActive])
+}
+
+// ═══════════════════════════════════════════
+// CARRITO
+// ═══════════════════════════════════════════
+
+model CartItem {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int     @default(1)
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+// ═══════════════════════════════════════════
+// PEDIDOS
+// ═══════════════════════════════════════════
+
+model Order {
+  id              String   @id @default(cuid())
+  buyerId         String
+  buyer           User     @relation("BuyerOrders", fields: [buyerId], references: [id])
+  courierId       String?
+  courier         User?    @relation("CourierOrders", fields: [courierId], references: [id])
+
+  status          String   @default("PENDING")
+  // PENDING → CONFIRMED → PREPARING → IN_TRANSIT → DELIVERED → CANCELLED
+
+  subtotal        Int
+  deliveryFee     Int      @default(0)
+  platformFee     Int      @default(0) // comisión MercaJusto
+  total           Int
+
+  paymentMethod   String   @default("NEQUI") // NEQUI | DAVIPLATA | CASH
+  paymentStatus   String   @default("PENDING") // PENDING | PAID | FAILED
+
+  deliveryAddressId String
+  deliveryAddress   Address @relation(fields: [deliveryAddressId], references: [id])
+
+  routeId         String?
+  route           DeliveryRoute? @relation(fields: [routeId], references: [id])
+
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deliveredAt     DateTime?
+
+  items           OrderItem[]
+  reviews         Review[]
+
+  @@index([buyerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+
+  quantity    Int
+  unitPrice   Int     // precio al momento de la compra (puede cambiar después)
+  subtotal    Int
+
+  @@index([orderId])
+}
+
+// ═══════════════════════════════════════════
+// LOGÍSTICA — agrupación y rutas
+// ═══════════════════════════════════════════
+
+model DeliveryRoute {
+  id            String   @id @default(cuid())
+  courierId     String?
+  courier       User?    @relation(fields: [courierId], references: [id])
+
+  date          DateTime
+  zoneLabel     String   // "Zona Norte Pasto", "Ruta Túquerres", ...
+  sequenceJson  String   // JSON: [{orderId, lat, lng, eta}]
+  totalDistanceKm Float  @default(0)
+  status        String   @default("PLANNED") // PLANNED | IN_PROGRESS | COMPLETED
+
+  orders        Order[]
+
+  @@index([date])
+  @@index([courierId])
+}
+
+// ═══════════════════════════════════════════
+// RESEÑAS
+// ═══════════════════════════════════════════
+
+model Review {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id])
+
+  fromUserId  String
+  fromUser    User     @relation("ReviewsGiven", fields: [fromUserId], references: [id])
+  toUserId    String
+  toUser      User     @relation("ReviewsReceived", fields: [toUserId], references: [id])
+
+  rating      Int      // 1-5
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  @@unique([orderId, fromUserId, toUserId])
+  @@index([toUserId])
+}
