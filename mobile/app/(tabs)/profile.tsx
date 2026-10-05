@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -7,13 +7,16 @@ import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon, IconName } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme } from "../../src/theme";
+import { fontSize, radius, spacing, useTheme, useThemeScheme } from "../../src/theme";
 import { useAuth } from "../../src/store/auth";
+import { useThemePreference } from "../../src/store/theme";
 import { getProducts } from "../../src/api/client";
 
 export default function Profile() {
   const router = useRouter();
   const t = useTheme();
+  const themeScheme = useThemeScheme();
+  const setThemeMode = useThemePreference((s) => s.setMode);
   const { user, logout } = useAuth();
 
   const isProducerUser = user?.role === "PRODUCER";
@@ -122,6 +125,47 @@ export default function Profile() {
             />
           </View>
         ) : null}
+
+        <View
+          style={{
+            backgroundColor: t.bgCard,
+            borderRadius: radius.lg,
+            padding: spacing[4],
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing[3],
+            borderWidth: 1,
+            borderColor: t.border,
+          }}
+        >
+          <View
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: radius.md,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: t.primaryLight,
+            }}
+          >
+            <Icon name="sparkles" size={20} color={t.primary} />
+          </View>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
+              Modo oscuro
+            </Text>
+            <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+              {themeScheme === "dark" ? "Apariencia oscura activa" : "Apariencia clara activa"}
+            </Text>
+          </View>
+          <Switch
+            accessibilityLabel="Activar modo oscuro"
+            value={themeScheme === "dark"}
+            onValueChange={(enabled) => setThemeMode(enabled ? "dark" : "light")}
+            trackColor={{ false: t.gray300, true: t.primary }}
+            thumbColor={t.bgPrimary}
+          />
+        </View>
 
         <View style={{ gap: spacing[2] }}>
           <MenuItem icon="location-outline" label="Mis direcciones de entrega" onPress={() => Alert.alert("MercaJusto", "Gestión de direcciones de entrega activa")} />

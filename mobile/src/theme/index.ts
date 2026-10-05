@@ -1,11 +1,17 @@
 import { useColorScheme } from "react-native";
+import { useThemePreference } from "../store/theme";
 import { colors, ThemeColors } from "./tokens";
 
 export * from "./tokens";
 
+export function useThemeScheme(): "light" | "dark" {
+  const systemScheme = useColorScheme();
+  const preference = useThemePreference((state) => state.mode);
+  return preference === "system" ? (systemScheme === "dark" ? "dark" : "light") : preference;
+}
+
 export function useTheme(): ThemeColors {
-  const scheme = useColorScheme();
-  return scheme === "dark" ? colors.dark : colors.light;
+  return colors[useThemeScheme()];
 }
 
 export function formatCOP(cents: number): string {

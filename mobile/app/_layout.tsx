@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuth } from "../src/store/auth";
 import { registerPushToken } from "../src/api/client";
 import { registerForPushNotifications } from "../src/lib/notifications";
+import { useThemeScheme } from "../src/theme";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,6 +20,7 @@ export default function RootLayout() {
   const bootstrap = useAuth((s) => s.bootstrap);
   const hydrated = useAuth((s) => s.hydrated);
   const userId = useAuth((s) => s.user?.id);
+  const themeScheme = useThemeScheme();
 
   useEffect(() => {
     bootstrap();
@@ -50,7 +52,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style="auto" />
+          <StatusBar style={themeScheme === "dark" ? "light" : "dark"} />
           <Stack
             screenOptions={{
               headerShown: false,

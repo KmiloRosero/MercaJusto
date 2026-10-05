@@ -80,7 +80,7 @@ function mapIconName(name: string): string {
 
   // Mapeo por emojis o texto de categorías existentes en la DB
   if (clean.includes("tubérculo") || clean.includes("papa") || clean.includes("🥔") || clean === "tuberculos") {
-    return "mci:potato";
+    return "mci:carrot";
   }
   if (clean.includes("hortaliza") || clean.includes("verdura") || clean.includes("🥦") || clean.includes("🥕") || clean === "hortalizas") {
     return "mci:carrot";
@@ -99,6 +99,12 @@ function mapIconName(name: string): string {
   }
   if (clean.includes("procesado") || clean.includes("mermelada") || clean.includes("🍯")) {
     return "mci:jar";
+  }
+  if (clean.includes("café") || clean.includes("cacao") || clean.includes("☕")) {
+    return "cafe-outline";
+  }
+  if (clean.includes("hierba") || clean.includes("aromática") || clean.includes("🌿")) {
+    return "leaf-outline";
   }
 
   // Iconos por defecto de estado / navegación

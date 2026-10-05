@@ -1,5 +1,6 @@
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { fontSize, radius, shadow, spacing, useTheme, formatCOP } from "../theme";
 import { Product } from "../api/types";
@@ -82,22 +83,28 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
             resizeMode="cover"
           />
         ) : (
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: radius.full,
-              backgroundColor: t.primaryLight,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Icon
-              name={product.category?.name || "leaf"}
-              size={36}
-              color={t.primary}
+          <>
+            <LinearGradient
+              colors={[t.primaryLight, t.accentLight, t.bgSecondary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
             />
-          </View>
+            <View
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: radius.full,
+                backgroundColor: "rgba(45,198,83,0.16)",
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: 1,
+                borderColor: "rgba(45,198,83,0.24)",
+              }}
+            >
+              <Icon name={product.category?.name || "leaf"} size={38} color={t.success} />
+            </View>
+          </>
         )}
 
         {product.isSurplus ? (

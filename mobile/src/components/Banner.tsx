@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { radius, spacing } from "../theme";
 import { Icon } from "./Icon";
 
@@ -28,18 +29,24 @@ export function Banner({
         marginBottom: spacing[5],
         borderRadius: radius.xl,
         padding: spacing[5],
-        backgroundColor: "#FF6B2B",
         overflow: "hidden",
         position: "relative",
+        minHeight: 228,
         opacity: pressed ? 0.92 : 1,
       })}
     >
+      <LinearGradient
+        colors={["#145C3B", "#21814D", "#50A94F"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+      />
       <View
         style={{
           flexDirection: "row",
           alignItems: "center",
           gap: 4,
-          backgroundColor: "rgba(0,0,0,0.20)",
+          backgroundColor: "rgba(5,36,22,0.36)",
           paddingHorizontal: 10,
           paddingVertical: 4,
           borderRadius: radius.full,
@@ -64,11 +71,11 @@ export function Banner({
       <Text
         style={{
           color: "#FFF",
-          fontSize: 22,
+          fontSize: 26,
           fontWeight: "800",
-          lineHeight: 28,
+          lineHeight: 31,
           marginBottom: spacing[1],
-          maxWidth: "75%",
+          maxWidth: "78%",
         }}
       >
         {title}
@@ -80,7 +87,7 @@ export function Banner({
             color: "rgba(255,255,255,0.92)",
             fontSize: 13,
             marginBottom: spacing[4],
-            maxWidth: "75%",
+            maxWidth: "78%",
           }}
         >
           {subtitle}
@@ -100,8 +107,8 @@ export function Banner({
             gap: 6,
           }}
         >
-          <Text style={{ color: "#FF6B2B", fontSize: 13, fontWeight: "700" }}>{cta}</Text>
-          <Icon name="arrow-forward" size={14} color="#FF6B2B" />
+          <Text style={{ color: "#17683F", fontSize: 13, fontWeight: "800" }}>{cta}</Text>
+          <Icon name="arrow-forward" size={14} color="#17683F" />
         </View>
       ) : null}
 
@@ -110,10 +117,10 @@ export function Banner({
           position: "absolute",
           right: 12,
           bottom: 12,
-          opacity: 0.18,
+          opacity: 0.22,
         }}
       >
-        <Icon name={iconName} size={110} color="#FFFFFF" />
+        <Icon name={iconName} size={124} color="#FFE7A3" />
       </View>
     </Pressable>
   );
