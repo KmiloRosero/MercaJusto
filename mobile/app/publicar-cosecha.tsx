@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,10 +16,11 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import * as ImagePicker from "expo-image-picker";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { fontSize, radius, spacing, useTheme } from "../src/theme";
-import { apiErrorMessage, createProduct, getCategories } from "../src/api/client";
+import { apiErrorMessage, createProduct, getCategories, uploadImage } from "../src/api/client";
 
 const UNITS = ["Kilo", "Libra", "Atado", "Docena", "Unidad", "Litro"];
 const DISCOUNTS = [10, 20, 30];
@@ -46,6 +48,50 @@ export default function PublicarCosecha() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+
+  const pickPhoto = async (useCamera: boolean) => {
+    try {
+      const perm = useCamera
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(
+          "Permiso denegado",
+          useCamera
+            ? "Necesitamos acceso a la cámara para tomar la foto."
+            : "Necesitamos acceso a tu galería para elegir una foto."
+        );
+        return;
+      }
+      const result = useCamera
+        ? await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.6,
+            allowsEditing: true,
+            aspect: [4, 3],
+          })
+        : await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 0.6,
+            allowsEditing: true,
+            aspect: [4, 3],
+          });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setPhotoUri(result.assets[0].uri);
+      }
+    } catch (err) {
+      Alert.alert("Error", apiErrorMessage(err));
+    }
+  };
+
+  const choosePhotoSource = () => {
+    Alert.alert("Foto de la cosecha", "¿De dónde quieres obtener la foto?", [
+      { text: "📷 Cámara", onPress: () => pickPhoto(true) },
+      { text: "🖼️ Galería", onPress: () => pickPhoto(false) },
+      { text: "Cancelar", style: "cancel" },
+    ]);
+  };
 
   const useMyLocation = async () => {
     setLocating(true);
@@ -104,6 +150,7 @@ export default function PublicarCosecha() {
 
     setSaving(true);
     try {
+      const photoUrl = photoUri ? await uploadImage(photoUri) : undefined;
       await createProduct({
         categoryId,
         name: name.trim(),
@@ -111,6 +158,7 @@ export default function PublicarCosecha() {
         price: priceNum,
         unit,
         stock: stockNum,
+        photoUrl,
         isSurplus,
         discountPct: isSurplus ? discountPct : 0,
         vereda: vereda.trim() || undefined,
@@ -144,6 +192,42 @@ export default function PublicarCosecha() {
           {/* Producto */}
           <Card>
             <Title>🌾 Producto</Title>
+
+            {/* Foto de la cosecha */}
+            <Pressable
+              onPress={choosePhotoSource}
+              style={{
+                height: 160,
+                borderRadius: radius.lg,
+                borderWidth: 1.5,
+                borderStyle: photoUri ? "solid" : "dashed",
+                borderColor: photoUri ? t.success : t.border,
+                backgroundColor: t.bgInput,
+                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              ) : (
+                <View style={{ alignItems: "center", gap: spacing[2] }}>
+                  <Text style={{ fontSize: 40 }}>📷</Text>
+                  <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>
+                    Agregar foto de la cosecha
+                  </Text>
+                  <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
+                    Una buena foto vende hasta 3 veces más
+                  </Text>
+                </View>
+              )}
+            </Pressable>
+            {photoUri ? (
+              <View style={{ flexDirection: "row", gap: spacing[2] }}>
+                <Button title="Cambiar foto" variant="ghost" size="sm" style={{ flex: 1 }} onPress={choosePhotoSource} />
+                <Button title="Quitar" variant="outline" size="sm" style={{ flex: 1 }} onPress={() => setPhotoUri(null)} />
+              </View>
+            ) : null}
 
             <Field label="Nombre">
               <TextInput

@@ -168,6 +168,25 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 // ═══════════════════════════════════════════
+// UPLOADS
+// ═══════════════════════════════════════════
+
+export async function uploadImage(uri: string): Promise<string> {
+  const filename = uri.split("/").pop() || "photo.jpg";
+  const match = /\.(\w+)$/.exec(filename);
+  const type = match ? `image/${match[1]}` : "image/jpeg";
+
+  const form = new FormData();
+  // React Native acepta este shape para archivos en FormData
+  form.append("file", { uri, name: filename, type } as unknown as Blob);
+
+  const { data } = await api.post<{ url: string }>("/uploads", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data.url;
+}
+
+// ═══════════════════════════════════════════
 // CART
 // ═══════════════════════════════════════════
 

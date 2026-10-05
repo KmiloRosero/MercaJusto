@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -53,7 +53,15 @@ export default function ProductDetail() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ fontSize: 140 }}>{product.category?.icon || "🌾"}</Text>
+          {product.photoUrl ? (
+            <Image
+              source={{ uri: product.photoUrl }}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+            />
+          ) : (
+            <Text style={{ fontSize: 140 }}>{product.category?.icon || "🌾"}</Text>
+          )}
           {product.isSurplus ? (
             <View style={{ position: "absolute", top: spacing[4], left: spacing[4] }}>
               <Pill variant="accent" icon="🔥">

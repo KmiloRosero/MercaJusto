@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { fontSize, radius, shadow, spacing, useTheme } from "../theme";
 import { Product } from "../api/types";
 import { formatCOP } from "../theme";
@@ -29,7 +29,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
         ...shadow.sm,
       })}
     >
-      {/* Image placeholder — reemplazar con <Image source={{uri: product.photoUrl}} /> cuando subas fotos */}
+      {/* Foto de la cosecha (o emoji de categoría como respaldo) */}
       <View
         style={{
           aspectRatio: 1,
@@ -38,7 +38,15 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
           justifyContent: "center",
         }}
       >
-        <Text style={{ fontSize: 56 }}>{product.category?.icon || "🌾"}</Text>
+        {product.photoUrl ? (
+          <Image
+            source={{ uri: product.photoUrl }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={{ fontSize: 56 }}>{product.category?.icon || "🌾"}</Text>
+        )}
         {product.isSurplus ? (
           <View style={{ position: "absolute", top: 8, left: 8 }}>
             <Pill variant="accent" icon="🔥">-{product.discountPct}%</Pill>

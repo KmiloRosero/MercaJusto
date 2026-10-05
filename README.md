@@ -112,6 +112,7 @@ curl http://localhost:4000/api/users/me -H "Authorization: Bearer $TOKEN"
 | POST | `/api/products` | Publicar cosecha | 👨‍🌾 PRODUCER |
 | PATCH | `/api/products/:id` | Editar cosecha | 👨‍🌾 dueño |
 | DELETE | `/api/products/:id` | Desactivar | 👨‍🌾 dueño |
+| POST | `/api/uploads` | Subir foto (multipart, máx 5 MB) | ✅ |
 | GET | `/api/cart` | Mi carrito | 🛍️ BUYER |
 | POST | `/api/cart/items` | Agregar item | 🛍️ BUYER |
 | PATCH | `/api/cart/items/:id` | Cambiar cantidad | 🛍️ BUYER |
@@ -161,7 +162,7 @@ Ver `backend/prisma/schema.prisma`. Entidades principales:
 - [x] **Seguimiento funcional** — tarjeta de estado en tiempo real (refetch 15s), línea de tiempo de 4 pasos, tarjeta del repartidor con botón de llamada, resumen del pedido, dirección de entrega, CTA de calificación al entregar
 - [x] **Calificación con estrellas interactivas** — tras la entrega, califica a cada productor y al repartidor con estrellas + comentario, y muestra el ahorro estimado del pedido
 - [x] **Perfil productor: publicar cosecha** — formulario con categoría, precio, unidad, stock, modo excedente (descuento 10/20/30%) y georreferenciación de la finca (expo-location). Contador real de productos activos en el perfil
-- [ ] Subida de fotos de cosecha (`expo-image-picker` + endpoint de almacenamiento)
+- [x] **Fotos reales de cosecha** — endpoint `POST /api/uploads` (multer, almacenamiento local servido en `/uploads`, máx. 5 MB, JPEG/PNG/WEBP), selector de cámara/galería con `expo-image-picker` en el formulario de publicación, y renderizado de la foto en catálogo y detalle del producto
 - [ ] Notificaciones push cuando cambia estado del pedido
 - [ ] Mapa real en seguimiento (`react-native-maps`)
 
