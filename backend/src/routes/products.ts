@@ -98,6 +98,9 @@ const createProductSchema = z.object({
   name: z.string().min(2).max(80),
   description: z.string().max(500).optional(),
   price: z.number().int().positive(),
+  // Precio de referencia en plaza/tienda tradicional (opcional): alimenta el
+  // dashboard de precio justo y el ahorro que ve el comprador.
+  traditionalPrice: z.number().int().positive().optional(),
   unit: z.string().min(1).max(20),
   stock: z.number().int().nonnegative(),
   photoUrl: z.string().url().optional(),

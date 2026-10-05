@@ -117,6 +117,9 @@ model Product {
   name         String
   description  String?
   price        Int       // en pesos colombianos, entero
+  // Precio de referencia en plaza de mercado / tienda tradicional (COP).
+  // alimenta el dashboard de "precio justo" y el ahorro mostrado al comprador.
+  traditionalPrice Int?
   unit         String    // "kg", "lb", "unidad", "docena", "bulto"
   stock        Int       // cantidad disponible
   photoUrl     String?

@@ -12,6 +12,7 @@ import { usersRouter } from "./routes/users";
 import { cartRouter } from "./routes/cart";
 import { uploadsRouter } from "./routes/uploads";
 import { routesRouter } from "./routes/routes";
+import { metricsRouter } from "./routes/metrics";
 import { errorHandler, NotFoundError } from "./middleware/errorHandler";
 
 const app = express();
@@ -35,6 +36,7 @@ app.use("/api/users", usersRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/routes", routesRouter);
+app.use("/api/metrics", metricsRouter);
 
 app.use((_req, _res, next) => next(new NotFoundError()));
 app.use(errorHandler);

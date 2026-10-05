@@ -7,6 +7,7 @@ import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
+import { cartSavings } from "../../src/lib/savings";
 
 export default function Cart() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function Cart() {
   const deliveryFee = items.length > 0 ? 3500 : 0;
   const platformFee = Math.round(subtotal * 0.05);
   const total = subtotal + deliveryFee + platformFee;
-  const savings = Math.round(subtotal * 0.35);
+  const savings = cartSavings(items);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>

@@ -37,6 +37,7 @@ export interface Product {
   name: string;
   description?: string | null;
   price: number;
+  traditionalPrice?: number | null;
   unit: string;
   stock: number;
   photoUrl?: string | null;

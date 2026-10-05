@@ -17,6 +17,7 @@ import { Address, PaymentMethod } from "../src/api/types";
 import { createOrder, apiErrorMessage } from "../src/api/client";
 import { useAuth } from "../src/store/auth";
 import { useCart } from "../src/store/cart";
+import { cartSavings } from "../src/lib/savings";
 
 const PAYMENT_METHODS: Array<{
   key: PaymentMethod;
@@ -31,7 +32,6 @@ const PAYMENT_METHODS: Array<{
 
 const DELIVERY_FEE = 3500;
 const PLATFORM_FEE_PCT = 0.05;
-const SAVINGS_PCT = 0.35;
 
 export default function Checkout() {
   const router = useRouter();
@@ -76,7 +76,7 @@ export default function Checkout() {
 
   const platformFee = Math.round(subtotal * PLATFORM_FEE_PCT);
   const total = subtotal + DELIVERY_FEE + platformFee;
-  const savings = Math.round(subtotal * SAVINGS_PCT);
+  const savings = cartSavings(items);
 
   const canSubmit = !!selectedAddress && items.length > 0 && !submitting;
 

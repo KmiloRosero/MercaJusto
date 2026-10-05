@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import axios, { AxiosError } from "axios";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
@@ -27,9 +28,34 @@ export const API_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API;
 const TOKEN_KEY = "mercajusto.token";
 
 export const tokenStorage = {
-  get: () => SecureStore.getItemAsync(TOKEN_KEY),
-  set: (t: string) => SecureStore.setItemAsync(TOKEN_KEY, t),
-  clear: () => SecureStore.deleteItemAsync(TOKEN_KEY),
+  get: async (): Promise<string | null> => {
+    if (Platform.OS === "web") {
+      try {
+        return typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      } catch {
+        return null;
+      }
+    }
+    return SecureStore.getItemAsync(TOKEN_KEY);
+  },
+  set: async (t: string): Promise<void> => {
+    if (Platform.OS === "web") {
+      try {
+        if (typeof window !== "undefined") localStorage.setItem(TOKEN_KEY, t);
+      } catch {}
+      return;
+    }
+    return SecureStore.setItemAsync(TOKEN_KEY, t);
+  },
+  clear: async (): Promise<void> => {
+    if (Platform.OS === "web") {
+      try {
+        if (typeof window !== "undefined") localStorage.removeItem(TOKEN_KEY);
+      } catch {}
+      return;
+    }
+    return SecureStore.deleteItemAsync(TOKEN_KEY);
+  },
 };
 
 export const api = axios.create({

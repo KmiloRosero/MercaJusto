@@ -13,6 +13,7 @@
     "prisma:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
+    "db:backfill-prices": "tsx scripts/backfill-traditional-price.ts",
     "test:routing": "tsx scripts/test-routing.ts",
     "test:routes": "tsx scripts/test-routes-endpoint.ts"
   },
