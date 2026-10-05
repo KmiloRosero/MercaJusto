@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -7,6 +7,7 @@ import {
   Text,
   View,
 } from "react-native";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -45,6 +46,43 @@ export default function Seguimiento() {
     refetchInterval: 15000, // actualiza cada 15s para simular tiempo real
   });
 
+  const mapRef = useRef<MapView>(null);
+
+  // Coordenadas: finca del primer productor (origen) y dirección de entrega (destino)
+  const { origin, destination } = useMemo(() => {
+    if (!order) return { origin: null, destination: null } as {
+      origin: { latitude: number; longitude: number } | null;
+      destination: { latitude: number; longitude: number } | null;
+    };
+    const addr = order.deliveryAddress;
+    const dest =
+      addr && addr.latitude && addr.longitude
+        ? { latitude: addr.latitude, longitude: addr.longitude }
+        : null;
+    let orig: { latitude: number; longitude: number } | null = null;
+    for (const it of order.items) {
+      const p = it.product;
+      if (p?.latitude && p?.longitude) {
+        orig = { latitude: p.latitude, longitude: p.longitude };
+        break;
+      }
+    }
+    return { origin: orig, destination: dest };
+  }, [order]);
+
+  const mapCoords = [origin, destination].filter(
+    (c): c is { latitude: number; longitude: number } => !!c
+  );
+
+  useEffect(() => {
+    if (mapCoords.length > 0 && mapRef.current) {
+      mapRef.current.fitToCoordinates(mapCoords, {
+        edgePadding: { top: 40, right: 40, bottom: 40, left: 40 },
+        animated: true,
+      });
+    }
+  }, [origin, destination]);
+
   if (isLoading || !order) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
@@ -74,35 +112,49 @@ export default function Seguimiento() {
       <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[10] }}>
-        {/* ═══ Map placeholder ═══ */}
-        <View
-          style={{
-            width: "100%",
-            height: 200,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#A5D6A7",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          {/* Gradiente simulado con capas */}
-          <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "#C8E6C9", opacity: 0.5 }} />
-          <Text style={{ fontSize: 48 }}>📍</Text>
-          <Text style={{ fontSize: 11, color: "#2E7D32", fontWeight: "600", marginTop: 4 }}>
-            Mapa en vivo · fase 3
-          </Text>
-          <View
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 60,
-              backgroundColor: t.bgSecondary,
-              opacity: 0.6,
-            }}
-          />
+        {/* ═══ Mapa en vivo ═══ */}
+        <View style={{ width: "100%", height: 220, backgroundColor: t.gray100 }}>
+          {mapCoords.length > 0 ? (
+            <MapView
+              ref={mapRef}
+              style={{ width: "100%", height: "100%" }}
+              initialRegion={{
+                latitude: mapCoords[0].latitude,
+                longitude: mapCoords[0].longitude,
+                latitudeDelta: 0.08,
+                longitudeDelta: 0.08,
+              }}
+            >
+              {origin ? (
+                <Marker
+                  coordinate={origin}
+                  title="Finca del productor"
+                  description="Aquí se recogió tu pedido"
+                >
+                  <Text style={{ fontSize: 30 }}>🌾</Text>
+                </Marker>
+              ) : null}
+              {destination ? (
+                <Marker coordinate={destination} title="Tu dirección" description="Punto de entrega">
+                  <Text style={{ fontSize: 30 }}>🏠</Text>
+                </Marker>
+              ) : null}
+              {origin && destination ? (
+                <Polyline
+                  coordinates={[origin, destination]}
+                  strokeWidth={3}
+                  strokeColor="#008FFF"
+                />
+              ) : null}
+            </MapView>
+          ) : (
+            <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontSize: 48 }}>📍</Text>
+              <Text style={{ fontSize: 12, color: t.textTertiary, marginTop: 4 }}>
+                Sin coordenadas disponibles para este pedido
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* ═══ Status card ═══ */}

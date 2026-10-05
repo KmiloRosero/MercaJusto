@@ -44,9 +44,21 @@ model User {
   routes       DeliveryRoute[]
   cartItems    CartItem[]
   otpCodes     OtpCode[]
+  pushTokens   PushToken[]
 
   @@index([role])
   @@index([phone])
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique // Expo push token (ExponentPushToken[...])
+  platform  String   @default("unknown") // "ios" | "android" | "web" | "unknown"
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Address {

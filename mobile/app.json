@@ -34,6 +34,12 @@
         {
           "locationAlwaysAndWhenInUsePermission": "MercaJusto necesita tu ubicación para mostrarte productores cercanos y calcular rutas de entrega."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#008FFF"
+        }
       ]
     ],
     "experiments": {

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import { sendPushToUser } from "../lib/push";
 import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
 
@@ -141,6 +142,14 @@ const statusSchema = z.object({
   status: z.enum(["CONFIRMED", "PREPARING", "IN_TRANSIT", "DELIVERED", "CANCELLED"]),
 });
 
+const STATUS_PUSH: Record<string, { title: string; body: string }> = {
+  CONFIRMED: { title: "✅ Pedido confirmado", body: "El productor recibió tu pedido y lo está alistando." },
+  PREPARING: { title: "👨‍🌾 Preparando tu pedido", body: "Están recolectando y empacando tus productos frescos." },
+  IN_TRANSIT: { title: "🚚 ¡En camino!", body: "Tu repartidor va hacia tu dirección. Sigue el recorrido en vivo." },
+  DELIVERED: { title: "🏠 Pedido entregado", body: "¡Disfruta tu cosecha fresca! No olvides calificar tu experiencia." },
+  CANCELLED: { title: "❌ Pedido cancelado", body: "Tu pedido fue cancelado. Si pagaste, el reembolso se verá reflejado pronto." },
+};
+
 ordersRouter.patch("/:id/status", async (req, res, next) => {
   try {
     const { status } = statusSchema.parse(req.body);
@@ -154,6 +163,17 @@ ordersRouter.patch("/:id/status", async (req, res, next) => {
         deliveredAt: status === "DELIVERED" ? new Date() : order.deliveredAt,
       },
     });
+
+    // Notificar al comprador (fire and forget, no bloquea la respuesta)
+    const push = STATUS_PUSH[status];
+    if (push) {
+      void sendPushToUser(order.buyerId, {
+        title: push.title,
+        body: push.body,
+        data: { orderId: order.id, status },
+      });
+    }
+
     res.json(updated);
   } catch (err) {
     next(err);

@@ -123,6 +123,8 @@ curl http://localhost:4000/api/users/me -H "Authorization: Bearer $TOKEN"
 | POST | `/api/orders/:id/reviews` | Calificar | ✅ |
 | GET | `/api/users/me` | Mi perfil | ✅ |
 | PATCH | `/api/users/me` | Editar perfil | ✅ |
+| POST | `/api/users/me/push-token` | Registrar token Expo Push | ✅ |
+| DELETE | `/api/users/me/push-token` | Desregistrar token (logout) | ✅ |
 | GET | `/api/users/:id` | Perfil público | ❌ |
 
 ---
@@ -156,15 +158,15 @@ Ver `backend/prisma/schema.prisma`. Entidades principales:
 - [x] Design system portado (tokens, Button, Pill, Chip, Card, TopBar, ProductCard, Banner)
 - [x] Pantallas: onboarding, login OTP, home funcional, search, cart, orders, profile, producto/[id]
 
-### 🚧 Fase 2 — en progreso
+### ✅ Fase 2 — completa
 - [x] **Checkout completo** — selector de dirección con bottom sheet, métodos de pago (Nequi/Daviplata/Efectivo), resumen con ahorro estimado, notas, CTA fijo, POST /orders → navegación a seguimiento
 - [x] **Gestión de direcciones** — listar, seleccionar, crear nueva con GPS (expo-location + reverse geocode)
 - [x] **Seguimiento funcional** — tarjeta de estado en tiempo real (refetch 15s), línea de tiempo de 4 pasos, tarjeta del repartidor con botón de llamada, resumen del pedido, dirección de entrega, CTA de calificación al entregar
 - [x] **Calificación con estrellas interactivas** — tras la entrega, califica a cada productor y al repartidor con estrellas + comentario, y muestra el ahorro estimado del pedido
 - [x] **Perfil productor: publicar cosecha** — formulario con categoría, precio, unidad, stock, modo excedente (descuento 10/20/30%) y georreferenciación de la finca (expo-location). Contador real de productos activos en el perfil
 - [x] **Fotos reales de cosecha** — endpoint `POST /api/uploads` (multer, almacenamiento local servido en `/uploads`, máx. 5 MB, JPEG/PNG/WEBP), selector de cámara/galería con `expo-image-picker` en el formulario de publicación, y renderizado de la foto en catálogo y detalle del producto
-- [ ] Notificaciones push cuando cambia estado del pedido
-- [ ] Mapa real en seguimiento (`react-native-maps`)
+- [x] **Notificaciones push** — modelo `PushToken` + endpoints `POST/DELETE /api/users/me/push-token`, envío con `expo-server-sdk` al cambiar el estado del pedido (fire-and-forget), y registro del token Expo en la app con `expo-notifications` al iniciar sesión
+- [x] **Mapa real en seguimiento** — `react-native-maps` con marcador de la finca (origen), la dirección de entrega (destino) y polilínea de ruta, ajustando el encuadre automáticamente
 
 ### 🔬 Fase 3 — diferenciador técnico
 - [ ] Migrar SQLite → PostgreSQL + PostGIS

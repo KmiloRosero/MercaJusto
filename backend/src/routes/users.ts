@@ -124,3 +124,43 @@ usersRouter.delete("/me/addresses/:id", requireAuth, async (req, res, next) => {
     next(err);
   }
 });
+
+// ═══════════════════════════════════════════
+// PUSH TOKENS (notificaciones Expo)
+// ═══════════════════════════════════════════
+
+const pushTokenSchema = z.object({
+  token: z.string().min(10),
+  platform: z.enum(["ios", "android", "web", "unknown"]).optional(),
+});
+
+// POST /api/users/me/push-token — registra el token Expo del dispositivo
+usersRouter.post("/me/push-token", requireAuth, async (req, res, next) => {
+  try {
+    const { token, platform } = pushTokenSchema.parse(req.body);
+    // Upsert por token: si ya existe (de otro usuario o del mismo), lo reasignamos
+    const saved = await prisma.pushToken.upsert({
+      where: { token },
+      update: { userId: req.user!.userId, platform: platform || "unknown" },
+      create: { userId: req.user!.userId, token, platform: platform || "unknown" },
+    });
+    res.status(201).json(saved);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/users/me/push-token — desregistra el token (logout)
+usersRouter.delete("/me/push-token", requireAuth, async (req, res, next) => {
+  try {
+    const token = req.query.token as string | undefined;
+    if (token) {
+      await prisma.pushToken.deleteMany({ where: { token, userId: req.user!.userId } });
+    } else {
+      await prisma.pushToken.deleteMany({ where: { userId: req.user!.userId } });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
