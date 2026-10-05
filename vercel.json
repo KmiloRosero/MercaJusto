@@ -1,0 +1,11 @@
+{
+  "installCommand": "npm ci --prefix mobile",
+  "buildCommand": "npm run build --prefix mobile",
+  "outputDirectory": "mobile/dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/producto/:id", "destination": "/producto/[id].html" },
+    { "source": "/seguimiento/:id", "destination": "/seguimiento/[id].html" },
+    { "source": "/calificacion/:id", "destination": "/calificacion/[id].html" }
+  ]
+}
