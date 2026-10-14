@@ -1,4 +1,5 @@
 import type { CartItem, Order } from "../api/types";
+import { effectivePrice } from "./pricing";
 
 // Cuando un producto no tiene precio de referencia (plaza/tienda), estimamos
 // el precio tradicional con el ahorro histórico del modelo: 35% sobre el
@@ -20,7 +21,7 @@ export function lineSavings(
 /** Ahorro total de la canasta usando los precios de referencia reales. */
 export function cartSavings(items: CartItem[]): number {
   return items.reduce(
-    (acc, it) => acc + lineSavings(it.product.price, it.product.traditionalPrice, it.quantity),
+    (acc, it) => acc + lineSavings(effectivePrice(it.product), it.product.traditionalPrice, it.quantity),
     0
   );
 }

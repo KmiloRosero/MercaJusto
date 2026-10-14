@@ -1,13 +1,24 @@
 import React from "react";
 import { View } from "react-native";
 import { Tabs } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../../src/store/auth";
 import { useTheme } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { Icon, IconName } from "../../src/components/Icon";
 
 export default function TabsLayout() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const cartCount = useCart((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
+  const fetchCart = useCart((s) => s.fetch);
+  const role = useAuth((s) => s.user?.role);
+  const isBuyer = role === "BUYER";
+
+  // Cargar la canasta al entrar para que el badge esté al día
+  React.useEffect(() => {
+    if (isBuyer) fetchCart();
+  }, [isBuyer, fetchCart]);
 
   return (
     <Tabs
@@ -18,8 +29,8 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: t.bgPrimary,
           borderTopColor: t.border,
-          height: 64,
-          paddingBottom: 8,
+          height: TAB_BAR_HEIGHT + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
@@ -47,6 +58,8 @@ export default function TabsLayout() {
         name="cart"
         options={{
           title: "Canasta",
+          // Solo los compradores arman canasta
+          href: isBuyer ? undefined : null,
           tabBarBadge: cartCount > 0 ? cartCount : undefined,
           tabBarBadgeStyle: { backgroundColor: t.accent, fontSize: 10, fontWeight: "800" },
           tabBarIcon: ({ color, focused }) => (
@@ -57,7 +70,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="orders"
         options={{
-          title: "Pedidos",
+          title: isBuyer ? "Pedidos" : role === "COURIER" ? "Entregas" : "Ventas",
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={focused ? "receipt" : "receipt-outline"} color={color} focused={focused} />
           ),
@@ -75,6 +88,8 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
+
+export const TAB_BAR_HEIGHT = 64;
 
 function TabIcon({ icon, color, focused }: { icon: IconName; color: string; focused: boolean }) {
   return (

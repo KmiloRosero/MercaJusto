@@ -117,6 +117,17 @@ export interface Order {
   deliveryAddress?: Address;
   buyer?: ProducerSummary;
   courier?: ProducerSummary;
+  reviews?: Review[];
+}
+
+export interface Review {
+  id: string;
+  orderId: string;
+  fromUserId: string;
+  toUserId: string;
+  rating: number;
+  comment?: string | null;
+  createdAt: string;
 }
 
 export interface AuthVerifyResponse {

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -8,7 +7,8 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQueryClient } from "@tanstack/react-query";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { AddressSheet } from "../src/components/AddressSheet";
@@ -19,6 +19,8 @@ import { createOrder, apiErrorMessage } from "../src/api/client";
 import { useAuth } from "../src/store/auth";
 import { useCart } from "../src/store/cart";
 import { cartSavings } from "../src/lib/savings";
+import { effectivePrice, orderTotals } from "../src/lib/pricing";
+import { showAlert } from "../src/lib/dialog";
 
 const PAYMENT_METHODS: Array<{
   key: PaymentMethod;
@@ -31,14 +33,13 @@ const PAYMENT_METHODS: Array<{
   { key: "CASH", icon: "cash-outline", name: "Efectivo contraentrega", desc: "Pagas al recibir tu cosecha" },
 ];
 
-const DELIVERY_FEE = 3500;
-const PLATFORM_FEE_PCT = 0.05;
-
 export default function Checkout() {
   const router = useRouter();
   const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
   const { user, refresh } = useAuth();
-  const { items, subtotal, fetch: fetchCart, clear: clearCart } = useCart();
+  const { items, subtotal, fetch: fetchCart } = useCart();
 
   const addresses = user?.addresses ?? [];
 
@@ -63,17 +64,16 @@ export default function Checkout() {
     if (items.length === 0 && !submitting) {
       const id = setTimeout(() => {
         if (useCart.getState().items.length === 0) {
-          Alert.alert("Canasta vacía", "Agrega productos antes de finalizar la compra.", [
-            { text: "OK", onPress: () => router.replace("/(tabs)/home") },
-          ]);
+          showAlert("Canasta vacía", "Agrega productos antes de finalizar la compra.").then(() =>
+            router.replace("/(tabs)/home")
+          );
         }
       }, 500);
       return () => clearTimeout(id);
     }
   }, [items.length, router, submitting]);
 
-  const platformFee = Math.round(subtotal * PLATFORM_FEE_PCT);
-  const total = subtotal + DELIVERY_FEE + platformFee;
+  const { deliveryFee, platformFee, total } = orderTotals(subtotal);
   const savings = cartSavings(items);
 
   const canSubmit = !!selectedAddress && items.length > 0 && !submitting;
@@ -87,12 +87,16 @@ export default function Checkout() {
         paymentMethod: payment,
         notes: notes.trim() || undefined,
       });
-      await clearCart();
+      // El backend ya vació la canasta al crear el pedido
+      useCart.setState({ items: [], subtotal: 0, error: null });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       await refresh();
       router.replace(`/seguimiento/${order.id}`);
     } catch (err) {
-      Alert.alert("No se pudo crear el pedido", apiErrorMessage(err));
       setSubmitting(false);
+      await showAlert("No se pudo crear el pedido", apiErrorMessage(err));
+      fetchCart();
     }
   };
 
@@ -106,7 +110,7 @@ export default function Checkout() {
       <TopBar showBack onBack={() => router.back()} title="Finalizar compra" />
 
       <ScrollView
-        contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: 130 }}
+        contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: 150 + insets.bottom }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Dirección de entrega */}
@@ -249,7 +253,7 @@ export default function Checkout() {
                   </Text>
                 </View>
                 <Text style={{ fontSize: 13, fontWeight: "800", color: t.textPrimary }}>
-                  {formatCOP(it.product.price * it.quantity)}
+                  {formatCOP(effectivePrice(it.product) * it.quantity)}
                 </Text>
               </View>
             ))}
@@ -257,7 +261,7 @@ export default function Checkout() {
 
           <View style={{ marginTop: spacing[3], gap: spacing[1] }}>
             <TotalRow label="Subtotal" value={formatCOP(subtotal)} color={t.textSecondary} />
-            <TotalRow label="Envío agrupado" value={formatCOP(DELIVERY_FEE)} color={t.textSecondary} />
+            <TotalRow label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
             <TotalRow
               label="Comisión plataforma (5%)"
               value={formatCOP(platformFee)}
@@ -324,6 +328,7 @@ export default function Checkout() {
           left: 0,
           right: 0,
           padding: spacing[4],
+          paddingBottom: spacing[4] + insets.bottom,
           backgroundColor: t.bgPrimary,
           borderTopWidth: 1,
           borderTopColor: t.border,

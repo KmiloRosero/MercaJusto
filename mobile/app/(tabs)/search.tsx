@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { FlatList, ScrollView, Text, TextInput, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -9,29 +9,43 @@ import { ProductCard } from "../../src/components/ProductCard";
 import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { getCategories, getProducts } from "../../src/api/client";
-import { useCart } from "../../src/store/cart";
+import { useAuth } from "../../src/store/auth";
+import { useAddToCart } from "../../src/lib/useAddToCart";
 
 export default function Search() {
   const router = useRouter();
   const t = useTheme();
   const params = useLocalSearchParams<{ surplus?: string }>();
-  const addToCart = useCart((s) => s.add);
+  const addToCart = useAddToCart();
+  const isBuyer = useAuth((s) => s.user?.role === "BUYER");
 
   const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [surplusOnly, setSurplusOnly] = useState(params.surplus === "true");
   const [sort, setSort] = useState<"recent" | "price_asc" | "price_desc">("recent");
+
+  // El banner "Ver ofertas" puede abrir esta pestaña ya montada con ?surplus=true
+  useEffect(() => {
+    if (params.surplus === "true") setSurplusOnly(true);
+  }, [params.surplus]);
+
+  // Esperar a que el usuario deje de escribir antes de consultar
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(search.trim()), 350);
+    return () => clearTimeout(id);
+  }, [search]);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
   });
 
-  const { data, isFetching } = useQuery({
-    queryKey: ["products", "search", search, category, surplusOnly, sort],
+  const { data, isRefetching, refetch } = useQuery({
+    queryKey: ["products", "search", debounced, category, surplusOnly, sort],
     queryFn: () =>
       getProducts({
-        search: search || undefined,
+        search: debounced || undefined,
         category: category || undefined,
         surplus: surplusOnly || undefined,
         sort,
@@ -41,7 +55,7 @@ export default function Search() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
-      <TopBar showBack onBack={() => router.back()} title="Buscar productos" />
+      <TopBar title="Buscar productos" />
 
       <View style={{ padding: spacing[4], gap: spacing[3] }}>
         <View style={{ position: "relative", justifyContent: "center" }}>
@@ -52,6 +66,8 @@ export default function Search() {
             value={search}
             onChangeText={setSearch}
             placeholder="Buscar papa criolla, café, fresas..."
+            returnKeyType="search"
+            autoCorrect={false}
             placeholderTextColor={t.textTertiary}
             style={{
               height: 46,
@@ -65,6 +81,15 @@ export default function Search() {
               color: t.textPrimary,
             }}
           />
+          {search ? (
+            <Pressable
+              onPress={() => setSearch("")}
+              hitSlop={8}
+              style={{ position: "absolute", right: 14 }}
+            >
+              <Icon name="close-circle" size={18} color={t.textTertiary} />
+            </Pressable>
+          ) : null}
         </View>
 
         <ScrollView
@@ -85,7 +110,7 @@ export default function Search() {
               icon={c.name}
               label={c.name}
               active={category === c.slug}
-              onPress={() => setCategory(c.slug)}
+              onPress={() => setCategory((cur) => (cur === c.slug ? null : c.slug))}
             />
           ))}
         </ScrollView>
@@ -117,8 +142,8 @@ export default function Search() {
         numColumns={2}
         columnWrapperStyle={{ gap: spacing[3], paddingHorizontal: spacing[4] }}
         contentContainerStyle={{ gap: spacing[3], paddingBottom: spacing[10] }}
-        refreshing={isFetching}
-        onRefresh={() => {}}
+        refreshing={isRefetching}
+        onRefresh={refetch}
         ListEmptyComponent={
           <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
             <View
@@ -143,7 +168,7 @@ export default function Search() {
             <ProductCard
               product={item}
               onPress={() => router.push(`/producto/${item.id}`)}
-              onAdd={() => addToCart(item.id, 1)}
+              onAdd={isBuyer ? () => addToCart(item.id, 1, item.name) : undefined}
             />
           </View>
         )}

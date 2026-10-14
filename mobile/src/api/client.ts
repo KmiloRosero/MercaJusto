@@ -76,6 +76,24 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Si el token expira a mitad de sesión, el store de auth cierra la sesión.
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(fn: (() => void) | null) {
+  onUnauthorized = fn;
+}
+
+api.interceptors.response.use(
+  (res) => res,
+  (err: AxiosError) => {
+    const url = err.config?.url ?? "";
+    const hadToken = Boolean(err.config?.headers?.Authorization);
+    if (err.response?.status === 401 && hadToken && !url.startsWith("/auth")) {
+      onUnauthorized?.();
+    }
+    return Promise.reject(err);
+  }
+);
+
 // ═══════════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════════
@@ -113,7 +131,19 @@ export async function getMe(): Promise<MeResponse> {
   return data;
 }
 
-export async function getUser(id: string): Promise<User & { products?: Product[] }> {
+export interface PublicProfile extends User {
+  products?: Product[];
+  municipios?: string[];
+  reviewsReceived?: Array<{
+    id: string;
+    rating: number;
+    comment?: string | null;
+    createdAt: string;
+    fromUser: { id: string; name: string };
+  }>;
+}
+
+export async function getUser(id: string): Promise<PublicProfile> {
   const { data } = await api.get(`/users/${id}`);
   return data;
 }
@@ -168,6 +198,7 @@ export async function getCategories(): Promise<Category[]> {
 
 export interface ProductFilters {
   category?: string;
+  producerId?: string;
   municipio?: string;
   surplus?: boolean;
   search?: string;
@@ -195,6 +226,7 @@ export interface CreateProductInput {
   name: string;
   description?: string;
   price: number;
+  traditionalPrice?: number;
   unit: string;
   stock: number;
   photoUrl?: string;
@@ -219,17 +251,29 @@ export async function deleteProduct(id: string): Promise<void> {
 // UPLOADS
 // ═══════════════════════════════════════════
 
-export async function uploadImage(uri: string): Promise<string> {
-  const filename = uri.split("/").pop() || "photo.jpg";
-  const match = /\.(\w+)$/.exec(filename);
-  const type = match ? `image/${match[1]}` : "image/jpeg";
-
+export async function uploadImage(uri: string, mimeType?: string | null): Promise<string> {
   const form = new FormData();
-  // React Native acepta este shape para archivos en FormData
-  form.append("file", { uri, name: filename, type } as unknown as Blob);
 
+  if (Platform.OS === "web") {
+    // En web el picker devuelve un blob:/data: URI → lo convertimos a Blob real
+    const blob = await (await fetch(uri)).blob();
+    const type = mimeType || blob.type || "image/jpeg";
+    const ext = type.split("/")[1] === "png" ? "png" : type.split("/")[1] === "webp" ? "webp" : "jpg";
+    form.append("file", new Blob([blob], { type }), `photo.${ext}`);
+  } else {
+    const filename = uri.split("/").pop() || "photo.jpg";
+    const match = /\.(\w+)$/.exec(filename);
+    const ext = match?.[1]?.toLowerCase();
+    const type =
+      mimeType || (ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg");
+    // React Native acepta este shape para archivos en FormData
+    form.append("file", { uri, name: filename, type } as unknown as Blob);
+  }
+
+  // En web el navegador debe poner el Content-Type (con su boundary) por sí mismo
   const { data } = await api.post<{ url: string }>("/uploads", form, {
-    headers: { "Content-Type": "multipart/form-data" },
+    headers: Platform.OS === "web" ? undefined : { "Content-Type": "multipart/form-data" },
+    timeout: 30000,
   });
   return data.url;
 }
@@ -297,13 +341,40 @@ export async function updateOrderStatus(
 }
 
 // ═══════════════════════════════════════════
+// MÉTRICAS — precio justo (ahorro del comprador / ingresos del productor)
+// ═══════════════════════════════════════════
+
+export interface FairPriceMetrics {
+  ordersCount: number;
+  itemsCount: number;
+  totals: {
+    buyerPaidTotal: number;
+    producerRevenue: number;
+    traditionalTotal: number;
+    buyerSavingsTotal: number;
+    buyerSavingsPct: number;
+    avgTicket: number;
+    surplusUnits: number;
+  };
+}
+
+export async function getFairPriceMetrics(): Promise<FairPriceMetrics> {
+  const { data } = await api.get("/metrics/fair-price");
+  return data;
+}
+
+// ═══════════════════════════════════════════
 // ERRORS
 // ═══════════════════════════════════════════
 
 export function apiErrorMessage(err: unknown): string {
   if (err instanceof AxiosError) {
     const data = err.response?.data as { error?: string } | undefined;
-    return data?.error || err.message || "Error de conexión";
+    if (data?.error) return data.error;
+    if (!err.response) {
+      return `No se pudo conectar con el servidor (${API_URL}). Verifica que el backend esté encendido y en la misma red.`;
+    }
+    return err.message || "Error de conexión";
   }
   if (err instanceof Error) return err.message;
   return "Error inesperado";

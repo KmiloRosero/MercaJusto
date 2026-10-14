@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,6 +16,7 @@ import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { requestOtp, verifyOtp, apiErrorMessage } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
+import { showAlert } from "../../src/lib/dialog";
 
 type Step = "phone" | "code" | "register";
 
@@ -35,6 +35,8 @@ export default function Login() {
   );
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  // En modo desarrollo el backend devuelve el código: lo mostramos en pantalla
+  const [devCode, setDevCode] = useState<string | null>(null);
 
   useEffect(() => {
     if (countdown <= 0) return;
@@ -44,7 +46,7 @@ export default function Login() {
 
   const sendOtp = async () => {
     if (phone.replace(/\D/g, "").length < 10) {
-      Alert.alert("Teléfono inválido", "Ingresa un número de 10 dígitos");
+      showAlert("Teléfono inválido", "Ingresa un número de 10 dígitos");
       return;
     }
     setLoading(true);
@@ -52,12 +54,11 @@ export default function Login() {
       const fullPhone = phone.startsWith("+") ? phone : `+57${phone}`;
       const res = await requestOtp(fullPhone);
       setCountdown(60);
+      setCode("");
       setStep("code");
-      if (res.devCode) {
-        Alert.alert("Modo desarrollo", `Código OTP: ${res.devCode}`);
-      }
+      setDevCode(res.devCode ?? null);
     } catch (err) {
-      Alert.alert("Error", apiErrorMessage(err));
+      showAlert("Error", apiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -65,7 +66,7 @@ export default function Login() {
 
   const confirmOtp = async (withRegistration = false) => {
     if (code.length !== 6) {
-      Alert.alert("Código inválido", "El código tiene 6 dígitos");
+      showAlert("Código inválido", "El código tiene 6 dígitos");
       return;
     }
     setLoading(true);
@@ -83,7 +84,7 @@ export default function Login() {
       if (msg === "USUARIO_NUEVO") {
         setStep("register");
       } else {
-        Alert.alert("Error", msg);
+        showAlert("Error", msg);
       }
     } finally {
       setLoading(false);
@@ -198,6 +199,25 @@ export default function Login() {
                   color: t.textPrimary,
                 }}
               />
+              {devCode ? (
+                <Pressable
+                  onPress={() => setCode(devCode)}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing[2],
+                    padding: spacing[3],
+                    borderRadius: radius.md,
+                    backgroundColor: t.primaryLight,
+                  }}
+                >
+                  <Icon name="key-outline" size={18} color={t.primary} />
+                  <Text style={{ flex: 1, color: t.primary, fontSize: fontSize.sm }}>
+                    Modo demo: tu código es <Text style={{ fontWeight: "800" }}>{devCode}</Text>. Toca para
+                    completarlo.
+                  </Text>
+                </Pressable>
+              ) : null}
               <Button
                 title="Verificar"
                 onPress={() => confirmOtp(false)}
@@ -264,7 +284,11 @@ export default function Login() {
                         alignItems: "center",
                       }}
                     >
-                      <Text style={{ fontSize: 20 }}>{r === "BUYER" ? "🛍️" : "👨‍🌾"}</Text>
+                      <Icon
+                        name={r === "BUYER" ? "bag-handle-outline" : "preparing"}
+                        size={24}
+                        color={role === r ? t.primary : t.textSecondary}
+                      />
                       <Text
                         style={{
                           fontSize: fontSize.sm,

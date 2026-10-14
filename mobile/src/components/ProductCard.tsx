@@ -6,6 +6,7 @@ import { fontSize, radius, shadow, spacing, useTheme, formatCOP } from "../theme
 import { Product } from "../api/types";
 import { Pill } from "./Pill";
 import { Icon } from "./Icon";
+import { effectivePrice } from "../lib/pricing";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -28,10 +29,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
     transform: [{ scale: addScale.value }],
   }));
 
-  const finalPrice =
-    product.isSurplus && product.discountPct > 0
-      ? Math.round(product.price * (1 - product.discountPct / 100))
-      : product.price;
+  const finalPrice = effectivePrice(product);
 
   const handleCardPressIn = () => {
     cardScale.value = withSpring(0.97, { damping: 15, stiffness: 300 });
@@ -142,6 +140,11 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
             /{product.unit}
           </Text>
         </View>
+        {finalPrice < product.price ? (
+          <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, textDecorationLine: "line-through" }}>
+            {formatCOP(product.price)}
+          </Text>
+        ) : null}
       </View>
 
       {onAdd ? (

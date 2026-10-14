@@ -8,7 +8,8 @@ interface CartState {
   loading: boolean;
   error: string | null;
   fetch: () => Promise<void>;
-  add: (productId: string, quantity?: number) => Promise<void>;
+  /** Devuelve `true` si se agregó; si falla deja el mensaje en `error`. */
+  add: (productId: string, quantity?: number) => Promise<boolean>;
   updateQty: (itemId: string, quantity: number) => Promise<void>;
   clear: () => Promise<void>;
   count: () => number;
@@ -34,8 +35,10 @@ export const useCart = create<CartState>((set, get) => ({
     try {
       await api.addToCart(productId, quantity);
       await get().fetch();
+      return true;
     } catch (err) {
       set({ error: api.apiErrorMessage(err) });
+      return false;
     }
   },
 

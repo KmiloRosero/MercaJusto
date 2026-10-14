@@ -57,14 +57,20 @@ export default function MapPreview({ origin, destination }: MapPreviewProps) {
         }}
       >
         {origin ? (
-          <Marker coordinate={origin} title="Finca del productor" description="Aquí se recogió tu pedido">
-            <Text style={{ fontSize: 30 }}>🌾</Text>
-          </Marker>
+          <Marker
+            coordinate={origin}
+            title="Finca del productor"
+            description="Aquí se recoge el pedido"
+            pinColor={theme.success}
+          />
         ) : null}
         {destination ? (
-          <Marker coordinate={destination} title="Tu dirección" description="Punto de entrega">
-            <Text style={{ fontSize: 30 }}>🏠</Text>
-          </Marker>
+          <Marker
+            coordinate={destination}
+            title="Dirección de entrega"
+            description="Punto de entrega"
+            pinColor={theme.primary}
+          />
         ) : null}
         {origin && destination ? (
           <Polyline coordinates={[origin, destination]} strokeWidth={3} strokeColor="#008FFF" />

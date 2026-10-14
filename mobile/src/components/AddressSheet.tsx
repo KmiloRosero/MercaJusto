@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   Text,
   TextInput,
@@ -12,7 +11,10 @@ import { BottomSheet } from "./BottomSheet";
 import { Button } from "./Button";
 import { fontSize, radius, spacing, useTheme } from "../theme";
 import { Address } from "../api/types";
-import { createAddress, apiErrorMessage } from "../api/client";
+import { createAddress, deleteAddress, apiErrorMessage } from "../api/client";
+import { Icon } from "./Icon";
+import { confirmDialog, showAlert } from "../lib/dialog";
+import { DEFAULT_COORDS, municipioCoords } from "../lib/municipios";
 
 interface AddressSheetProps {
   visible: boolean;
@@ -21,6 +23,8 @@ interface AddressSheetProps {
   onSelect: (address: Address) => void;
   onClose: () => void;
   onCreated: (address: Address) => void;
+  /** Si se pasa, cada dirección muestra un botón para eliminarla. */
+  onDeleted?: (id: string) => void;
 }
 
 export function AddressSheet({
@@ -30,6 +34,7 @@ export function AddressSheet({
   onSelect,
   onClose,
   onCreated,
+  onDeleted,
 }: AddressSheetProps) {
   const t = useTheme();
   const [mode, setMode] = useState<"list" | "new">("list");
@@ -56,7 +61,10 @@ export function AddressSheet({
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permiso denegado", "Necesitamos acceso a tu ubicación para guardar la dirección.");
+        showAlert(
+          "Ubicación no disponible",
+          "Sin permiso de ubicación usaremos la ubicación aproximada del municipio que escribas."
+        );
         return;
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -73,8 +81,11 @@ export function AddressSheet({
       } catch {
         // reverse geocode puede fallar sin red, no es crítico
       }
-    } catch (err) {
-      Alert.alert("Error", apiErrorMessage(err));
+    } catch {
+      showAlert(
+        "No pudimos obtener tu ubicación",
+        "Usaremos la ubicación aproximada del municipio que escribas."
+      );
     } finally {
       setLocating(false);
     }
@@ -82,16 +93,11 @@ export function AddressSheet({
 
   const save = async () => {
     if (!municipio.trim() || !detail.trim()) {
-      Alert.alert("Faltan datos", "Municipio y dirección son obligatorios.");
+      showAlert("Faltan datos", "Municipio y dirección son obligatorios.");
       return;
     }
-    if (!coords) {
-      Alert.alert(
-        "Ubicación requerida",
-        "Usa el botón 'Usar mi ubicación' para guardar las coordenadas. Si no tienes señal, escribe una dirección y presiona el botón de todas formas."
-      );
-      return;
-    }
+    // Sin GPS: usamos la cabecera del municipio (o Pasto si no lo conocemos)
+    const point = coords ?? municipioCoords(municipio) ?? DEFAULT_COORDS;
     setSaving(true);
     try {
       const created = await createAddress({
@@ -99,15 +105,15 @@ export function AddressSheet({
         municipio: municipio.trim(),
         vereda: vereda.trim() || undefined,
         detail: detail.trim(),
-        latitude: coords.lat,
-        longitude: coords.lng,
+        latitude: point.lat,
+        longitude: point.lng,
         isDefault: addresses.length === 0,
       });
       onCreated(created);
       resetForm();
       setMode("list");
     } catch (err) {
-      Alert.alert("Error al guardar", apiErrorMessage(err));
+      showAlert("Error al guardar", apiErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -120,13 +126,13 @@ export function AddressSheet({
         setMode("list");
         onClose();
       }}
-      title={mode === "list" ? "📍 Entregar en" : "Nueva dirección"}
+      title={mode === "list" ? (onDeleted ? "Mis direcciones" : "Entregar en") : "Nueva dirección"}
     >
       {mode === "list" ? (
         <View style={{ gap: spacing[3] }}>
           {addresses.length === 0 ? (
             <View style={{ alignItems: "center", paddingVertical: spacing[6], gap: spacing[2] }}>
-              <Text style={{ fontSize: 48 }}>🏠</Text>
+              <Icon name="home-outline" size={44} color={t.textTertiary} />
               <Text style={{ color: t.textSecondary, textAlign: "center" }}>
                 Aún no tienes direcciones guardadas.
               </Text>
@@ -162,7 +168,11 @@ export function AddressSheet({
                       justifyContent: "center",
                     }}
                   >
-                    <Text style={{ fontSize: 20 }}>{addr.label === "Finca" ? "🌾" : "📍"}</Text>
+                    <Icon
+                      name={addr.label === "Finca" ? "leaf" : addr.label === "Trabajo" ? "briefcase" : "location"}
+                      size={20}
+                      color={selected ? "#FFFFFF" : t.primary}
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "600", color: t.textPrimary }}>
@@ -172,6 +182,27 @@ export function AddressSheet({
                       {[addr.vereda, addr.detail].filter(Boolean).join(" — ")}
                     </Text>
                   </View>
+                  {onDeleted ? (
+                    <Pressable
+                      hitSlop={8}
+                      onPress={async () => {
+                        const ok = await confirmDialog(
+                          "¿Eliminar dirección?",
+                          `${addr.label} · ${addr.municipio}`,
+                          { confirmText: "Eliminar", destructive: true }
+                        );
+                        if (!ok) return;
+                        try {
+                          await deleteAddress(addr.id);
+                          onDeleted(addr.id);
+                        } catch (err) {
+                          showAlert("No se pudo eliminar", apiErrorMessage(err));
+                        }
+                      }}
+                    >
+                      <Icon name="trash-outline" size={18} color={t.danger} />
+                    </Pressable>
+                  ) : null}
                   <View
                     style={{
                       width: 20,
@@ -279,7 +310,7 @@ export function AddressSheet({
             {locating ? (
               <ActivityIndicator size="small" color={t.primary} />
             ) : (
-              <Text style={{ fontSize: 20 }}>{coords ? "✅" : "📡"}</Text>
+              <Icon name={coords ? "checkmark-circle" : "navigate"} size={20} color={coords ? t.success : t.primary} />
             )}
             <Text
               style={{
@@ -293,7 +324,7 @@ export function AddressSheet({
                 ? "Obteniendo ubicación..."
                 : coords
                 ? `Ubicación guardada (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
-                : "Usar mi ubicación actual"}
+                : "Usar mi ubicación actual (opcional)"}
             </Text>
           </Pressable>
 

@@ -1,22 +1,30 @@
 import React, { useState } from "react";
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
-import { getProduct } from "../../src/api/client";
-import { useCart } from "../../src/store/cart";
+import { apiErrorMessage, deleteProduct, getProduct } from "../../src/api/client";
+import { useAuth } from "../../src/store/auth";
+import { useAddToCart } from "../../src/lib/useAddToCart";
+import { effectivePrice } from "../../src/lib/pricing";
+import { confirmDialog, showAlert } from "../../src/lib/dialog";
+import { toast } from "../../src/store/toast";
 
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const t = useTheme();
-  const addToCart = useCart((s) => s.add);
+  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const me = useAuth((s) => s.user);
+  const addToCart = useAddToCart();
   const [qty, setQty] = useState(1);
+  const [busy, setBusy] = useState(false);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -35,16 +43,43 @@ export default function ProductDetail() {
     );
   }
 
-  const finalPrice =
-    product.isSurplus && product.discountPct > 0
-      ? Math.round(product.price * (1 - product.discountPct / 100))
-      : product.price;
+  const finalPrice = effectivePrice(product);
+  const isOwner = me?.id === product.producerId;
+  const isBuyer = me?.role === "BUYER";
+  const outOfStock = product.stock <= 0 || !product.isActive;
+
+  const onAdd = async () => {
+    setBusy(true);
+    const ok = await addToCart(product.id, qty, product.name);
+    setBusy(false);
+    if (ok) router.push("/(tabs)/cart");
+  };
+
+  const onWithdraw = async () => {
+    const ok = await confirmDialog(
+      "¿Retirar publicación?",
+      "El producto dejará de mostrarse en el catálogo. Los pedidos existentes no se afectan.",
+      { confirmText: "Retirar", destructive: true }
+    );
+    if (!ok) return;
+    setBusy(true);
+    try {
+      await deleteProduct(product.id);
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("Publicación retirada");
+      router.back();
+    } catch (err) {
+      showAlert("No se pudo retirar", apiErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
       <TopBar showBack onBack={() => router.back()} title="Detalle del producto" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}>
         {/* Hero Image / Placeholder */}
         <View
           style={{
@@ -113,9 +148,15 @@ export default function ProductDetail() {
           </View>
 
           <View style={{ flexDirection: "row", gap: spacing[2], flexWrap: "wrap" }}>
-            <Pill variant="success" icon="checkmark-circle">
-              Disponible: {product.stock} {product.unit}
-            </Pill>
+            {outOfStock ? (
+              <Pill variant="danger" icon="close-circle">
+                Agotado
+              </Pill>
+            ) : (
+              <Pill variant="success" icon="checkmark-circle">
+                Disponible: {product.stock} {product.unit}
+              </Pill>
+            )}
             {product.harvestDate ? (
               <Pill variant="primary" icon="time-outline">
                 Cosechado {new Date(product.harvestDate).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
@@ -141,7 +182,9 @@ export default function ProductDetail() {
 
           {/* Productor */}
           <Pressable
-            onPress={() => product.producer && router.push(`/(tabs)/profile`)}
+            onPress={() =>
+              isOwner ? router.push("/(tabs)/profile") : router.push(`/productor/${product.producerId}`)
+            }
             style={({ pressed }) => ({
               flexDirection: "row",
               alignItems: "center",
@@ -173,7 +216,9 @@ export default function ProductDetail() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
                 <Icon name="star" size={13} color="#FFB800" />
                 <Text style={{ fontSize: fontSize.xs, color: t.textSecondary, fontWeight: "600" }}>
-                  {product.producer?.rating.toFixed(1) || "5.0"} · {product.producer?.ratingCount || 0} calificaciones
+                  {product.producer?.ratingCount
+                    ? `${product.producer.rating.toFixed(1)} · ${product.producer.ratingCount} calificaciones`
+                    : "Productor nuevo"}
                 </Text>
               </View>
             </View>
@@ -190,6 +235,7 @@ export default function ProductDetail() {
           left: 0,
           right: 0,
           padding: spacing[4],
+          paddingBottom: spacing[4] + insets.bottom,
           backgroundColor: t.bgCard,
           borderTopWidth: 1,
           borderTopColor: t.border,
@@ -198,6 +244,33 @@ export default function ProductDetail() {
           gap: spacing[3],
         }}
       >
+        {isOwner ? (
+          <>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.textPrimary }}>
+                Esta es tu publicación
+              </Text>
+              <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+                Stock: {product.stock} {product.unit}
+              </Text>
+            </View>
+            <Button
+              title="Retirar"
+              variant="outline"
+              icon={<Icon name="trash-outline" size={18} color={t.primary} />}
+              onPress={onWithdraw}
+              loading={busy}
+            />
+          </>
+        ) : !isBuyer ? (
+          <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+            <Icon name="information-circle-outline" size={18} color={t.textSecondary} />
+            <Text style={{ flex: 1, fontSize: fontSize.sm, color: t.textSecondary }}>
+              Las compras se hacen desde una cuenta de comprador.
+            </Text>
+          </View>
+        ) : (
+        <>
         <View
           style={{
             flexDirection: "row",
@@ -217,21 +290,22 @@ export default function ProductDetail() {
           <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary, minWidth: 20, textAlign: "center" }}>
             {qty}
           </Text>
-          <Pressable onPress={() => setQty((q) => Math.min(product.stock, q + 1))} hitSlop={6}>
+          <Pressable onPress={() => setQty((q) => Math.min(Math.max(1, product.stock), q + 1))} hitSlop={6}>
             <Icon name="add" size={16} color={t.textPrimary} />
           </Pressable>
         </View>
 
         <Button
-          title={`Agregar · ${formatCOP(finalPrice * qty)}`}
           icon={<Icon name="cart" size={18} color="#FFFFFF" />}
-          onPress={async () => {
-            await addToCart(product.id, qty);
-            router.push("/(tabs)/cart");
-          }}
+          title={outOfStock ? "Agotado" : `Agregar · ${formatCOP(finalPrice * qty)}`}
+          onPress={onAdd}
+          loading={busy}
+          disabled={outOfStock}
           style={{ flex: 1 }}
           size="lg"
         />
+        </>
+        )}
       </View>
     </SafeAreaView>
   );

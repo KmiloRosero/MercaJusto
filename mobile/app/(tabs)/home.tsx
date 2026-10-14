@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -19,13 +19,17 @@ import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
-import { useCart } from "../../src/store/cart";
+import { useAddToCart } from "../../src/lib/useAddToCart";
+import { Button } from "../../src/components/Button";
 
 export default function Home() {
   const router = useRouter();
   const t = useTheme();
   const user = useAuth((s) => s.user);
-  const addToCart = useCart((s) => s.add);
+  const addToCart = useAddToCart();
+  const isBuyer = user?.role === "BUYER";
+  const isProducer = user?.role === "PRODUCER";
+  const defaultAddress = user?.addresses?.find((a) => a.isDefault) ?? user?.addresses?.[0];
 
   const [category, setCategory] = useState<string | null>(null);
 
@@ -49,12 +53,9 @@ export default function Home() {
     queryFn: () => getProducts({ surplus: true, limit: 6 }),
   });
 
-  useEffect(() => {
-    useCart.getState().fetch();
-  }, []);
-
   const products = productsData?.products || [];
   const surplus = surplusData?.products || [];
+  const categoryName = categories.find((c) => c.slug === category)?.name;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
@@ -82,8 +83,9 @@ export default function Home() {
         }
       />
 
-      {/* Selector de Ubicación */}
-      <View
+      {/* Ubicación de entrega */}
+      <Pressable
+        onPress={() => router.push("/(tabs)/profile")}
         style={{
           paddingHorizontal: spacing[4],
           paddingVertical: spacing[3],
@@ -96,11 +98,16 @@ export default function Home() {
         }}
       >
         <Icon name="location" size={16} color={t.primary} />
-        <Text style={{ flex: 1, fontSize: fontSize.sm, color: t.textSecondary }}>
-          Entregar en <Text style={{ color: t.textPrimary, fontWeight: "700" }}>Pasto, Nariño</Text>
+        <Text style={{ flex: 1, fontSize: fontSize.sm, color: t.textSecondary }} numberOfLines={1}>
+          {isProducer ? "Vendiendo desde " : "Entregar en "}
+          <Text style={{ color: t.textPrimary, fontWeight: "700" }}>
+            {defaultAddress
+              ? `${defaultAddress.vereda ? `${defaultAddress.vereda}, ` : ""}${defaultAddress.municipio}`
+              : "Nariño"}
+          </Text>
         </Text>
-        <Icon name="chevron-down" size={16} color={t.textTertiary} />
-      </View>
+        <Icon name="chevron-forward" size={16} color={t.textTertiary} />
+      </Pressable>
 
       <FlatList
         data={products}
@@ -113,6 +120,37 @@ export default function Home() {
         }
         ListHeaderComponent={
           <View style={{ paddingTop: spacing[4] }}>
+            {isProducer ? (
+              <View
+                style={{
+                  marginHorizontal: spacing[4],
+                  marginBottom: spacing[4],
+                  padding: spacing[4],
+                  borderRadius: radius.lg,
+                  backgroundColor: t.primaryLight,
+                  gap: spacing[3],
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+                  <Icon name="mci:sprout" size={22} color={t.primary} />
+                  <Text style={{ flex: 1, fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>
+                    ¿Tienes cosecha lista?
+                  </Text>
+                </View>
+                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>
+                  Publícala en minutos y véndela directo, sin intermediarios.
+                </Text>
+                <View style={{ flexDirection: "row", gap: spacing[2] }}>
+                  <Button
+                    title="Publicar cosecha"
+                    size="sm"
+                    icon={<Icon name="add-circle" size={16} color="#FFFFFF" />}
+                    onPress={() => router.push("/publicar-cosecha")}
+                  />
+                  <Button title="Ver mis ventas" size="sm" variant="outline" onPress={() => router.push("/(tabs)/orders")} />
+                </View>
+              </View>
+            ) : null}
             <Banner
               tag="Modo Excedente"
               title="Cosecha que no se pierde"
@@ -124,7 +162,11 @@ export default function Home() {
 
             {surplus.length > 0 ? (
               <View style={{ marginBottom: spacing[5] }}>
-                <SectionHeader title="Excedentes de hoy" action="Ver todo" />
+                <SectionHeader
+                  title="Excedentes de hoy"
+                  action="Ver todo"
+                  onAction={() => router.push("/(tabs)/search?surplus=true")}
+                />
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -135,7 +177,7 @@ export default function Home() {
                       <ProductCard
                         product={p}
                         onPress={() => router.push(`/producto/${p.id}`)}
-                        onAdd={() => addToCart(p.id, 1)}
+                        onAdd={isBuyer ? () => addToCart(p.id, 1, p.name) : undefined}
                       />
                     </View>
                   ))}
@@ -169,7 +211,7 @@ export default function Home() {
             </View>
 
             <SectionHeader
-              title={category ? `Categoría: ${category}` : "Cosechas frescas"}
+              title={categoryName ?? "Cosechas frescas"}
               action="Ver todo"
               onAction={() => router.push("/(tabs)/search")}
             />
@@ -208,7 +250,7 @@ export default function Home() {
             <ProductCard
               product={item}
               onPress={() => router.push(`/producto/${item.id}`)}
-              onAdd={() => addToCart(item.id, 1)}
+              onAdd={isBuyer ? () => addToCart(item.id, 1, item.name) : undefined}
             />
           </View>
         )}

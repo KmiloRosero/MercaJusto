@@ -9,11 +9,12 @@ import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
+import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
-  const { items, subtotal, fetch, updateQty } = useCart();
+  const { items, subtotal, fetch, updateQty, error } = useCart();
 
   useEffect(() => {
     fetch();
@@ -26,14 +27,31 @@ export default function Cart() {
     return acc;
   }, {});
 
-  const deliveryFee = items.length > 0 ? 3500 : 0;
-  const platformFee = Math.round(subtotal * 0.05);
-  const total = subtotal + deliveryFee + platformFee;
+  const { deliveryFee, platformFee, total } = orderTotals(subtotal);
   const savings = cartSavings(items);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
-      <TopBar showBack onBack={() => router.back()} title="Mi canasta" />
+      <TopBar title="Mi canasta" />
+      {error ? (
+        <Pressable
+          onPress={() => useCart.setState({ error: null })}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: spacing[2],
+            backgroundColor: `${t.danger}1A`,
+            marginHorizontal: spacing[4],
+            marginTop: spacing[2],
+            padding: spacing[3],
+            borderRadius: radius.md,
+          }}
+        >
+          <Icon name="alert-circle-outline" size={18} color={t.danger} />
+          <Text style={{ flex: 1, color: t.danger, fontSize: fontSize.sm }}>{error}</Text>
+          <Icon name="close" size={16} color={t.danger} />
+        </Pressable>
+      ) : null}
 
       {items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
@@ -113,7 +131,12 @@ export default function Cart() {
                         {it.product.name}
                       </Text>
                       <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, marginTop: 2 }}>
-                        {formatCOP(it.product.price)} / {it.product.unit}
+                        {formatCOP(effectivePrice(it.product))} / {it.product.unit}
+                        {effectivePrice(it.product) < it.product.price ? (
+                          <Text style={{ textDecorationLine: "line-through" }}>
+                            {"  "}{formatCOP(it.product.price)}
+                          </Text>
+                        ) : null}
                       </Text>
                     </View>
                     <View
@@ -149,6 +172,7 @@ export default function Cart() {
 
                       <Pressable
                         onPress={() => updateQty(it.id, it.quantity + 1)}
+                        disabled={it.quantity >= it.product.stock}
                         style={({ pressed }) => ({
                           width: 26,
                           height: 26,
@@ -170,7 +194,7 @@ export default function Cart() {
           <View
             style={{
               position: "absolute",
-              bottom: 64,
+              bottom: 0,
               left: 0,
               right: 0,
               backgroundColor: t.bgCard,
