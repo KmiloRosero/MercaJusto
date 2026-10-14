@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import { toast } from "../../src/store/toast";
 
 import { FieldTile } from "../../src/components/FieldTile";
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -28,18 +29,21 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["product", id],
     queryFn: () => getProduct(id!),
-    enabled: !!id,
-  });
+    enabled: !!id });
 
   if (isLoading || !product) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
-        <TopBar showBack onBack={() => router.back()} title="Cargando..." />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={t.primary} size="large" />
+        <TopBar showBack onBack={() => router.back()} title="Detalle del producto" />
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          {error ? (
+            <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
+          ) : (
+            <LoadingState label="Cargando la cosecha…" />
+          )}
         </View>
       </SafeAreaView>
     );
@@ -90,8 +94,7 @@ export default function ProductDetail() {
             backgroundColor: t.gray100,
             alignItems: "center",
             justifyContent: "center",
-            position: "relative",
-          }}
+            position: "relative" }}
         >
           {product.photoUrl ? (
             <Image
@@ -149,8 +152,7 @@ export default function ProductDetail() {
                 gap: spacing[3],
                 padding: spacing[4],
                 borderRadius: radius.lg,
-                backgroundColor: t.successLight,
-              }}
+                backgroundColor: t.successLight }}
             >
               <Icon name="leaf" size={22} color={t.success} />
               <View style={{ flex: 1, gap: 2 }}>
@@ -188,8 +190,7 @@ export default function ProductDetail() {
                 padding: spacing[3],
                 borderRadius: radius.md,
                 borderWidth: 1,
-                borderColor: t.border,
-              }}
+                borderColor: t.border }}
             >
               <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, lineHeight: 22 }}>
                 {product.description}
@@ -211,8 +212,7 @@ export default function ProductDetail() {
               backgroundColor: t.bgCard,
               borderWidth: 1,
               borderColor: t.border,
-              opacity: pressed ? 0.9 : 1,
-            })}
+              opacity: pressed ? 0.9 : 1 })}
           >
             <View
               style={{
@@ -221,8 +221,7 @@ export default function ProductDetail() {
                 borderRadius: radius.full,
                 backgroundColor: t.primaryLight,
                 alignItems: "center",
-                justifyContent: "center",
-              }}
+                justifyContent: "center" }}
             >
               <Icon name="storefront" size={24} color={t.primary} />
             </View>
@@ -258,8 +257,7 @@ export default function ProductDetail() {
           borderTopColor: t.border,
           flexDirection: "row",
           alignItems: "center",
-          gap: spacing[3],
-        }}
+          gap: spacing[3] }}
       >
         {isOwner ? (
           <>
@@ -298,8 +296,7 @@ export default function ProductDetail() {
             paddingVertical: 6,
             gap: spacing[3],
             borderWidth: 1,
-            borderColor: t.border,
-          }}
+            borderColor: t.border }}
         >
           <Pressable onPress={() => setQty((q) => Math.max(1, q - 1))} hitSlop={6}>
             <Icon name="remove" size={16} color={t.textPrimary} />

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -22,6 +21,7 @@ import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
 
+import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
 const GUTTER = spacing[5];
 
 function greeting(date = new Date()) {
@@ -51,6 +51,8 @@ export default function Home() {
   const {
     data: productsData,
     isLoading: loadingProds,
+    isError: productsFailed,
+    error: productsError,
     refetch,
     isRefetching,
   } = useQuery({
@@ -239,10 +241,9 @@ export default function Home() {
         ListHeaderComponent={header}
         ListEmptyComponent={
           loadingProds ? (
-            <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
-              <ActivityIndicator color={t.primary} />
-              <Text style={[type.footnote, { color: t.textSecondary }]}>Cargando cosechas…</Text>
-            </View>
+            <ProductGridSkeleton gutter={GUTTER} />
+          ) : productsFailed ? (
+            <ErrorState error={productsError} onRetry={() => refetch()} retrying={isRefetching} />
           ) : (
             <View style={{ paddingHorizontal: GUTTER * 2, paddingVertical: spacing[8], alignItems: "center", gap: spacing[2] }}>
               <Icon name="leaf-outline" size={28} color={t.textTertiary} />

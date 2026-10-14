@@ -1,5 +1,5 @@
 import React from "react";
-import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -7,12 +7,12 @@ import { TopBar } from "../../src/components/TopBar";
 import { ProductCard } from "../../src/components/ProductCard";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
-import { Button } from "../../src/components/Button";
 import { fontSize, radius, shadow, spacing, useTheme } from "../../src/theme";
-import { apiErrorMessage, getUser } from "../../src/api/client";
+import { getUser } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
 
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
 export default function ProducerProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -20,25 +20,20 @@ export default function ProducerProfile() {
   const isBuyer = useAuth((s) => s.user?.role === "BUYER");
   const addToCart = useAddToCart();
 
-  const { data: producer, isLoading, error } = useQuery({
+  const { data: producer, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["producer", id],
     queryFn: () => getUser(id!),
-    enabled: !!id,
-  });
+    enabled: !!id });
 
   if (isLoading || !producer) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
         <TopBar showBack onBack={() => router.back()} title="Productor" />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
+        <View style={{ flex: 1, justifyContent: "center" }}>
           {error ? (
-            <>
-              <Icon name="alert-circle-outline" size={40} color={t.danger} />
-              <Text style={{ color: t.textSecondary, textAlign: "center" }}>{apiErrorMessage(error)}</Text>
-              <Button title="Volver" variant="outline" onPress={() => router.back()} />
-            </>
+            <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
           ) : (
-            <ActivityIndicator color={t.primary} size="large" />
+            <LoadingState label="Cargando al productor…" />
           )}
         </View>
       </SafeAreaView>
@@ -76,8 +71,7 @@ export default function ProducerProfile() {
                 gap: spacing[2],
                 borderWidth: 1,
                 borderColor: t.border,
-                ...shadow.sm,
-              }}
+                ...shadow.sm }}
             >
               <View
                 style={{
@@ -86,8 +80,7 @@ export default function ProducerProfile() {
                   borderRadius: radius.full,
                   backgroundColor: t.primary,
                   alignItems: "center",
-                  justifyContent: "center",
-                }}
+                  justifyContent: "center" }}
               >
                 <Text style={{ color: t.onPrimary, fontSize: 28, fontWeight: "800" }}>{initials}</Text>
               </View>
@@ -124,8 +117,7 @@ export default function ProducerProfile() {
                   padding: spacing[4],
                   gap: spacing[3],
                   borderWidth: 1,
-                  borderColor: t.border,
-                }}
+                  borderColor: t.border }}
               >
                 <Text style={{ fontSize: 14, fontWeight: "800", color: t.textPrimary }}>Lo que dicen sus clientes</Text>
                 {reviews.map((r) => (

@@ -14,6 +14,7 @@ import { useAuth } from "../../src/store/auth";
 import { NEXT_ACTION, ORDER_STATUS } from "../../src/lib/orderStatus";
 import { showAlert } from "../../src/lib/dialog";
 
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
 export default function Orders() {
   const router = useRouter();
   const t = useTheme();
@@ -22,7 +23,7 @@ export default function Orders() {
   const isBuyer = user?.role === "BUYER";
   const [advancingId, setAdvancingId] = useState<string | null>(null);
 
-  const { data = [], isLoading, isRefetching, refetch } = useQuery({
+  const { data = [], isLoading, isError, error, isRefetching, refetch } = useQuery({
     queryKey: ["orders"],
     queryFn: getMyOrders,
     // Los estados cambian desde el otro lado (productor ↔ comprador)
@@ -77,7 +78,11 @@ export default function Orders() {
           ) : null
         }
         ListEmptyComponent={
-          isLoading ? null : (
+          isLoading ? (
+            <LoadingState label={isBuyer ? "Cargando tus pedidos…" : "Cargando tus ventas…"} />
+          ) : isError ? (
+            <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
+          ) : (
             <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
               <View
                 style={{

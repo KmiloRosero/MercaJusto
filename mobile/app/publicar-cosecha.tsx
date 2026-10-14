@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -20,11 +20,12 @@ import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { Icon, IconName } from "../src/components/Icon";
 import { fontSize, formatCOP, radius, spacing, useTheme } from "../src/theme";
-import { apiErrorMessage, createProduct, getCategories, uploadImage } from "../src/api/client";
-import { chooseOption, showAlert } from "../src/lib/dialog";
+import { apiErrorMessage, createProduct, getCategories, isRetryableError, uploadImage } from "../src/api/client";
+import { chooseOption, confirmDialog, showAlert } from "../src/lib/dialog";
 import { DEFAULT_COORDS, municipioCoords } from "../src/lib/municipios";
 import { toast } from "../src/store/toast";
 
+import { clearPublishDraft, draftHasContent, loadPublishDraft, PublishDraft, savePublishDraft } from "../src/lib/publishDraft";
 const UNITS = ["Kilo", "Libra", "Atado", "Docena", "Unidad", "Litro"];
 const DISCOUNTS = [10, 20, 30];
 
@@ -54,6 +55,64 @@ export default function PublicarCosecha() {
   const [saving, setSaving] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [photoMime, setPhotoMime] = useState<string | null>(null);
+
+  // Borrador: se restaura al entrar y se guarda mientras se escribe.
+  const [draftLoaded, setDraftLoaded] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const currentDraft: PublishDraft = {
+    name, categoryId, price, traditionalPrice, unit, stock, description,
+    isSurplus, discountPct, municipio, vereda, coords, photoUri, photoMime,
+  };
+
+  const applyDraft = (d: PublishDraft) => {
+    setName(d.name);
+    setCategoryId(d.categoryId);
+    setPrice(d.price);
+    setTraditionalPrice(d.traditionalPrice);
+    setUnit(d.unit);
+    setStock(d.stock);
+    setDescription(d.description);
+    setIsSurplus(d.isSurplus);
+    setDiscountPct(d.discountPct);
+    setMunicipio(d.municipio);
+    setVereda(d.vereda);
+    setCoords(d.coords);
+    setPhotoUri(d.photoUri);
+    setPhotoMime(d.photoMime);
+  };
+
+  useEffect(() => {
+    loadPublishDraft().then((d) => {
+      if (d && draftHasContent(d)) {
+        applyDraft(d);
+        setDraftRestored(true);
+      }
+      setDraftLoaded(true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const draftJson = JSON.stringify(currentDraft);
+  useEffect(() => {
+    if (!draftLoaded) return;
+    const id = setTimeout(() => savePublishDraft(JSON.parse(draftJson)), 400);
+    return () => clearTimeout(id);
+  }, [draftJson, draftLoaded]);
+
+  const discardDraft = async () => {
+    const ok = await confirmDialog("¿Empezar de nuevo?", "Se borrará lo que habías escrito.", {
+      confirmText: "Borrar borrador",
+      destructive: true,
+    });
+    if (!ok) return;
+    await clearPublishDraft();
+    applyDraft({
+      name: "", categoryId: null, price: "", traditionalPrice: "", unit: "Kilo", stock: "",
+      description: "", isSurplus: false, discountPct: 20, municipio: "Pasto", vereda: "",
+      coords: null, photoUri: null, photoMime: null,
+    });
+    setDraftRestored(false);
+  };
 
   const pickPhoto = async (useCamera: boolean) => {
     try {
@@ -172,11 +231,19 @@ export default function PublicarCosecha() {
         longitude: defaultCoords.lng,
       });
 
+      await clearPublishDraft();
       await queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success("¡Publicación exitosa! Tu cosecha ya está en el catálogo");
       router.replace("/(tabs)/home");
     } catch (err) {
-      showAlert("Error al publicar", apiErrorMessage(err));
+      if (isRetryableError(err)) {
+        showAlert(
+          "No se pudo publicar",
+          "Parece que no hay señal. Tu cosecha quedó guardada en este celular: vuelve a tocar \"Publicar cosecha\" cuando tengas conexión."
+        );
+      } else {
+        showAlert("No se pudo publicar", apiErrorMessage(err));
+      }
     } finally {
       setSaving(false);
     }
@@ -194,6 +261,26 @@ export default function PublicarCosecha() {
           contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: spacing[10] }}
           keyboardShouldPersistTaps="handled"
         >
+          {draftRestored ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing[3],
+                padding: spacing[3],
+                borderRadius: radius.md,
+                backgroundColor: t.primaryLight,
+              }}
+            >
+              <Icon name="document-text-outline" size={20} color={t.onPrimaryLight} />
+              <Text style={{ flex: 1, fontSize: fontSize.sm, color: t.onPrimaryLight, lineHeight: 18 }}>
+                Recuperamos lo que habías escrito.
+              </Text>
+              <Pressable onPress={discardDraft} hitSlop={12} accessibilityRole="button">
+                <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.onPrimaryLight }}>Empezar de nuevo</Text>
+              </Pressable>
+            </View>
+          ) : null}
           {/* Foto del producto */}
           <Card>
             <Title icon="camera">Foto de la cosecha</Title>

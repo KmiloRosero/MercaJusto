@@ -65,7 +65,9 @@ export default function Checkout() {
   useEffect(() => {
     if (items.length === 0 && !submitting) {
       const id = setTimeout(() => {
-        if (useCart.getState().items.length === 0) {
+        // Solo si la canasta cargó de verdad: un fallo de red no es "canasta vacía".
+        const cart = useCart.getState();
+        if (cart.loaded && cart.items.length === 0) {
           showAlert("Canasta vacía", "Agrega productos antes de finalizar la compra.").then(() =>
             router.replace("/(tabs)/home")
           );

@@ -6,7 +6,11 @@ interface CartState {
   items: CartItem[];
   subtotal: number;
   loading: boolean;
+  /** La canasta se cargó al menos una vez: distingue "vacía" de "no cargó". */
+  loaded: boolean;
   error: string | null;
+  /** Error crudo de la última carga, para explicar la causa y reintentar. */
+  loadError: unknown;
   fetch: () => Promise<void>;
   /** Devuelve `true` si se agregó; si falla deja el mensaje en `error`. */
   add: (productId: string, quantity?: number) => Promise<boolean>;
@@ -19,15 +23,17 @@ export const useCart = create<CartState>((set, get) => ({
   items: [],
   subtotal: 0,
   loading: false,
+  loaded: false,
   error: null,
+  loadError: null,
 
   fetch: async () => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, loadError: null });
     try {
       const data = await api.getCart();
-      set({ items: data.items, subtotal: data.subtotal, loading: false });
+      set({ items: data.items, subtotal: data.subtotal, loading: false, loaded: true });
     } catch (err) {
-      set({ error: api.apiErrorMessage(err), loading: false });
+      set({ error: api.apiErrorMessage(err), loadError: err, loading: false });
     }
   },
 

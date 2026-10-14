@@ -65,9 +65,10 @@ export const tokenStorage = {
   },
 };
 
+// 60 s: el backend gratuito tarda hasta ~50 s en despertar tras estar inactivo.
 export const api = axios.create({
   baseURL: `${API_URL}/api`,
-  timeout: 10000,
+  timeout: 60000,
 });
 
 api.interceptors.request.use(async (config) => {
@@ -367,15 +368,52 @@ export async function getFairPriceMetrics(): Promise<FairPriceMetrics> {
 // ERRORS
 // ═══════════════════════════════════════════
 
-export function apiErrorMessage(err: unknown): string {
+export type ErrorKind = "offline" | "timeout" | "server" | "notfound" | "rejected" | "other";
+
+/** Clasifica un error y lo explica en lenguaje llano: qué pasó y qué hacer. */
+export function describeError(err: unknown): { kind: ErrorKind; title: string; message: string } {
   if (err instanceof AxiosError) {
+    const status = err.response?.status;
     const data = err.response?.data as { error?: string } | undefined;
-    if (data?.error) return data.error;
-    if (!err.response) {
-      return `No se pudo conectar con el servidor (${API_URL}). Verifica que el backend esté encendido y en la misma red.`;
+    if (err.code === "ECONNABORTED" || err.code === "ETIMEDOUT") {
+      return {
+        kind: "timeout",
+        title: "El servidor no respondió a tiempo",
+        message: "Puede estar despertando o tu señal está débil. Inténtalo de nuevo en un momento.",
+      };
     }
-    return err.message || "Error de conexión";
+    if (!err.response) {
+      return {
+        kind: "offline",
+        title: "Sin conexión",
+        message: __DEV__
+          ? `No se pudo conectar con ${API_URL}. Revisa tu internet o que el backend esté encendido.`
+          : "No pudimos conectar con MercaJusto. Revisa tu señal o tus datos e inténtalo de nuevo.",
+      };
+    }
+    if (status === 404) {
+      return { kind: "notfound", title: "No lo encontramos", message: data?.error ?? "Puede que ya no esté disponible." };
+    }
+    if (status && status >= 500) {
+      return {
+        kind: "server",
+        title: "MercaJusto tuvo un problema",
+        message: "No es tu culpa. Inténtalo de nuevo en un momento.",
+      };
+    }
+    return { kind: "rejected", title: "No se pudo completar", message: data?.error ?? "Revisa los datos e inténtalo de nuevo." };
   }
-  if (err instanceof Error) return err.message;
-  return "Error inesperado";
+  return { kind: "other", title: "Algo salió mal", message: err instanceof Error ? err.message : "Inténtalo de nuevo." };
+}
+
+/** Reintentar solo lo que puede arreglarse solo: red, tiempo de espera y fallas del servidor. */
+export function isRetryableError(err: unknown): boolean {
+  const kind = describeError(err).kind;
+  return kind === "offline" || kind === "timeout" || kind === "server";
+}
+
+export function apiErrorMessage(err: unknown): string {
+  const info = describeError(err);
+  // Los rechazos del backend (validación, permisos) ya traen su propio mensaje.
+  return info.kind === "rejected" || info.kind === "notfound" ? info.message : `${info.title}. ${info.message}`;
 }

@@ -12,6 +12,7 @@ import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
 
+import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
 export default function Search() {
   const router = useRouter();
   const t = useTheme();
@@ -41,7 +42,7 @@ export default function Search() {
     queryFn: getCategories,
   });
 
-  const { data, isRefetching, refetch } = useQuery({
+  const { data, isLoading, isError, error, isRefetching, refetch } = useQuery({
     queryKey: ["products", "search", debounced, category, surplusOnly, sort],
     queryFn: () =>
       getProducts({
@@ -145,6 +146,11 @@ export default function Search() {
         refreshing={isRefetching}
         onRefresh={refetch}
         ListEmptyComponent={
+          isLoading ? (
+            <ProductGridSkeleton gutter={spacing[4]} />
+          ) : isError ? (
+            <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
+          ) : (
           <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
             <View
               style={{
@@ -159,9 +165,10 @@ export default function Search() {
               <Icon name="search-outline" size={32} color={t.textTertiary} />
             </View>
             <Text style={{ color: t.textSecondary, textAlign: "center", fontSize: fontSize.sm }}>
-              No se encontraron productos con estos criterios.
+              No encontramos cosechas con estos filtros. Prueba quitando alguno.
             </Text>
           </View>
+          )
         }
         renderItem={({ item }) => (
           <View style={{ flex: 1, maxWidth: "48%" }}>

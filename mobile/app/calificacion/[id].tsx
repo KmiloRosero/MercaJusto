@@ -1,12 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Pressable,
   ScrollView,
   Text,
   TextInput,
-  View,
-} from "react-native";
+  View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -23,6 +21,7 @@ import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../../sr
 import { getOrder, createReview, apiErrorMessage } from "../../src/api/client";
 import { ProducerSummary } from "../../src/api/types";
 
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
 interface RatingEntry {
   toUserId: string;
   name: string;
@@ -42,11 +41,10 @@ export default function Calificacion() {
   const queryClient = useQueryClient();
   const meId = useAuth((s) => s.user?.id);
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["order", id],
     queryFn: () => getOrder(id!),
-    enabled: !!id,
-  });
+    enabled: !!id });
 
   const [entries, setEntries] = useState<RatingEntry[]>([]);
   const [initialized, setInitialized] = useState(false);
@@ -66,8 +64,7 @@ export default function Calificacion() {
       avatarIcon: "preparing",
       role: "productor",
       rating: 0,
-      comment: "",
-    }));
+      comment: "" }));
     if (order.courier) {
       list.push({
         toUserId: order.courier.id,
@@ -75,8 +72,7 @@ export default function Calificacion() {
         avatarIcon: "in_transit",
         role: "repartidor",
         rating: 0,
-        comment: "",
-      });
+        comment: "" });
     }
     // Quienes ya fueron calificados en este pedido no se vuelven a pedir
     const already = new Set(
@@ -97,8 +93,12 @@ export default function Calificacion() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
         <TopBar showBack onBack={() => router.back()} title="Calificar" />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={t.primary} />
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          {error ? (
+            <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
+          ) : (
+            <LoadingState label="Cargando tu pedido…" />
+          )}
         </View>
       </SafeAreaView>
     );
@@ -141,8 +141,7 @@ export default function Calificacion() {
         await createReview(order.id, {
           rating: e.rating,
           comment: e.comment.trim() || undefined,
-          toUserId: e.toUserId,
-        });
+          toUserId: e.toUserId });
         updateEntry(e.toUserId, { done: true });
       }
       queryClient.invalidateQueries({ queryKey: ["order", order.id] });
@@ -169,8 +168,7 @@ export default function Calificacion() {
             backgroundColor: t.bgPrimary,
             paddingVertical: spacing[10],
             paddingHorizontal: spacing[6],
-            alignItems: "center",
-          }}
+            alignItems: "center" }}
         >
           <View
             style={{
@@ -180,8 +178,7 @@ export default function Calificacion() {
               backgroundColor: t.successLight,
                             alignItems: "center",
               justifyContent: "center",
-              marginBottom: spacing[4],
-            }}
+              marginBottom: spacing[4] }}
           >
             <Icon name="checkmark-circle" size={48} color={t.success} />
           </View>
@@ -215,8 +212,7 @@ export default function Calificacion() {
               marginHorizontal: spacing[4],
               marginTop: spacing[4],
               padding: spacing[5],
-              ...shadow.md,
-            }}
+              ...shadow.md }}
           >
             {/* Seller summary */}
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3], marginBottom: spacing[4] }}>
@@ -227,8 +223,7 @@ export default function Calificacion() {
                   borderRadius: radius.full,
                   backgroundColor: t.primary10,
                   alignItems: "center",
-                  justifyContent: "center",
-                }}
+                  justifyContent: "center" }}
               >
                 <Icon name={entry.avatarIcon} size={26} color={t.primary} />
               </View>
@@ -267,8 +262,7 @@ export default function Calificacion() {
                 color: t.warning,
                 minHeight: 20,
                 marginTop: spacing[3],
-                marginBottom: spacing[4],
-              }}
+                marginBottom: spacing[4] }}
             >
               {entry.rating > 0 ? starFeedback(entry.rating) : "Toca las estrellas para calificar"}
             </Text>
@@ -291,8 +285,7 @@ export default function Calificacion() {
                 fontSize: 14,
                 color: t.textPrimary,
                 backgroundColor: t.bgInput,
-                textAlignVertical: "top",
-              }}
+                textAlignVertical: "top" }}
             />
             <Text style={{ fontSize: 11, color: t.textTertiary, textAlign: "right", marginTop: 4 }}>
               {entry.comment.length}/500
@@ -310,8 +303,7 @@ export default function Calificacion() {
             backgroundColor: t.primaryLight,
             flexDirection: "row",
             alignItems: "center",
-            gap: spacing[3],
-          }}
+            gap: spacing[3] }}
         >
           <Icon name="heart" size={28} color={t.primary} />
           <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
@@ -338,8 +330,7 @@ export default function Calificacion() {
           backgroundColor: t.bgPrimary,
           borderTopWidth: 1,
           borderTopColor: t.border,
-          ...shadow.lg,
-        }}
+          ...shadow.lg }}
       >
         <Button
           title={submitting ? "Enviando..." : "Enviar calificación"}

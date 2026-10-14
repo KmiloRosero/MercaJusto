@@ -13,10 +13,11 @@ import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
 import { SavingsNote } from "../../src/components/SavingsNote";
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
-  const { items, subtotal, fetch, updateQty, error } = useCart();
+  const { items, subtotal, fetch, updateQty, error, loaded, loading, loadError } = useCart();
 
   useEffect(() => {
     fetch();
@@ -35,14 +36,23 @@ export default function Cart() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
       <TopBar title="Mi canasta" />
-      {error ? (
+      {!loaded ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          {loadError ? (
+            <ErrorState error={loadError} onRetry={fetch} retrying={loading} />
+          ) : (
+            <LoadingState label="Cargando tu canasta…" />
+          )}
+        </View>
+      ) : null}
+      {loaded && error ? (
         <Pressable
           onPress={() => useCart.setState({ error: null })}
           style={{
             flexDirection: "row",
             alignItems: "center",
             gap: spacing[2],
-            backgroundColor: `${t.danger}1A`,
+            backgroundColor: t.dangerLight,
             marginHorizontal: spacing[4],
             marginTop: spacing[2],
             padding: spacing[3],
@@ -55,7 +65,7 @@ export default function Cart() {
         </Pressable>
       ) : null}
 
-      {items.length === 0 ? (
+      {!loaded ? null : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
           <View
             style={{

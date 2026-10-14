@@ -5,6 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { isRetryableError } from "../src/api/client";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuth } from "../src/store/auth";
@@ -19,7 +20,9 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { staleTime: 30_000, retry: 1 },
+    // Con señal débil un fallo aislado no debe vaciar la pantalla: se reintenta
+    // dos veces, pero nunca un 4xx (eso no se arregla reintentando).
+    queries: { staleTime: 30_000, retry: (count, err) => count < 2 && isRetryableError(err) },
   },
 });
 
