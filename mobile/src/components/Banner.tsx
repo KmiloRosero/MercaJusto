@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { radius, spacing } from "../theme";
+import { radius, spacing, type } from "../theme";
 import { Icon } from "./Icon";
 
 interface BannerProps {
@@ -13,115 +13,60 @@ interface BannerProps {
   iconName?: string;
 }
 
-export function Banner({
-  tag,
-  title,
-  subtitle,
-  cta,
-  onCta,
-  iconName = "sparkles",
-}: BannerProps) {
+// Verde campo: el único bloque saturado del Home, reservado para excedentes.
+const FIELD = ["#0F5132", "#1B7A47"] as const;
+const FIELD_INK = "#0F5132";
+
+export function Banner({ tag, title, subtitle, cta, onCta, iconName = "leaf" }: BannerProps) {
   return (
     <Pressable
       onPress={onCta}
+      accessibilityRole="button"
       style={({ pressed }) => ({
-        marginHorizontal: spacing[4],
-        marginBottom: spacing[5],
-        borderRadius: radius.xl,
-        padding: spacing[5],
+        marginHorizontal: spacing[5],
+        borderRadius: radius.xl + 4,
         overflow: "hidden",
-        position: "relative",
-        minHeight: 228,
-        opacity: pressed ? 0.92 : 1,
+        opacity: pressed ? 0.94 : 1,
       })}
     >
       <LinearGradient
-        colors={["#145C3B", "#21814D", "#50A94F"]}
+        colors={FIELD}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
-      />
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 4,
-          backgroundColor: "rgba(5,36,22,0.36)",
-          paddingHorizontal: 10,
-          paddingVertical: 4,
-          borderRadius: radius.full,
-          alignSelf: "flex-start",
-          marginBottom: spacing[2],
-        }}
+        style={{ padding: spacing[5], gap: spacing[2] }}
       >
-        <Icon name="sparkles" size={12} color="#FFFFFF" />
-        <Text
-          style={{
-            color: "#FFF",
-            fontSize: 10,
-            fontWeight: "800",
-            letterSpacing: 1,
-            textTransform: "uppercase",
-          }}
-        >
-          {tag}
-        </Text>
-      </View>
-
-      <Text
-        style={{
-          color: "#FFF",
-          fontSize: 26,
-          fontWeight: "800",
-          lineHeight: 31,
-          marginBottom: spacing[1],
-          maxWidth: "78%",
-        }}
-      >
-        {title}
-      </Text>
-
-      {subtitle ? (
-        <Text
-          style={{
-            color: "rgba(255,255,255,0.92)",
-            fontSize: 13,
-            marginBottom: spacing[4],
-            maxWidth: "78%",
-          }}
-        >
-          {subtitle}
-        </Text>
-      ) : null}
-
-      {cta ? (
-        <View
-          style={{
-            backgroundColor: "#FFFFFF",
-            paddingHorizontal: 16,
-            paddingVertical: 8,
-            borderRadius: radius.full,
-            alignSelf: "flex-start",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <Text style={{ color: "#17683F", fontSize: 13, fontWeight: "800" }}>{cta}</Text>
-          <Icon name="arrow-forward" size={14} color="#17683F" />
+        {/* Marca de agua: hoja grande recortada en la esquina */}
+        <View style={{ position: "absolute", right: -28, bottom: -32, opacity: 0.14 }}>
+          <Icon name={iconName} size={168} color="#FFFFFF" />
         </View>
-      ) : null}
 
-      <View
-        style={{
-          position: "absolute",
-          right: 12,
-          bottom: 12,
-          opacity: 0.22,
-        }}
-      >
-        <Icon name={iconName} size={124} color="#FFE7A3" />
-      </View>
+        <Text style={[type.overline, { color: "#B7F0C8", textTransform: "uppercase" }]}>{tag}</Text>
+        <Text style={[type.title, { color: "#FFFFFF", maxWidth: "82%" }]}>{title}</Text>
+        {subtitle ? (
+          <Text style={[type.footnote, { color: "rgba(255,255,255,0.86)", fontWeight: "400", maxWidth: "82%" }]}>
+            {subtitle}
+          </Text>
+        ) : null}
+
+        {cta ? (
+          <View
+            style={{
+              marginTop: spacing[2],
+              height: 36,
+              paddingHorizontal: spacing[4],
+              borderRadius: radius.full,
+              backgroundColor: "#FFFFFF",
+              alignSelf: "flex-start",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Text style={[type.footnote, { color: FIELD_INK, fontWeight: "700" }]}>{cta}</Text>
+            <Icon name="arrow-forward" size={14} color={FIELD_INK} />
+          </View>
+        ) : null}
+      </LinearGradient>
     </Pressable>
   );
 }

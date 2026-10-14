@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View, Pressable } from "react-native";
-import { fontSize, radius, spacing, useTheme } from "../theme";
+import { fontSize, radius, spacing, type, useTheme } from "../theme";
 import { Icon } from "./Icon";
 
 interface TopBarProps {
@@ -77,18 +77,24 @@ export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
     <View
       style={{
         flexDirection: "row",
-        alignItems: "center",
+        alignItems: "baseline",
         justifyContent: "space-between",
-        paddingHorizontal: spacing[4],
+        paddingHorizontal: spacing[5],
         marginBottom: spacing[3],
       }}
     >
-      <Text style={{ fontSize: 16, fontWeight: "700", color: t.textPrimary }}>{title}</Text>
+      <Text style={[type.headline, { color: t.textPrimary }]} accessibilityRole="header">
+        {title}
+      </Text>
       {action ? (
-        <Pressable onPress={onAction} style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}>
-          <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.primary }}>
-            {action}
-          </Text>
+        <Pressable
+          onPress={onAction}
+          hitSlop={10}
+          accessibilityRole="button"
+          style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 2, opacity: pressed ? 0.5 : 1 })}
+        >
+          <Text style={[type.footnote, { fontWeight: "600", color: t.primary }]}>{action}</Text>
+          <Icon name="chevron-forward" size={14} color={t.primary} />
         </Pressable>
       ) : null}
     </View>
