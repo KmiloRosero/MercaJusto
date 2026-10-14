@@ -21,7 +21,7 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <Pressable
-          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" }}
+          style={{ flex: 1, backgroundColor: t.scrim, justifyContent: "flex-end" }}
           onPress={onClose}
         />
         <View

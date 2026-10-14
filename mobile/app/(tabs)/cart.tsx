@@ -6,6 +6,7 @@ import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
+import { FieldTile } from "../../src/components/FieldTile";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
@@ -114,18 +115,7 @@ export default function Cart() {
                       borderTopColor: t.border,
                     }}
                   >
-                    <View
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: radius.md,
-                        backgroundColor: t.gray100,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon name={it.product.category?.name || "leaf"} size={26} color={t.primary} />
-                    </View>
+                    <FieldTile category={it.product.category} size={52} iconSize={26} radius={radius.md} />
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
                         {it.product.name}

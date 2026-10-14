@@ -10,6 +10,7 @@ import Animated, {
 import { formatCOP, motion, radius, spacing, type, useTheme } from "../theme";
 import { Product } from "../api/types";
 import { Icon } from "./Icon";
+import { FieldTile } from "./FieldTile";
 import { effectivePrice } from "../lib/pricing";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -60,18 +61,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
         {product.photoUrl ? (
           <Image source={{ uri: product.photoUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
         ) : (
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 32,
-              backgroundColor: t.bgCard,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Icon name={product.category?.name || "leaf"} size={32} color={t.primary} />
-          </View>
+          <FieldTile category={product.category} iconSize={44} radius={0} />
         )}
 
         {product.isSurplus && product.discountPct > 0 ? (
@@ -89,8 +79,8 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
               gap: 3,
             }}
           >
-            <Icon name="flash" size={11} color="#FFFFFF" />
-            <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "700" }}>-{product.discountPct}%</Text>
+            <Icon name="leaf" size={11} color={t.onAccent} />
+            <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "700" }}>-{product.discountPct}%</Text>
           </View>
         ) : null}
 
@@ -114,7 +104,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
                 backgroundColor: t.bgCard,
                 alignItems: "center",
                 justifyContent: "center",
-                shadowColor: "#0B1B2B",
+                shadowColor: "#0A140E",
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.14,
                 shadowRadius: 10,
@@ -136,10 +126,10 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
               height: 24,
               justifyContent: "center",
               borderRadius: radius.full,
-              backgroundColor: "rgba(17,24,39,0.72)",
+              backgroundColor: t.inverseSurface,
             }}
           >
-            <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "600" }}>Agotado</Text>
+            <Text style={{ color: t.onInverseSurface, fontSize: 12, fontWeight: "600" }}>Agotado</Text>
           </View>
         ) : null}
       </View>

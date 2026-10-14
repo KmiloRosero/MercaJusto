@@ -22,6 +22,7 @@ import { cartSavings } from "../src/lib/savings";
 import { effectivePrice, orderTotals } from "../src/lib/pricing";
 import { showAlert } from "../src/lib/dialog";
 
+import { FieldTile } from "../src/components/FieldTile";
 const PAYMENT_METHODS: Array<{
   key: PaymentMethod;
   icon: IconName;
@@ -189,7 +190,7 @@ export default function Checkout() {
                       justifyContent: "center",
                     }}
                   >
-                    <Icon name={m.icon} size={20} color={selected ? "#FFFFFF" : t.primary} />
+                    <Icon name={m.icon} size={20} color={selected ? t.onPrimary : t.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{m.name}</Text>
@@ -208,7 +209,7 @@ export default function Checkout() {
                     }}
                   >
                     {selected ? (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#FFF" }} />
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.onPrimary }} />
                     ) : null}
                   </View>
                 </Pressable>
@@ -232,18 +233,7 @@ export default function Checkout() {
                   borderBottomColor: t.border,
                 }}
               >
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: radius.sm,
-                    backgroundColor: t.bgSecondary,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon name={it.product.category?.name || "leaf"} size={20} color={t.primary} />
-                </View>
+                <FieldTile category={it.product.category} size={40} iconSize={20} radius={radius.sm} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
                     {it.product.name}
@@ -337,7 +327,7 @@ export default function Checkout() {
       >
         <Button
           title={submitting ? "Procesando..." : `Confirmar pedido · ${formatCOP(total)}`}
-          icon={<Icon name="checkmark-circle" size={20} color="#FFFFFF" />}
+          icon={<Icon name="checkmark-circle" size={20} color={t.onPrimary} />}
           onPress={onConfirm}
           disabled={!canSubmit}
           loading={submitting}

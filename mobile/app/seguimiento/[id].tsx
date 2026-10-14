@@ -22,6 +22,7 @@ import { BUYER_CAN_CANCEL, NEXT_ACTION } from "../../src/lib/orderStatus";
 import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import MapPreview from "../../src/components/MapPreview";
 
+import { FieldTile } from "../../src/components/FieldTile";
 const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string }> = [
   { key: "CONFIRMED", label: "Pedido confirmado", icon: "checkmark-circle", desc: "El productor recibió tu pedido" },
   { key: "PREPARING", label: "Preparando", icon: "preparing", desc: "Están alistando tus productos" },
@@ -270,7 +271,7 @@ export default function Seguimiento() {
                     opacity: pressed ? 0.8 : 1,
                   })}
                 >
-                  <Icon name="call" size={18} color="#FFFFFF" />
+                  <Icon name="call" size={18} color={t.onPrimary} />
                 </Pressable>
               ) : null}
             </View>
@@ -334,7 +335,7 @@ export default function Seguimiento() {
                       <Icon
                         name={state === "completed" ? "checkmark" : step.icon}
                         size={12}
-                        color={state === "pending" ? t.textTertiary : "#FFFFFF"}
+                        color={state === "pending" ? t.textTertiary : t.onPrimary}
                       />
                     </View>
                     <Text
@@ -409,7 +410,7 @@ export default function Seguimiento() {
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], flex: 1 }}>
-                <Icon name={it.product?.category?.name || "leaf"} size={20} color={t.primary} />
+                <FieldTile category={it.product?.category} size={36} iconSize={18} radius={radius.sm} />
                 <View>
                   <Text style={{ fontSize: 13, fontWeight: "500", color: t.textPrimary }}>
                     {it.product?.name}
@@ -493,18 +494,18 @@ export default function Seguimiento() {
           {nextAction ? (
             <Button
               title={nextAction.label}
-              icon={<Icon name={nextAction.icon} size={20} color="#FFFFFF" />}
+              icon={<Icon name={nextAction.icon} size={20} color={t.onPrimary} />}
               full
               size="lg"
               loading={updating}
-              variant={nextAction.next === "DELIVERED" ? "accent" : "primary"}
+              variant="primary"
               onPress={() => changeStatus(nextAction.next)}
             />
           ) : null}
           {isDelivered && isBuyerView ? (
             <Button
               title={reviewed ? "Ya calificaste este pedido" : "Calificar pedido"}
-              icon={<Icon name="star" size={20} color={reviewed ? t.gray400 : "#FFFFFF"} />}
+              icon={<Icon name="star" size={20} color={reviewed ? t.gray400 : t.onPrimary} />}
               full
               size="lg"
               disabled={reviewed}

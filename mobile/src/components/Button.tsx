@@ -67,7 +67,8 @@ export function Button({
   const color =
     disabled ? t.gray400 :
     variant === "outline" || variant === "ghost" ? t.primary :
-    "#FFFFFF";
+    variant === "accent" ? t.onAccent :
+    t.onPrimary;
 
   return (
     <AnimatedPressable

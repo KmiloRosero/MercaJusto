@@ -10,10 +10,9 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { LogoMark } from "./Logo";
+import { BRAND, LogoMark } from "./Logo";
 import { motion } from "../theme";
 
-const BLUE = "#008FFF";
 const easeOut = Easing.bezier(...motion.easeOut);
 
 // Geometría del splash nativo (plugin expo-splash-screen en app.json): la marca
@@ -114,7 +113,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: BLUE,
+    backgroundColor: BRAND.field,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 100,

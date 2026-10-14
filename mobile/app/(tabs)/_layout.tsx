@@ -61,7 +61,7 @@ export default function TabsLayout() {
           // Solo los compradores arman canasta
           href: isBuyer ? undefined : null,
           tabBarBadge: cartCount > 0 ? cartCount : undefined,
-          tabBarBadgeStyle: { backgroundColor: t.accent, color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
+          tabBarBadgeStyle: { backgroundColor: t.primary, color: t.onPrimary, fontSize: 10, fontWeight: "800" },
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={focused ? "cart" : "cart-outline"} color={color} focused={focused} />
           ),

@@ -3,7 +3,7 @@ import { Pressable, Text } from "react-native";
 import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../store/toast";
-import { radius, shadow, spacing } from "../theme";
+import { radius, shadow, spacing, useTheme } from "../theme";
 import { Icon } from "./Icon";
 
 const DURATION_MS = 2600;
@@ -12,6 +12,7 @@ const DURATION_MS = 2600;
 export function Toast() {
   const { message, kind, key, hide } = useToast();
   const insets = useSafeAreaInsets();
+  const t = useTheme();
 
   useEffect(() => {
     if (!message) return;
@@ -21,7 +22,6 @@ export function Toast() {
 
   if (!message) return null;
 
-  const bg = kind === "success" ? "#1F9D45" : kind === "error" ? "#D92D3A" : "#1E293B";
   const icon = kind === "success" ? "checkmark-circle" : kind === "error" ? "alert-circle" : "information-circle";
 
   return (
@@ -44,16 +44,17 @@ export function Toast() {
           flexDirection: "row",
           alignItems: "center",
           gap: spacing[2],
-          backgroundColor: bg,
+          backgroundColor: t.inverseSurface,
           paddingVertical: spacing[3],
           paddingHorizontal: spacing[4],
-          borderRadius: radius.full,
+          borderRadius: radius.sm,
+          minHeight: 48,
           maxWidth: 480,
           ...shadow.lg,
         }}
       >
-        <Icon name={icon} size={18} color="#FFFFFF" />
-        <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 14, flexShrink: 1 }}>{message}</Text>
+        <Icon name={icon} size={18} color={kind === "error" ? t.dangerLight : t.onInverseSurface} />
+        <Text style={{ color: t.onInverseSurface, fontWeight: "600", fontSize: 14, flexShrink: 1 }}>{message}</Text>
       </Pressable>
     </Animated.View>
   );

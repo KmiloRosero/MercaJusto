@@ -15,6 +15,7 @@ import { effectivePrice } from "../../src/lib/pricing";
 import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import { toast } from "../../src/store/toast";
 
+import { FieldTile } from "../../src/components/FieldTile";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -97,18 +98,7 @@ export default function ProductDetail() {
               resizeMode="cover"
             />
           ) : (
-            <View
-              style={{
-                width: 100,
-                height: 100,
-                borderRadius: radius.full,
-                backgroundColor: t.primaryLight,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Icon name={product.category?.name || "leaf"} size={56} color={t.primary} />
-            </View>
+            <FieldTile category={product.category} iconSize={88} radius={0} />
           )}
 
           {product.isSurplus ? (
@@ -214,7 +204,7 @@ export default function ProductDetail() {
                 {product.producer?.name || "Productor campesino"}
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
-                <Icon name="star" size={13} color="#FFB800" />
+                <Icon name="star" size={13} color={t.rating} />
                 <Text style={{ fontSize: fontSize.xs, color: t.textSecondary, fontWeight: "600" }}>
                   {product.producer?.ratingCount
                     ? `${product.producer.rating.toFixed(1)} · ${product.producer.ratingCount} calificaciones`
@@ -296,7 +286,7 @@ export default function ProductDetail() {
         </View>
 
         <Button
-          icon={<Icon name="cart" size={18} color="#FFFFFF" />}
+          icon={<Icon name="cart" size={18} color={t.onPrimary} />}
           title={outOfStock ? "Agotado" : `Agregar · ${formatCOP(finalPrice * qty)}`}
           onPress={onAdd}
           loading={busy}

@@ -30,7 +30,7 @@ export async function registerForPushNotifications(): Promise<string | null> {
         name: "Estado de pedidos",
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#008FFF",
+        lightColor: "#1F6B3D",
       });
     }
 

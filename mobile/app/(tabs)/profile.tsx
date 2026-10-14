@@ -15,6 +15,7 @@ import { getFairPriceMetrics, getProducts } from "../../src/api/client";
 import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import { effectivePrice } from "../../src/lib/pricing";
 
+import { FieldTile } from "../../src/components/FieldTile";
 export default function Profile() {
   const router = useRouter();
   const t = useTheme();
@@ -183,7 +184,7 @@ export default function Profile() {
                     opacity: pressed ? 0.8 : 1,
                   })}
                 >
-                  <Icon name={p.category?.name || "leaf"} size={22} color={t.primary} />
+                  <FieldTile category={p.category} size={40} iconSize={20} radius={radius.sm} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{p.name}</Text>
                     <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
@@ -198,9 +199,9 @@ export default function Profile() {
 
             <Button
               title="Publicar nueva cosecha"
-              variant="accent"
+              variant="primary"
               full
-              icon={<Icon name="add" size={20} color="#FFFFFF" />}
+              icon={<Icon name="add" size={20} color={t.onPrimary} />}
               onPress={() => router.push("/publicar-cosecha")}
             />
           </View>

@@ -89,7 +89,7 @@ export default function ProducerProfile() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ color: "#FFFFFF", fontSize: 28, fontWeight: "800" }}>{initials}</Text>
+                <Text style={{ color: t.onPrimary, fontSize: 28, fontWeight: "800" }}>{initials}</Text>
               </View>
               <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary, textAlign: "center" }}>
                 {producer.name}

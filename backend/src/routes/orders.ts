@@ -45,7 +45,7 @@ ordersRouter.get("/mine", async (req, res, next) => {
     const orders = await prisma.order.findMany({
       where,
       include: {
-        items: { include: { product: true } },
+        items: { include: { product: { include: { category: true } } } },
         buyer: { select: { id: true, name: true, avatarUrl: true, phone: true } },
         courier: { select: { id: true, name: true, avatarUrl: true, phone: true } },
         deliveryAddress: true,

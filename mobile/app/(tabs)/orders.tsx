@@ -176,7 +176,7 @@ export default function Orders() {
               {action ? (
                 <Button
                   title={action.label}
-                  icon={<Icon name={action.icon} size={18} color="#FFFFFF" />}
+                  icon={<Icon name={action.icon} size={18} color={t.onPrimary} />}
                   onPress={() => advance(item)}
                   loading={advancingId === item.id}
                   variant={action.next === "DELIVERED" ? "accent" : "primary"}

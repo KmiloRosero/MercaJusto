@@ -177,10 +177,8 @@ export default function Calificacion() {
               width: 88,
               height: 88,
               borderRadius: radius.full,
-              backgroundColor: "rgba(45,198,83,0.15)",
-              borderWidth: 3,
-              borderColor: "rgba(45,198,83,0.3)",
-              alignItems: "center",
+              backgroundColor: t.successLight,
+                            alignItems: "center",
               justifyContent: "center",
               marginBottom: spacing[4],
             }}

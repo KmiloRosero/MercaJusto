@@ -2,6 +2,7 @@ import React from "react";
 import { Text, View, Pressable } from "react-native";
 import { fontSize, radius, spacing, type, useTheme } from "../theme";
 import { Icon } from "./Icon";
+import { BRAND, LogoMark } from "./Logo";
 
 interface TopBarProps {
   title?: string;
@@ -48,15 +49,15 @@ export function TopBar({ title, showBack, onBack, right }: TopBarProps) {
               width: 34,
               height: 34,
               borderRadius: radius.md,
-              backgroundColor: t.primary,
+              backgroundColor: BRAND.field,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Icon name="cart" size={18} color="#FFFFFF" />
+            <LogoMark size={24} />
           </View>
         )}
-        <Text style={{ fontSize: 18, fontWeight: "800", color: showBack ? t.textPrimary : t.primary }}>
+        <Text style={[type.headline, { color: t.textPrimary }]} numberOfLines={1}>
           {title || "MercaJusto"}
         </Text>
       </View>

@@ -15,27 +15,24 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { Button } from "../../src/components/Button";
 import { Icon, IconName } from "../../src/components/Icon";
-import { LogoMark } from "../../src/components/Logo";
-import { formatCOP, radius, spacing, type, useTheme, ThemeColors } from "../../src/theme";
+import { BRAND, LogoMark } from "../../src/components/Logo";
+import { formatCOP, radius, spacing, type, useTheme, useFieldColor, ThemeColors } from "../../src/theme";
 
 type Role = "BUYER" | "PRODUCER";
 
 const SLIDES = [
   {
     key: "origen",
-    overline: "Directo del campo",
     title: "Compra a quien\ncultiva tu comida",
     body: "Productores campesinos de Nariño publican su cosecha del día. Tú eliges, sin intermediarios.",
   },
   {
     key: "entrega",
-    overline: "Entrega agrupada",
     title: "Pide y sigue tu\npedido en vivo",
     body: "Agrupamos los pedidos por zona para que el envío sea rápido y económico. Ves cada paso hasta tu puerta.",
   },
   {
     key: "precio",
-    overline: "Precio justo",
     title: "Pagas menos.\nEl campo gana más.",
     body: "El productor recibe el precio que fija y tú ahorras frente a la plaza de mercado.",
   },
@@ -106,12 +103,12 @@ export default function Onboarding() {
               width: 30,
               height: 30,
               borderRadius: 9,
-              backgroundColor: t.primary,
+              backgroundColor: BRAND.field,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <LogoMark size={22} knockout={t.primary} />
+            <LogoMark size={22} />
           </View>
           <Text style={[type.callout, { color: t.textPrimary, fontWeight: "700" }]}>MercaJusto</Text>
         </View>
@@ -153,7 +150,6 @@ export default function Onboarding() {
             height={pagerHeight}
             scrollX={scrollX}
             parallax={!reduceMotion}
-            overline={`0${i + 1}  ·  ${slide.overline}`}
             title={slide.title}
             body={slide.body}
             t={t}
@@ -192,7 +188,7 @@ export default function Onboarding() {
           disabled={isLast && !role}
           full
           size="lg"
-          trailingIcon={!isLast || role ? <Icon name="arrow-forward" size={18} color="#FFFFFF" /> : undefined}
+          trailingIcon={!isLast || role ? <Icon name="arrow-forward" size={18} color={t.onPrimary} /> : undefined}
         />
         <Pressable
           onPress={() => toLogin(role)}
@@ -219,7 +215,6 @@ function Slide({
   height,
   scrollX,
   parallax,
-  overline,
   title,
   body,
   t,
@@ -230,7 +225,6 @@ function Slide({
   height: number;
   scrollX: SharedValue<number>;
   parallax: boolean;
-  overline: string;
   title: string;
   body: string;
   t: ThemeColors;
@@ -266,7 +260,6 @@ function Slide({
     <View style={{ width, height: height || undefined, paddingHorizontal: spacing[6], paddingTop: spacing[4] }}>
       <Animated.View style={[{ flex: 1, justifyContent: "center" }, sceneStyle]}>{children}</Animated.View>
       <Animated.View style={[{ gap: spacing[3], paddingTop: spacing[6], paddingBottom: spacing[5] }, textStyle]}>
-        <Text style={[type.overline, { color: t.primary, textTransform: "uppercase" }]}>{overline}</Text>
         <Text style={[type.display, { color: t.textPrimary }]} accessibilityRole="header">
           {title}
         </Text>
@@ -378,7 +371,7 @@ function Card({ t, children, inset = 0 }: { t: ThemeColors; children: React.Reac
         marginHorizontal: inset,
         borderWidth: 1,
         borderColor: t.border,
-        shadowColor: "#0B1B2B",
+        shadowColor: "#0A140E",
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.08,
         shadowRadius: 24,
@@ -391,6 +384,7 @@ function Card({ t, children, inset = 0 }: { t: ThemeColors; children: React.Reac
 }
 
 function ProducerScene({ t }: { t: ThemeColors }) {
+  const tuberculos = useFieldColor({ slug: "tuberculos" });
   return (
     <SceneFrame t={t}>
       <Card t={t}>
@@ -405,7 +399,7 @@ function ProducerScene({ t }: { t: ThemeColors }) {
               justifyContent: "center",
             }}
           >
-            <Text style={{ color: "#FFFFFF", fontWeight: "700", fontSize: 16 }}>JT</Text>
+            <Text style={{ color: t.onPrimary, fontWeight: "700", fontSize: 16 }}>JT</Text>
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={[type.callout, { color: t.textPrimary }]}>José Tulio Enríquez</Text>
@@ -413,7 +407,7 @@ function ProducerScene({ t }: { t: ThemeColors }) {
               <Icon name="location-outline" size={12} color={t.textTertiary} />
               <Text style={[type.footnote, { color: t.textSecondary }]}>Túquerres</Text>
               <Text style={[type.footnote, { color: t.textTertiary }]}> · </Text>
-              <Icon name="star" size={12} color={t.warning} />
+              <Icon name="star" size={12} color={t.rating} />
               <Text style={[type.footnote, { color: t.textSecondary }]}>4.8</Text>
             </View>
           </View>
@@ -427,12 +421,12 @@ function ProducerScene({ t }: { t: ThemeColors }) {
               width: 40,
               height: 40,
               borderRadius: 12,
-              backgroundColor: t.primaryLight,
+              backgroundColor: tuberculos.ground,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Icon name="Tubérculos" size={22} color={t.primary} />
+            <Icon name="Tubérculos" size={22} color={tuberculos.ink} />
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={[type.callout, { color: t.textPrimary }]}>Papa criolla</Text>
@@ -468,11 +462,11 @@ function TrackingScene({ t }: { t: ThemeColors }) {
               paddingHorizontal: 10,
               paddingVertical: 4,
               borderRadius: radius.full,
-              backgroundColor: t.accentLight,
+              backgroundColor: t.primaryLight,
             }}
           >
-            <Icon name="in_transit" size={12} color={t.accent} />
-            <Text style={{ fontSize: 12, fontWeight: "700", color: t.accent }}>En camino</Text>
+            <Icon name="in_transit" size={12} color={t.onPrimaryLight} />
+            <Text style={{ fontSize: 12, fontWeight: "700", color: t.onPrimaryLight }}>En camino</Text>
           </View>
         </View>
 
@@ -493,7 +487,7 @@ function TrackingScene({ t }: { t: ThemeColors }) {
                   }}
                 >
                   {s.state !== "todo" ? (
-                    <Icon name={s.state === "done" ? "checkmark" : "ellipse"} size={s.state === "done" ? 12 : 8} color="#FFFFFF" />
+                    <Icon name={s.state === "done" ? "checkmark" : "ellipse"} size={s.state === "done" ? 12 : 8} color={t.onPrimary} />
                   ) : null}
                 </View>
                 {i < steps.length - 1 ? (
@@ -574,7 +568,7 @@ function PriceScene({
               paddingHorizontal: 10,
               paddingVertical: 4,
               borderRadius: radius.full,
-              backgroundColor: "rgba(45,198,83,0.14)",
+              backgroundColor: t.successLight,
             }}
           >
             <Text style={{ fontSize: 12, fontWeight: "700", color: t.success }}>Ahorras {savingPct}%</Text>

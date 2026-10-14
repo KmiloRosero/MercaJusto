@@ -108,7 +108,7 @@ export default function Home() {
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>
+            <Text style={{ color: t.onPrimary, fontSize: 17, fontWeight: "700" }}>
               {user?.name?.charAt(0).toUpperCase() || "M"}
             </Text>
           </Pressable>
@@ -157,7 +157,7 @@ export default function Home() {
             <Button
               title="Publicar cosecha"
               size="sm"
-              icon={<Icon name="add" size={16} color="#FFFFFF" />}
+              icon={<Icon name="add" size={16} color={t.onPrimary} />}
               onPress={() => router.push("/publicar-cosecha")}
             />
             <Button title="Mis ventas" size="sm" variant="outline" onPress={() => router.push("/(tabs)/orders")} />
@@ -166,7 +166,6 @@ export default function Home() {
       ) : null}
 
       <Banner
-        tag="Modo excedente"
         title="Cosecha que no se pierde"
         subtitle="Descuentos directos cuando al productor le sobra. Apoyas el campo y ahorras."
         cta="Ver ofertas"

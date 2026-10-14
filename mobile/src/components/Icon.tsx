@@ -58,7 +58,7 @@ interface IconProps {
   color?: string;
 }
 
-export function Icon({ name, size = 20, color = "#1E293B" }: IconProps) {
+export function Icon({ name, size = 20, color = "#17211A" }: IconProps) {
   // Manejo de mapeo dinámico de categorías o nombres custom
   const ioniconName = mapIconName(name);
 
@@ -80,7 +80,7 @@ function mapIconName(name: string): string {
 
   // Mapeo por emojis o texto de categorías existentes en la DB
   if (clean.includes("tubérculo") || clean.includes("papa") || clean.includes("🥔") || clean === "tuberculos") {
-    return "mci:carrot";
+    return "mci:sack";
   }
   if (clean.includes("hortaliza") || clean.includes("verdura") || clean.includes("🥦") || clean.includes("🥕") || clean === "hortalizas") {
     return "mci:carrot";
@@ -92,7 +92,7 @@ function mapIconName(name: string): string {
     return "mci:cheese";
   }
   if (clean.includes("grano") || clean.includes("frijol") || clean.includes("🌾") || clean.includes("🫘")) {
-    return "mci:barley";
+    return "mci:corn";
   }
   if (clean.includes("huevo") || clean.includes("pollo") || clean.includes("🥚") || clean.includes("🐔")) {
     return "mci:egg";

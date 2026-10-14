@@ -345,15 +345,15 @@ export default function PublicarCosecha() {
                         paddingVertical: 8,
                         borderRadius: radius.full,
                         borderWidth: 1.5,
-                        borderColor: selected ? t.accent : t.border,
-                        backgroundColor: selected ? t.accentLight : t.bgPrimary,
+                        borderColor: selected ? t.primary : t.border,
+                        backgroundColor: selected ? t.primaryLight : t.bgPrimary,
                       }}
                     >
                       <Text
                         style={{
                           fontSize: fontSize.sm,
                           fontWeight: "700",
-                          color: selected ? t.accent : t.textSecondary,
+                          color: selected ? t.onPrimaryLight : t.textSecondary,
                         }}
                       >
                         {u}
@@ -382,8 +382,8 @@ export default function PublicarCosecha() {
               <Switch
                 value={isSurplus}
                 onValueChange={setIsSurplus}
-                trackColor={{ true: t.success, false: t.gray200 }}
-                thumbColor="#FFFFFF"
+                trackColor={{ true: t.accent, false: t.gray300 }}
+                thumbColor={isSurplus ? t.onAccent : t.bgCard}
               />
             </View>
 
@@ -405,15 +405,15 @@ export default function PublicarCosecha() {
                           borderRadius: radius.md,
                           borderWidth: 1.5,
                           alignItems: "center",
-                          borderColor: selected ? t.success : t.border,
-                          backgroundColor: selected ? "rgba(45,198,83,0.1)" : t.bgPrimary,
+                          borderColor: selected ? t.accent : t.border,
+                          backgroundColor: selected ? t.accentLight : t.bgPrimary,
                         }}
                       >
                         <Text
                           style={{
                             fontSize: fontSize.base,
                             fontWeight: "800",
-                            color: selected ? t.success : t.textSecondary,
+                            color: selected ? t.onAccentLight : t.textSecondary,
                           }}
                         >
                           -{d}%
@@ -470,7 +470,7 @@ export default function PublicarCosecha() {
                 borderWidth: 1.5,
                 borderStyle: "dashed",
                 borderColor: coords ? t.success : t.primary,
-                backgroundColor: coords ? "rgba(45,198,83,0.08)" : t.primaryLight,
+                backgroundColor: coords ? t.successLight : t.primaryLight,
               }}
             >
               {locating ? (
@@ -497,10 +497,10 @@ export default function PublicarCosecha() {
 
           <Button
             title="Publicar cosecha"
-            variant="accent"
+            variant="primary"
             size="lg"
             full
-            icon={<Icon name="checkmark-circle" size={20} color="#FFFFFF" />}
+            icon={<Icon name="checkmark-circle" size={20} color={t.onPrimary} />}
             loading={saving}
             onPress={submit}
           />
