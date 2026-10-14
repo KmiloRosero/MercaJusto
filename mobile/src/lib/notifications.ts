@@ -5,7 +5,8 @@ import * as Notifications from "expo-notifications";
 // Mostrar la notificación aunque la app esté en primer plano
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),

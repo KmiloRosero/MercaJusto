@@ -6,13 +6,13 @@ import Animated, {
   Extrapolation,
   SharedValue,
   interpolate,
-  runOnJS,
   useAnimatedReaction,
   useAnimatedScrollHandler,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { Button } from "../../src/components/Button";
 import { Icon, IconName } from "../../src/components/Icon";
 import { LogoMark } from "../../src/components/Logo";
@@ -63,7 +63,7 @@ export default function Onboarding() {
   useAnimatedReaction(
     () => (width > 0 ? Math.round(scrollX.value / width) : 0),
     (page, prev) => {
-      if (page !== prev) runOnJS(setIndex)(page);
+      if (page !== prev) scheduleOnRN(setIndex, page);
     },
     [width]
   );
