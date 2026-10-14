@@ -8,7 +8,8 @@ import { BadRequestError } from "../middleware/errorHandler";
 
 export const uploadsRouter = Router();
 
-const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
+// En producción apunta a un volumen persistente (p. ej. /data/uploads)
+export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads"));
 if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
 
 // Si PUBLIC_URL no está definido se usa el host con el que llegó la petición,

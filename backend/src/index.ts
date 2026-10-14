@@ -15,8 +15,11 @@ import { uploadsRouter } from "./routes/uploads";
 import { routesRouter } from "./routes/routes";
 import { metricsRouter } from "./routes/metrics";
 import { errorHandler, NotFoundError } from "./middleware/errorHandler";
+import { UPLOAD_DIR } from "./routes/uploads";
 
 const app = express();
+// Railway/Vercel terminan TLS en un proxy: así req.protocol refleja https
+app.set("trust proxy", true);
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "2mb" }));
@@ -25,7 +28,7 @@ app.use(morgan("dev"));
 // Imágenes subidas (fotos de cosecha) servidas como estáticos
 app.use(
   "/uploads",
-  express.static(path.resolve(process.cwd(), "uploads"), {
+  express.static(UPLOAD_DIR, {
     setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
   })
 );

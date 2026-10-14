@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
@@ -16,7 +16,8 @@
     "db:backfill-prices": "tsx scripts/backfill-traditional-price.ts",
     "test:routing": "tsx scripts/test-routing.ts",
     "test:routes": "tsx scripts/test-routes-endpoint.ts",
-    "setup": "prisma migrate deploy && prisma generate && tsx prisma/seed.ts"
+    "setup": "prisma migrate deploy && prisma generate && tsx prisma/seed.ts",
+    "start:prod": "prisma migrate deploy && tsx prisma/seed-if-empty.ts && node dist/index.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -31,6 +32,8 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "multer": "^2.4.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -41,8 +44,9 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^2.3.0",
     "@types/node": "^22.9.0",
-    "prisma": "^5.22.0",
-    "tsx": "^4.19.2",
     "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
