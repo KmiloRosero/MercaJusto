@@ -185,3 +185,21 @@ export const nav = {
   bottomHeight: 64,
   topbarHeight: 56,
 } as const;
+
+// Escala tipográfica (fuente del sistema). Los tamaños grandes llevan
+// tracking negativo para que se vean compactos y nítidos.
+export const type = {
+  display: { fontSize: 30, lineHeight: 36, fontWeight: "700", letterSpacing: -0.6 },
+  title: { fontSize: 22, lineHeight: 28, fontWeight: "700", letterSpacing: -0.4 },
+  headline: { fontSize: 18, lineHeight: 24, fontWeight: "700", letterSpacing: -0.2 },
+  body: { fontSize: 16, lineHeight: 24, fontWeight: "400", letterSpacing: 0 },
+  callout: { fontSize: 15, lineHeight: 20, fontWeight: "600", letterSpacing: -0.1 },
+  footnote: { fontSize: 13, lineHeight: 18, fontWeight: "500", letterSpacing: 0 },
+  overline: { fontSize: 12, lineHeight: 16, fontWeight: "700", letterSpacing: 0.8 },
+} as const;
+
+// Curvas de movimiento: ease-out fuerte para entradas y respuestas.
+export const motion = {
+  easeOut: [0.23, 1, 0.32, 1] as const,
+  easeInOut: [0.77, 0, 0.175, 1] as const,
+} as const;

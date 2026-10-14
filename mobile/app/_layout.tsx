@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Platform } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
+import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -11,6 +12,10 @@ import { registerPushToken } from "../src/api/client";
 import { registerForPushNotifications } from "../src/lib/notifications";
 import { useTheme, useThemeScheme } from "../src/theme";
 import { Toast } from "../src/components/Toast";
+import { AnimatedSplash } from "../src/components/AnimatedSplash";
+
+// El splash nativo se mantiene hasta que el splash animado tome el relevo.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +32,8 @@ export default function RootLayout() {
   const setPushToken = useAuth((s) => s.setPushToken);
   const themeScheme = useThemeScheme();
   const t = useTheme();
+  const [splashVisible, setSplashVisible] = useState(true);
+  const hideSplash = useCallback(() => setSplashVisible(false), []);
 
   useEffect(() => {
     bootstrap();
@@ -76,13 +83,12 @@ export default function RootLayout() {
     return () => sub.remove();
   }, [userId, router]);
 
-  if (!hydrated) return null;
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style={themeScheme === "dark" ? "light" : "dark"} />
+          <StatusBar style={splashVisible || themeScheme === "dark" ? "light" : "dark"} />
+          {hydrated ? (
           <Stack
             screenOptions={{
               headerShown: false,
@@ -96,7 +102,9 @@ export default function RootLayout() {
             <Stack.Screen name="seguimiento/[id]" />
             <Stack.Screen name="calificacion/[id]" />
           </Stack>
+          ) : null}
           <Toast />
+          {splashVisible ? <AnimatedSplash ready={hydrated} onFinish={hideSplash} /> : null}
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
