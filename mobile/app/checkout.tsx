@@ -13,7 +13,7 @@ import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { AddressSheet } from "../src/components/AddressSheet";
 import { Icon, IconName } from "../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../src/theme";
+import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../src/theme";
 import { Address, PaymentMethod } from "../src/api/types";
 import { createOrder, apiErrorMessage } from "../src/api/client";
 import { useAuth } from "../src/store/auth";
@@ -96,7 +96,7 @@ export default function Checkout() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       await refresh();
-      router.replace(`/seguimiento/${order.id}`);
+      router.replace(`/seguimiento/${order.id}?nuevo=1`);
     } catch (err) {
       setSubmitting(false);
       await showAlert("No se pudo crear el pedido", apiErrorMessage(err));
@@ -368,16 +368,8 @@ function SectionCard({ title, icon, children }: { title: string; icon?: IconName
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[3] }}>
-        {icon ? <Icon name={icon} size={16} color={t.primary} /> : null}
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: "800",
-            color: t.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-          }}
-        >
+        {icon ? <Icon name={icon} size={18} color={t.primary} /> : null}
+        <Text style={[type.headline, { fontSize: 16, color: t.textPrimary }]} accessibilityRole="header">
           {title}
         </Text>
       </View>

@@ -19,11 +19,13 @@ import { toast } from "../../src/store/toast";
 import { FieldTile } from "../../src/components/FieldTile";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
+import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const onActionBarLayout = useSnackbarAnchor();
   const queryClient = useQueryClient();
   const me = useAuth((s) => s.user);
   const addToCart = useAddToCart();
@@ -246,6 +248,7 @@ export default function ProductDetail() {
 
       {/* Barra de acción fija */}
       <View
+        onLayout={onActionBarLayout}
         style={{
           position: "absolute",
           bottom: 0,

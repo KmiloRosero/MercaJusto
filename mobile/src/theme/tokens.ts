@@ -252,8 +252,10 @@ export const shadow = {
 } as const;
 
 export const nav = {
-  bottomHeight: 64,
-  topbarHeight: 56,
+  /** Barra de pestañas sin el área segura: ícono + etiqueta sin recortes. */
+  bottomHeight: 68,
+  /** App bar de Material. */
+  topbarHeight: 64,
 } as const;
 
 // Escala tipográfica (fuente del sistema). Los tamaños grandes llevan

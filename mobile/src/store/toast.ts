@@ -14,6 +14,9 @@ interface ToastState {
   key: number;
   /** Acción opcional del snackbar (p. ej. "Deshacer"). */
   action: ToastAction | null;
+  /** Distancia desde el borde inferior de la pantalla; la fija la pantalla con barra inferior. */
+  anchor: number | null;
+  setAnchor: (anchor: number | null) => void;
   show: (message: string, kind?: ToastKind, action?: ToastAction) => void;
   hide: () => void;
 }
@@ -23,6 +26,8 @@ export const useToast = create<ToastState>((set) => ({
   kind: "info",
   key: 0,
   action: null,
+  anchor: null,
+  setAnchor: (anchor) => set({ anchor }),
   show: (message, kind = "info", action) => set((s) => ({ message, kind, action: action ?? null, key: s.key + 1 })),
   hide: () => set({ message: null, action: null }),
 }));

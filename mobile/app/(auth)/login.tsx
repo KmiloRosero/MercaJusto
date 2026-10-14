@@ -157,6 +157,8 @@ export default function Login() {
                   placeholder="300 123 4567"
                   placeholderTextColor={t.textTertiary}
                   keyboardType="phone-pad"
+                  autoComplete="tel"
+                  textContentType="telephoneNumber"
                   style={{
                     flex: 1,
                     height: 48,
@@ -186,6 +188,9 @@ export default function Login() {
                 placeholderTextColor={t.textTertiary}
                 keyboardType="number-pad"
                 maxLength={6}
+                // Android/iOS ofrecen el código del SMS para llenarlo con un toque
+                autoComplete="sms-otp"
+                textContentType="oneTimeCode"
                 style={{
                   height: 64,
                   borderRadius: radius.md,

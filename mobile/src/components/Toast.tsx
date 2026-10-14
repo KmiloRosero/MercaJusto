@@ -10,7 +10,7 @@ const DURATION_MS = 2600;
 
 /** Aviso flotante breve. Se monta una sola vez en el layout raíz. */
 export function Toast() {
-  const { message, kind, key, hide, action } = useToast();
+  const { message, kind, key, hide, action, anchor } = useToast();
   const insets = useSafeAreaInsets();
   const t = useTheme();
 
@@ -35,7 +35,8 @@ export function Toast() {
         position: "absolute",
         left: spacing[4],
         right: spacing[4],
-        bottom: insets.bottom + 84,
+        // Encima de la barra de acciones de la pantalla, si la hay; si no, sobre las pestañas.
+        bottom: anchor ?? insets.bottom + 84,
         alignItems: "center",
       }}
     >

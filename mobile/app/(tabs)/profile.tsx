@@ -8,7 +8,7 @@ import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon, IconName } from "../../src/components/Icon";
 import { AddressSheet } from "../../src/components/AddressSheet";
-import { fontSize, formatCOP, radius, spacing, useTheme, useThemeScheme } from "../../src/theme";
+import { fontSize, formatCOP, radius, spacing, type, useTheme, useThemeScheme } from "../../src/theme";
 import { useAuth } from "../../src/store/auth";
 import { useThemePreference } from "../../src/store/theme";
 import { getFairPriceMetrics, getProducts } from "../../src/api/client";
@@ -52,6 +52,7 @@ export default function Profile() {
   if (!user) return null;
 
   const products = myProducts?.products ?? [];
+  const pedidosLabel = metrics ? `${metrics.ordersCount} ${metrics.ordersCount === 1 ? "pedido" : "pedidos"}` : "";
   const roleLabel = isProducer ? "Productor" : user.role === "COURIER" ? "Repartidor" : "Comprador";
 
   return (
@@ -99,7 +100,8 @@ export default function Profile() {
             <Pill variant={isProducer ? "success" : "primary"} icon={isProducer ? "preparing" : "cart"}>
               {roleLabel}
             </Pill>
-            {user.ratingCount > 0 ? (
+            {/* La calificación solo tiene sentido para quien la recibe: productor y repartidor */}
+            {!isBuyer && user.ratingCount > 0 ? (
               <Pill variant="warning" icon="star">
                 {user.rating.toFixed(1)} ({user.ratingCount})
               </Pill>
@@ -125,25 +127,20 @@ export default function Profile() {
                 {isProducer ? "Tus ventas directas" : "Tu impacto con MercaJusto"}
               </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: spacing[3] }}>
-              {isProducer ? (
-                <>
-                  <StatBox label="Ingresos" value={formatCOP(metrics.totals.producerRevenue)} color={t.success} />
-                  <StatBox label="Pedidos" value={String(metrics.ordersCount)} color={t.primary} />
-                </>
-              ) : (
-                <>
-                  <StatBox label="Ahorrado frente a la plaza" value={formatCOP(metrics.totals.buyerSavingsTotal)} color={t.success} />
-                  <StatBox label="Pedidos" value={String(metrics.ordersCount)} color={t.primary} />
-                </>
-              )}
-            </View>
-            <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+            {/* El impacto como una frase, no como un tablero de cifras */}
+            <Text style={[type.headline, { color: t.textPrimary }]}>
+              {isProducer ? "Recibiste " : "Ahorraste "}
+              <Text style={{ color: t.success }}>
+                {formatCOP(isProducer ? metrics.totals.producerRevenue : metrics.totals.buyerSavingsTotal)}
+              </Text>
+              {isProducer ? " por tus cosechas" : " frente a la plaza"}
+            </Text>
+            <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, lineHeight: 20 }}>
               {isProducer
-                ? "Recibes el 100 % del precio de tu cosecha: sin intermediarios."
+                ? `En ${pedidosLabel}, sin intermediarios: el 100 % del precio es tuyo.`
                 : metrics.totals.buyerSavingsPct > 0
-                  ? `En los productos con precio de plaza pagaste ${metrics.totals.buyerSavingsPct.toLocaleString("es-CO")} % menos, y el dinero llegó directo al campo.`
-                  : "Tu dinero llega directo al campo, sin intermediarios."}
+                  ? `En ${pedidosLabel}. En los productos con precio de plaza pagaste ${metrics.totals.buyerSavingsPct.toLocaleString("es-CO")} % menos, y el dinero llegó directo al campo.`
+                  : `En ${pedidosLabel}. Tu dinero llega directo al campo, sin intermediarios.`}
             </Text>
           </View>
         ) : null}
@@ -318,27 +315,6 @@ export default function Profile() {
   );
 }
 
-function StatBox({ label, value, color }: { label: string; value: string; color: string }) {
-  const t = useTheme();
-  return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: t.bgSecondary,
-        borderRadius: radius.md,
-        padding: spacing[3],
-        alignItems: "center",
-      }}
-    >
-      <Text style={{ fontSize: fontSize.lg, fontWeight: "800", color }} numberOfLines={1} adjustsFontSizeToFit>
-        {value}
-      </Text>
-      <Text style={{ fontSize: 10, color: t.textTertiary, textAlign: "center", marginTop: 2, fontWeight: "600" }}>
-        {label}
-      </Text>
-    </View>
-  );
-}
 
 function MenuItem({
   icon,

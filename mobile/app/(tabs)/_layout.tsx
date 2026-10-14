@@ -3,14 +3,15 @@ import { ColorValue, View } from "react-native";
 import { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/store/auth";
-import { useTheme } from "../../src/theme";
+import { nav, useTheme } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { Icon, IconName } from "../../src/components/Icon";
 
 export default function TabsLayout() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const cartCount = useCart((s) => s.items.reduce((acc, i) => acc + i.quantity, 0));
+  // Productos distintos, no unidades: 3 kg de papa cuentan como un producto.
+  const cartCount = useCart((s) => s.items.length);
   const fetchCart = useCart((s) => s.fetch);
   const role = useAuth((s) => s.user?.role);
   const isBuyer = role === "BUYER";
@@ -29,7 +30,7 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: t.bgPrimary,
           borderTopColor: t.border,
-          height: TAB_BAR_HEIGHT + insets.bottom,
+          height: nav.bottomHeight + insets.bottom,
           paddingTop: 6,
           paddingBottom: 6 + insets.bottom,
         },
@@ -88,9 +89,6 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-// Altura útil (sin área segura): icono + etiqueta sin recortes.
-export const TAB_BAR_HEIGHT = 68;
 
 function TabIcon({ icon, color, focused }: { icon: IconName; color: ColorValue; focused: boolean }) {
   return (

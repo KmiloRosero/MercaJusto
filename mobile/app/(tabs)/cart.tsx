@@ -7,7 +7,7 @@ import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
 import { FieldTile } from "../../src/components/FieldTile";
-import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
+import { fontSize, nav, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
@@ -15,9 +15,14 @@ import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 import { SavingsNote } from "../../src/components/SavingsNote";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
+import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
+  const insets = useSafeAreaInsets();
+  // El resumen va sobre las pestañas: el snackbar se ancla encima de ambos.
+  const onSummaryLayout = useSnackbarAnchor(nav.bottomHeight + insets.bottom);
   const { items, subtotal, fetch, updateQty, remove, pendingIds, error, loaded, loading, loadError } = useCart();
 
   useEffect(() => {
@@ -170,6 +175,7 @@ export default function Cart() {
           />
 
           <View
+            onLayout={onSummaryLayout}
             style={{
               position: "absolute",
               bottom: 0,

@@ -43,12 +43,14 @@ const STATUS_INDEX: Record<OrderStatus, number> = {
   CANCELLED: -1 };
 
 export default function Seguimiento() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, nuevo } = useLocalSearchParams<{ id: string; nuevo?: string }>();
   const router = useRouter();
   const t = useTheme();
   const queryClient = useQueryClient();
   const me = useAuth((s) => s.user);
   const [updating, setUpdating] = useState(false);
+  // Recién creado desde el checkout: se confirma el envío antes del seguimiento.
+  const [justPlaced, setJustPlaced] = useState(nuevo === "1");
 
   const { data: order, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["order", id],
@@ -138,6 +140,10 @@ export default function Seguimiento() {
     isDelivered ? "¡Entregado!" :
     STEPS[currentStep]?.label || "Procesando";
 
+  const producerNames = [...new Set(order.items.map((it) => it.product?.producer?.name).filter(Boolean))]
+    .map((n) => n!.split(" ")[0])
+    .join(" y ");
+
   const currentDesc =
     isCancelled ? "Este pedido fue cancelado." :
     STEPS[currentStep]?.desc || "Estamos procesando tu pedido.";
@@ -147,6 +153,39 @@ export default function Seguimiento() {
       <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[10] }}>
+        {justPlaced && order.buyerId === me?.id ? (
+          <View
+            accessibilityRole="alert"
+            style={{
+              margin: spacing[4],
+              padding: spacing[4],
+              gap: spacing[2],
+              borderRadius: radius.lg,
+              backgroundColor: t.successLight,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+              <Icon name="checkmark-circle" size={24} color={t.success} />
+              <Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: t.textPrimary }}>
+                ¡Pedido enviado{producerNames ? ` a ${producerNames}` : ""}!
+              </Text>
+            </View>
+            <Text style={{ fontSize: fontSize.sm, color: t.textPrimary, lineHeight: 20 }}>
+              {order.paymentMethod === "CASH"
+                ? `Pagas ${formatCOP(order.total)} en efectivo cuando recibas tu cosecha.`
+                : `Pago con ${PAYMENT_LABEL[order.paymentMethod]} por ${formatCOP(order.total)}: aparece como pendiente hasta que se confirme.`}{" "}
+              Te avisaremos cuando el productor empiece a prepararlo.
+            </Text>
+            <Pressable
+              onPress={() => setJustPlaced(false)}
+              accessibilityRole="button"
+              style={{ alignSelf: "flex-start", minHeight: 48, justifyContent: "center" }}
+            >
+              <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.success }}>Entendido</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {/* ═══ Mapa en vivo ═══ */}
         <MapPreview origin={origin} destination={destination} />
 
