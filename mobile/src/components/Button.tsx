@@ -73,6 +73,8 @@ export function Button({
   return (
     <AnimatedPressable
       onPress={disabled || loading ? undefined : onPress}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
       // El tamaño "sm" mide 36 dp: el área táctil se extiende hasta 48.
       hitSlop={size === "sm" ? { top: 6, bottom: 6 } : undefined}
       onPressIn={handlePressIn}

@@ -27,6 +27,7 @@ export type IconName =
   | "call"
   | "camera"
   | "image"
+  | "eye-outline"
   | "leaf"
   | "leaf-outline"
   | "filter"
