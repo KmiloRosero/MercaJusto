@@ -85,8 +85,9 @@ export default function Search() {
           {search ? (
             <Pressable
               onPress={() => setSearch("")}
-              hitSlop={8}
-              style={{ position: "absolute", right: 14 }}
+              accessibilityRole="button"
+              accessibilityLabel="Borrar búsqueda"
+              style={{ position: "absolute", right: 0, width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
             >
               <Icon name="close-circle" size={18} color={t.textTertiary} />
             </Pressable>

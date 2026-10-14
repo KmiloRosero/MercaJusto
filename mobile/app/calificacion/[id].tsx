@@ -340,7 +340,7 @@ export default function Calificacion() {
           full
           size="lg"
         />
-        <Pressable onPress={() => router.replace("/(tabs)/home")} style={{ padding: spacing[2], alignItems: "center" }}>
+        <Pressable onPress={() => router.replace("/(tabs)/home")} style={{ minHeight: 48, justifyContent: "center", alignItems: "center" }}>
           <Text style={{ color: t.textTertiary, fontSize: fontSize.sm }}>
             {entries.length === 0 ? "Volver al inicio" : "Omitir por ahora"}
           </Text>

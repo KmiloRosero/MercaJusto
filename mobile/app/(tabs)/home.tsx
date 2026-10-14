@@ -84,7 +84,7 @@ export default function Home() {
             </Text>
             <Pressable
               onPress={() => router.push("/(tabs)/profile")}
-              hitSlop={8}
+              hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={`${isProducer ? "Vendiendo desde" : "Entregar en"} ${place}. Cambiar`}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, opacity: pressed ? 0.6 : 1 })}

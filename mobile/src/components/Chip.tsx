@@ -21,6 +21,7 @@ export function Chip({ icon, label, active, onPress }: ChipProps) {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
+      hitSlop={{ top: 5, bottom: 5 }}
       style={({ pressed }) => ({
         height: 38,
         paddingHorizontal: 14,

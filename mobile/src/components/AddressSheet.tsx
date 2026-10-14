@@ -184,7 +184,9 @@ export function AddressSheet({
                   </View>
                   {onDeleted ? (
                     <Pressable
-                      hitSlop={8}
+                      hitSlop={15}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Eliminar dirección ${addr.label}`}
                       onPress={async () => {
                         const ok = await confirmDialog(
                           "¿Eliminar dirección?",
@@ -239,6 +241,7 @@ export function AddressSheet({
                 <Pressable
                   key={l}
                   onPress={() => setLabel(l)}
+                  hitSlop={{ top: 6, bottom: 6 }}
                   style={{
                     paddingHorizontal: spacing[3],
                     paddingVertical: 8,

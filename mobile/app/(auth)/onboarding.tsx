@@ -115,7 +115,7 @@ export default function Onboarding() {
         {!isLast ? (
           <Pressable
             onPress={() => goTo(SLIDES.length - 1)}
-            hitSlop={12}
+            hitSlop={14}
             accessibilityRole="button"
             style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, paddingVertical: spacing[2] })}
           >
@@ -192,9 +192,8 @@ export default function Onboarding() {
         />
         <Pressable
           onPress={() => toLogin(role)}
-          hitSlop={8}
           accessibilityRole="button"
-          style={({ pressed }) => ({ alignItems: "center", paddingVertical: spacing[2], opacity: pressed ? 0.5 : 1 })}
+          style={({ pressed }) => ({ alignItems: "center", justifyContent: "center", minHeight: 48, opacity: pressed ? 0.5 : 1 })}
         >
           <Text style={[type.footnote, { color: t.textSecondary }]}>
             ¿Ya tienes cuenta? <Text style={{ color: t.primary, fontWeight: "700" }}>Inicia sesión</Text>

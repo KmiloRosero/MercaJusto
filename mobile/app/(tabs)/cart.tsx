@@ -14,10 +14,11 @@ import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
 import { SavingsNote } from "../../src/components/SavingsNote";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
+import { QuantityStepper } from "../../src/components/QuantityStepper";
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
-  const { items, subtotal, fetch, updateQty, error, loaded, loading, loadError } = useCart();
+  const { items, subtotal, fetch, updateQty, remove, pendingIds, error, loaded, loading, loadError } = useCart();
 
   useEffect(() => {
     fetch();
@@ -118,73 +119,49 @@ export default function Cart() {
                   <View
                     key={it.id}
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing[3],
+                      gap: spacing[2],
                       paddingVertical: spacing[2],
                       borderTopWidth: 1,
                       borderTopColor: t.border,
                     }}
                   >
-                    <FieldTile category={it.product.category} size={52} iconSize={26} radius={radius.md} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
-                        {it.product.name}
-                      </Text>
-                      <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, marginTop: 2 }}>
-                        {formatCOP(effectivePrice(it.product))} / {it.product.unit}
-                        {effectivePrice(it.product) < it.product.price ? (
-                          <Text style={{ textDecorationLine: "line-through" }}>
-                            {"  "}{formatCOP(it.product.price)}
-                          </Text>
-                        ) : null}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+                      <FieldTile category={it.product.category} size={52} iconSize={26} radius={radius.md} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>{it.product.name}</Text>
+                        <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginTop: 2 }}>
+                          {formatCOP(effectivePrice(it.product))} / {it.product.unit}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>
+                        {formatCOP(effectivePrice(it.product) * it.quantity)}
                       </Text>
                     </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        backgroundColor: t.bgSecondary,
-                        borderRadius: radius.full,
-                        paddingHorizontal: 6,
-                        paddingVertical: 4,
-                        gap: 6,
-                        borderWidth: 1,
-                        borderColor: t.border,
-                      }}
-                    >
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                       <Pressable
-                        onPress={() => updateQty(it.id, it.quantity - 1)}
+                        onPress={() => remove(it)}
+                        disabled={!!pendingIds[it.id]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Quitar ${it.product.name} de la canasta`}
                         style={({ pressed }) => ({
-                          width: 26,
-                          height: 26,
-                          borderRadius: radius.full,
+                          minHeight: 48,
+                          flexDirection: "row",
                           alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: pressed ? t.gray200 : "transparent",
+                          gap: 6,
+                          paddingRight: spacing[3],
+                          opacity: pressed ? 0.6 : 1,
                         })}
                       >
-                        <Icon name={it.quantity === 1 ? "trash-outline" : "remove"} size={14} color={t.textPrimary} />
+                        <Icon name="trash-outline" size={18} color={t.danger} />
+                        <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.danger }}>Quitar</Text>
                       </Pressable>
-
-                      <Text style={{ fontSize: 14, fontWeight: "800", color: t.textPrimary, minWidth: 18, textAlign: "center" }}>
-                        {it.quantity}
-                      </Text>
-
-                      <Pressable
-                        onPress={() => updateQty(it.id, it.quantity + 1)}
-                        disabled={it.quantity >= it.product.stock}
-                        style={({ pressed }) => ({
-                          width: 26,
-                          height: 26,
-                          borderRadius: radius.full,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: pressed ? t.gray200 : "transparent",
-                        })}
-                      >
-                        <Icon name="add" size={14} color={t.textPrimary} />
-                      </Pressable>
+                      <QuantityStepper
+                        value={it.quantity}
+                        max={it.product.stock}
+                        pending={!!pendingIds[it.id]}
+                        label={it.product.name}
+                        onChange={(q) => updateQty(it.id, q)}
+                      />
                     </View>
                   </View>
                 ))}

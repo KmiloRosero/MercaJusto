@@ -276,7 +276,7 @@ export default function PublicarCosecha() {
               <Text style={{ flex: 1, fontSize: fontSize.sm, color: t.onPrimaryLight, lineHeight: 18 }}>
                 Recuperamos lo que habías escrito.
               </Text>
-              <Pressable onPress={discardDraft} hitSlop={12} accessibilityRole="button">
+              <Pressable onPress={discardDraft} hitSlop={15} accessibilityRole="button">
                 <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.onPrimaryLight }}>Empezar de nuevo</Text>
               </Pressable>
             </View>
@@ -337,6 +337,7 @@ export default function PublicarCosecha() {
                     <Pressable
                       key={c.id}
                       onPress={() => setCategoryId(c.id)}
+                      hitSlop={{ top: 6, bottom: 6 }}
                       style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -430,6 +431,7 @@ export default function PublicarCosecha() {
                     <Pressable
                       key={u}
                       onPress={() => setUnit(u)}
+                      hitSlop={{ top: 6, bottom: 6 }}
                       style={{
                         paddingHorizontal: spacing[3],
                         paddingVertical: 8,

@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, View, Pressable } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import { fontSize, radius, spacing, type, useTheme } from "../theme";
 import { Icon } from "./Icon";
 import { BRAND, LogoMark } from "./Logo";
@@ -17,8 +17,10 @@ export function TopBar({ title, showBack, onBack, right }: TopBarProps) {
   return (
     <View
       style={{
-        height: 56,
-        paddingHorizontal: spacing[4],
+        height: 64,
+        // Con botón Atrás, el ícono queda a 4 dp del borde como en la app bar de Material.
+        paddingLeft: showBack ? spacing[1] : spacing[4],
+        paddingRight: spacing[4],
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
@@ -31,17 +33,19 @@ export function TopBar({ title, showBack, onBack, right }: TopBarProps) {
         {showBack ? (
           <Pressable
             onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            android_ripple={{ color: t.gray200, borderless: true, radius: 24 }}
             style={({ pressed }) => ({
-              width: 36,
-              height: 36,
+              width: 48,
+              height: 48,
               borderRadius: radius.full,
-              backgroundColor: t.bgSecondary,
               alignItems: "center",
               justifyContent: "center",
-              opacity: pressed ? 0.7 : 1,
+              backgroundColor: pressed && Platform.OS !== "android" ? t.gray100 : "transparent",
             })}
           >
-            <Icon name="chevron-back" size={20} color={t.textPrimary} />
+            <Icon name="arrow-back" size={24} color={t.textPrimary} />
           </Pressable>
         ) : (
           <View
@@ -90,7 +94,7 @@ export function SectionHeader({ title, action, onAction }: SectionHeaderProps) {
       {action ? (
         <Pressable
           onPress={onAction}
-          hitSlop={10}
+          hitSlop={{ top: 15, bottom: 15, left: 12, right: 12 }}
           accessibilityRole="button"
           style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 2, opacity: pressed ? 0.5 : 1 })}
         >

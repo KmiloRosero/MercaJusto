@@ -10,15 +10,16 @@ const DURATION_MS = 2600;
 
 /** Aviso flotante breve. Se monta una sola vez en el layout raíz. */
 export function Toast() {
-  const { message, kind, key, hide } = useToast();
+  const { message, kind, key, hide, action } = useToast();
   const insets = useSafeAreaInsets();
   const t = useTheme();
 
   useEffect(() => {
     if (!message) return;
-    const id = setTimeout(hide, DURATION_MS);
+    // Con acción (Deshacer) se deja más tiempo para alcanzar a tocarla.
+    const id = setTimeout(hide, action ? DURATION_MS * 2 : DURATION_MS);
     return () => clearTimeout(id);
-  }, [message, key, hide]);
+  }, [message, key, hide, action]);
 
   if (!message) return null;
 
@@ -55,6 +56,19 @@ export function Toast() {
       >
         <Icon name={icon} size={18} color={kind === "error" ? t.dangerLight : t.onInverseSurface} />
         <Text style={{ color: t.onInverseSurface, fontWeight: "600", fontSize: 14, flexShrink: 1 }}>{message}</Text>
+        {action ? (
+          <Pressable
+            onPress={() => {
+              hide();
+              action.onPress();
+            }}
+            accessibilityRole="button"
+            hitSlop={8}
+            style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: spacing[2], marginRight: -spacing[2] }}
+          >
+            <Text style={{ color: t.inversePrimary, fontWeight: "800", fontSize: 14 }}>{action.label}</Text>
+          </Pressable>
+        ) : null}
       </Pressable>
     </Animated.View>
   );

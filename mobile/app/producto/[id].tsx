@@ -18,6 +18,7 @@ import { toast } from "../../src/store/toast";
 
 import { FieldTile } from "../../src/components/FieldTile";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
+import { QuantityStepper } from "../../src/components/QuantityStepper";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -286,28 +287,12 @@ export default function ProductDetail() {
           </View>
         ) : (
         <>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: t.bgSecondary,
-            borderRadius: radius.full,
-            paddingHorizontal: spacing[3],
-            paddingVertical: 6,
-            gap: spacing[3],
-            borderWidth: 1,
-            borderColor: t.border }}
-        >
-          <Pressable onPress={() => setQty((q) => Math.max(1, q - 1))} hitSlop={6}>
-            <Icon name="remove" size={16} color={t.textPrimary} />
-          </Pressable>
-          <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary, minWidth: 20, textAlign: "center" }}>
-            {qty}
-          </Text>
-          <Pressable onPress={() => setQty((q) => Math.min(Math.max(1, product.stock), q + 1))} hitSlop={6}>
-            <Icon name="add" size={16} color={t.textPrimary} />
-          </Pressable>
-        </View>
+        <QuantityStepper
+          value={qty}
+          max={Math.max(1, product.stock)}
+          label={product.name}
+          onChange={setQty}
+        />
 
         <Button
           icon={<Icon name="cart" size={18} color={t.onPrimary} />}

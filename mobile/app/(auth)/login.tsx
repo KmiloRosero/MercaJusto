@@ -225,7 +225,7 @@ export default function Login() {
                 full
                 size="lg"
               />
-              <Pressable onPress={countdown === 0 ? sendOtp : undefined} style={{ padding: spacing[2] }}>
+              <Pressable onPress={countdown === 0 ? sendOtp : undefined} style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: spacing[2] }}>
                 <Text
                   style={{
                     textAlign: "center",

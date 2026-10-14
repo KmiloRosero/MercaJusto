@@ -53,6 +53,8 @@ type ColorTokens = {
   /** Superficie inversa (snackbar). */
   inverseSurface: string;
   onInverseSurface: string;
+  /** Acción sobre la superficie inversa (botón del snackbar). */
+  inversePrimary: string;
 };
 
 export const colors: { light: ColorTokens; dark: ColorTokens } = {
@@ -105,6 +107,7 @@ export const colors: { light: ColorTokens; dark: ColorTokens } = {
     scrim: "rgba(10,20,14,0.5)",
     inverseSurface: "#26302A",
     onInverseSurface: "#EEF3EC",
+    inversePrimary: "#8FD3A1",
   },
   dark: {
     primary: "#8FD3A1",
@@ -155,6 +158,7 @@ export const colors: { light: ColorTokens; dark: ColorTokens } = {
     scrim: "rgba(0,0,0,0.6)",
     inverseSurface: "#E4EBE3",
     onInverseSurface: "#1C241D",
+    inversePrimary: "#1F6B3D",
   },
 };
 
