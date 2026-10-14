@@ -83,7 +83,7 @@ EXPO_PUBLIC_API_URL=http://192.168.0.36:4000
 
 - **Render gratuito:** se duerme tras 15 min sin uso. El primer acceso tarda unos 50 s en despertar, así que conviene abrirlo antes de presentar.
 - **Datos:** cada reinicio vuelve a cargar los datos demo.
-- **Redesplegar la web:** `cd mobile && vercel deploy --prod`.
+- **Web:** se publica sola con cada `git push` a `main` (Vercel conectado al repo, raíz `mobile/`). A mano: `vercel deploy --prod` desde la raíz del repo.
 - **Backend en Railway:** también está listo con `backend/railway.json`. Necesita el plan Hobby y un volumen en `/data`.
 
 ## 👤 Cuentas demo
