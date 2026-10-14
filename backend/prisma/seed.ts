@@ -552,8 +552,8 @@ async function main() {
         status: "DELIVERED",
         subtotal: 10000,
         deliveryFee: 3500,
-        platformFee: 800,
-        total: 14300,
+        platformFee: 500,
+        total: 14000,
         paymentMethod: "NEQUI",
         paymentStatus: "PAID",
         deliveryAddressId: buyerAddr.id,
@@ -574,6 +574,44 @@ async function main() {
         rating: 5,
         comment: "La cebolla llegó fresquísima y Doña Rosa fue muy amable. ¡Volveré a comprar!",
       },
+    });
+  }
+
+  console.log("🚜 Creando pedido en curso para la demo del productor...");
+
+  // Pedido confirmado con productos de Don José: desde su cuenta se puede
+  // avanzar a "Preparando" → "En camino" → "Entregado" y María lo ve en vivo.
+  const papaPastusa = await prisma.product.findFirst({ where: { name: "Papa pastusa" } });
+  if (papaPastusa && buyerAddr) {
+    const qty = 2;
+    const unitPrice = papaPastusa.isSurplus
+      ? Math.round(papaPastusa.price * (1 - papaPastusa.discountPct / 100))
+      : papaPastusa.price;
+    const subtotal = unitPrice * qty;
+    const platformFee = Math.round(subtotal * 0.05);
+    await prisma.order.create({
+      data: {
+        buyerId: buyer.id,
+        status: "CONFIRMED",
+        subtotal,
+        deliveryFee: 3500,
+        platformFee,
+        total: subtotal + 3500 + platformFee,
+        paymentMethod: "CASH",
+        paymentStatus: "PENDING",
+        deliveryAddressId: buyerAddr.id,
+        notes: "Dejar con el portero, por favor.",
+        createdAt: new Date(Date.now() - 45 * 60 * 1000),
+        items: {
+          create: [
+            { productId: papaPastusa.id, quantity: qty, unitPrice, subtotal },
+          ],
+        },
+      },
+    });
+    await prisma.product.update({
+      where: { id: papaPastusa.id },
+      data: { stock: { decrement: qty } },
     });
   }
 

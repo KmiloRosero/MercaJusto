@@ -2,14 +2,36 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { sendPushToUser } from "../lib/push";
-import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
+import { effectivePrice, orderTotals } from "../lib/pricing";
+import {
+  BadRequestError,
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+} from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
 
 export const ordersRouter = Router();
 ordersRouter.use(requireAuth);
 
-const PLATFORM_FEE_PCT = 0.05; // 5% comisión MercaJusto
-const BASE_DELIVERY_FEE = 3500;
+type OrderStatus = "PENDING" | "CONFIRMED" | "PREPARING" | "IN_TRANSIT" | "DELIVERED" | "CANCELLED";
+
+/** Quién participa en un pedido y con qué papel. */
+async function loadParticipation(orderId: string, userId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { items: { include: { product: { select: { producerId: true } } } } },
+  });
+  if (!order) throw new NotFoundError("Pedido no encontrado");
+  const producerIds = [...new Set(order.items.map((it) => it.product.producerId))];
+  return {
+    order,
+    producerIds,
+    isBuyer: order.buyerId === userId,
+    isProducer: producerIds.includes(userId),
+    isCourier: order.courierId === userId,
+  };
+}
 
 // GET /api/orders/mine — pedidos del usuario logueado
 ordersRouter.get("/mine", async (req, res, next) => {
@@ -36,24 +58,37 @@ ordersRouter.get("/mine", async (req, res, next) => {
   }
 });
 
-// GET /api/orders/:id
+// GET /api/orders/:id — solo comprador, productores del pedido o repartidor
 ordersRouter.get("/:id", async (req, res, next) => {
   try {
+    const p = await loadParticipation(req.params.id, req.user!.userId);
+    if (!p.isBuyer && !p.isProducer && !p.isCourier) {
+      throw new ForbiddenError("No tienes acceso a este pedido");
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: req.params.id },
       include: {
         items: {
           include: {
-            product: { include: { producer: { select: { id: true, name: true, phone: true, rating: true } } } },
+            product: {
+              include: {
+                category: true,
+                producer: {
+                  select: { id: true, name: true, phone: true, rating: true, ratingCount: true, avatarUrl: true },
+                },
+              },
+            },
           },
         },
         buyer: { select: { id: true, name: true, phone: true, avatarUrl: true } },
-        courier: { select: { id: true, name: true, phone: true, avatarUrl: true } },
+        courier: {
+          select: { id: true, name: true, phone: true, avatarUrl: true, rating: true, ratingCount: true },
+        },
         deliveryAddress: true,
         reviews: true,
       },
     });
-    if (!order) throw new NotFoundError("Pedido no encontrado");
     res.json(order);
   } catch (err) {
     next(err);
@@ -72,64 +107,75 @@ const createOrderSchema = z.object({
 ordersRouter.post("/", requireRole("BUYER"), async (req, res, next) => {
   try {
     const { deliveryAddressId, paymentMethod, notes } = createOrderSchema.parse(req.body);
+    const userId = req.user!.userId;
 
     const address = await prisma.address.findFirst({
-      where: { id: deliveryAddressId, userId: req.user!.userId },
+      where: { id: deliveryAddressId, userId },
     });
     if (!address) throw new NotFoundError("Dirección no encontrada");
 
-    const cartItems = await prisma.cartItem.findMany({
-      where: { userId: req.user!.userId },
-      include: { product: true },
-    });
-    if (cartItems.length === 0) throw new BadRequestError("El carrito está vacío");
+    // Todo en una transacción: si falta stock de un producto no se crea nada.
+    const order = await prisma.$transaction(async (tx) => {
+      const cartItems = await tx.cartItem.findMany({
+        where: { userId },
+        include: { product: true },
+      });
+      if (cartItems.length === 0) throw new BadRequestError("El carrito está vacío");
 
-    // Verificar stock
-    for (const it of cartItems) {
-      if (it.product.stock < it.quantity) {
-        throw new BadRequestError(
-          `Stock insuficiente de "${it.product.name}". Disponible: ${it.product.stock}`
-        );
-      }
-    }
-
-    const subtotal = cartItems.reduce((acc, it) => acc + it.product.price * it.quantity, 0);
-    const platformFee = Math.round(subtotal * PLATFORM_FEE_PCT);
-    const total = subtotal + BASE_DELIVERY_FEE + platformFee;
-
-    const order = await prisma.order.create({
-      data: {
-        buyerId: req.user!.userId,
-        deliveryAddressId,
-        paymentMethod,
-        notes,
-        subtotal,
-        deliveryFee: BASE_DELIVERY_FEE,
-        platformFee,
-        total,
-        status: "CONFIRMED",
-        items: {
-          create: cartItems.map((it) => ({
-            productId: it.productId,
-            quantity: it.quantity,
-            unitPrice: it.product.price,
-            subtotal: it.product.price * it.quantity,
-          })),
-        },
-      },
-      include: { items: { include: { product: true } } },
-    });
-
-    // Descontar stock y vaciar carrito en una transacción
-    await prisma.$transaction([
-      ...cartItems.map((it) =>
-        prisma.product.update({
-          where: { id: it.productId },
+      for (const it of cartItems) {
+        if (!it.product.isActive) {
+          throw new BadRequestError(`"${it.product.name}" ya no está disponible`);
+        }
+        // Decremento condicional: falla si otro pedido se llevó el stock.
+        const { count } = await tx.product.updateMany({
+          where: { id: it.productId, stock: { gte: it.quantity } },
           data: { stock: { decrement: it.quantity } },
-        })
-      ),
-      prisma.cartItem.deleteMany({ where: { userId: req.user!.userId } }),
-    ]);
+        });
+        if (count === 0) {
+          throw new BadRequestError(
+            `Stock insuficiente de "${it.product.name}". Disponible: ${it.product.stock} ${it.product.unit}`
+          );
+        }
+      }
+
+      const lines = cartItems.map((it) => {
+        const unitPrice = effectivePrice(it.product);
+        return {
+          productId: it.productId,
+          quantity: it.quantity,
+          unitPrice,
+          subtotal: unitPrice * it.quantity,
+        };
+      });
+      const totals = orderTotals(lines.reduce((acc, l) => acc + l.subtotal, 0));
+
+      const created = await tx.order.create({
+        data: {
+          buyerId: userId,
+          deliveryAddressId,
+          paymentMethod,
+          paymentStatus: paymentMethod === "CASH" ? "PENDING" : "PAID",
+          notes,
+          ...totals,
+          status: "CONFIRMED",
+          items: { create: lines },
+        },
+        include: { items: { include: { product: true } } },
+      });
+
+      await tx.cartItem.deleteMany({ where: { userId } });
+      return created;
+    });
+
+    // Avisar a cada productor involucrado (fire and forget)
+    const producerIds = [...new Set(order.items.map((it) => it.product.producerId))];
+    for (const producerId of producerIds) {
+      void sendPushToUser(producerId, {
+        title: "🧺 ¡Nuevo pedido!",
+        body: "Tienes un pedido nuevo para alistar. Revísalo en la pestaña Pedidos.",
+        data: { orderId: order.id },
+      });
+    }
 
     res.status(201).json(order);
   } catch (err) {
@@ -137,10 +183,23 @@ ordersRouter.post("/", requireRole("BUYER"), async (req, res, next) => {
   }
 });
 
-// PATCH /api/orders/:id/status — actualizar estado (courier o productor)
+// ═══════════════════════════════════════════
+// PATCH /api/orders/:id/status — avanzar estado
+// Productor/repartidor avanzan el flujo; el comprador solo puede cancelar
+// antes de que el pedido se empiece a preparar.
+// ═══════════════════════════════════════════
 const statusSchema = z.object({
   status: z.enum(["CONFIRMED", "PREPARING", "IN_TRANSIT", "DELIVERED", "CANCELLED"]),
 });
+
+const NEXT_STATUS: Record<OrderStatus, OrderStatus[]> = {
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PREPARING", "CANCELLED"],
+  PREPARING: ["IN_TRANSIT", "CANCELLED"],
+  IN_TRANSIT: ["DELIVERED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
 
 const STATUS_PUSH: Record<string, { title: string; body: string }> = {
   CONFIRMED: { title: "✅ Pedido confirmado", body: "El productor recibió tu pedido y lo está alistando." },
@@ -153,25 +212,80 @@ const STATUS_PUSH: Record<string, { title: string; body: string }> = {
 ordersRouter.patch("/:id/status", async (req, res, next) => {
   try {
     const { status } = statusSchema.parse(req.body);
-    const order = await prisma.order.findUnique({ where: { id: req.params.id } });
-    if (!order) throw new NotFoundError();
+    const userId = req.user!.userId;
+    const { order, isBuyer, isProducer, isCourier, producerIds } = await loadParticipation(
+      req.params.id,
+      userId
+    );
 
-    const updated = await prisma.order.update({
-      where: { id: order.id },
-      data: {
-        status,
-        deliveredAt: status === "DELIVERED" ? new Date() : order.deliveredAt,
-      },
+    if (!isBuyer && !isProducer && !isCourier) {
+      throw new ForbiddenError("No tienes acceso a este pedido");
+    }
+
+    const current = order.status as OrderStatus;
+    if (!NEXT_STATUS[current]?.includes(status)) {
+      throw new BadRequestError(`No se puede pasar de ${current} a ${status}`);
+    }
+
+    // El comprador solo cancela, y solo antes de que se prepare
+    if (!isProducer && !isCourier) {
+      if (status !== "CANCELLED" || !["PENDING", "CONFIRMED"].includes(current)) {
+        throw new ForbiddenError("Solo puedes cancelar el pedido antes de que se empiece a preparar");
+      }
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      // Al cancelar se devuelve el stock reservado
+      if (status === "CANCELLED") {
+        for (const it of order.items) {
+          await tx.product.update({
+            where: { id: it.productId },
+            data: { stock: { increment: it.quantity } },
+          });
+        }
+      }
+      // Al despachar sin repartidor asignado, se toma el que tenga menos pedidos en curso
+      let courierId = order.courierId;
+      if (status === "IN_TRANSIT" && !courierId) {
+        const couriers = await tx.user.findMany({
+          where: { role: "COURIER" },
+          select: {
+            id: true,
+            _count: { select: { ordersAsCourier: { where: { status: "IN_TRANSIT" } } } },
+          },
+        });
+        couriers.sort((a, b) => a._count.ordersAsCourier - b._count.ordersAsCourier);
+        courierId = couriers[0]?.id ?? null;
+      }
+      return tx.order.update({
+        where: { id: order.id },
+        data: {
+          status,
+          courierId,
+          deliveredAt: status === "DELIVERED" ? new Date() : order.deliveredAt,
+          ...(status === "DELIVERED" && order.paymentMethod === "CASH" ? { paymentStatus: "PAID" } : {}),
+        },
+      });
     });
 
-    // Notificar al comprador (fire and forget, no bloquea la respuesta)
-    const push = STATUS_PUSH[status];
-    if (push) {
-      void sendPushToUser(order.buyerId, {
-        title: push.title,
-        body: push.body,
-        data: { orderId: order.id, status },
-      });
+    // Notificar (fire and forget, no bloquea la respuesta)
+    if (isBuyer && !isProducer && !isCourier) {
+      for (const producerId of producerIds) {
+        void sendPushToUser(producerId, {
+          title: "❌ Pedido cancelado",
+          body: "El comprador canceló su pedido. El stock volvió a tu inventario.",
+          data: { orderId: order.id, status },
+        });
+      }
+    } else {
+      const push = STATUS_PUSH[status];
+      if (push) {
+        void sendPushToUser(order.buyerId, {
+          title: push.title,
+          body: push.body,
+          data: { orderId: order.id, status },
+        });
+      }
     }
 
     res.json(updated);
@@ -181,7 +295,7 @@ ordersRouter.patch("/:id/status", async (req, res, next) => {
 });
 
 // ═══════════════════════════════════════════
-// POST /api/orders/:id/reviews — calificar
+// POST /api/orders/:id/reviews — el comprador califica productor/repartidor
 // ═══════════════════════════════════════════
 const reviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
@@ -192,20 +306,26 @@ const reviewSchema = z.object({
 ordersRouter.post("/:id/reviews", async (req, res, next) => {
   try {
     const { rating, comment, toUserId } = reviewSchema.parse(req.body);
+    const userId = req.user!.userId;
+    const { order, isBuyer, producerIds } = await loadParticipation(req.params.id, userId);
 
-    const order = await prisma.order.findUnique({
-      where: { id: req.params.id },
-      include: { items: { include: { product: true } } },
-    });
-    if (!order) throw new NotFoundError();
+    if (!isBuyer) throw new ForbiddenError("Solo el comprador puede calificar este pedido");
     if (order.status !== "DELIVERED") {
       throw new BadRequestError("Solo puedes calificar pedidos entregados");
     }
+    if (!producerIds.includes(toUserId) && order.courierId !== toUserId) {
+      throw new BadRequestError("Solo puedes calificar a quienes participaron en el pedido");
+    }
+
+    const existing = await prisma.review.findFirst({
+      where: { orderId: order.id, fromUserId: userId, toUserId },
+    });
+    if (existing) throw new ConflictError("Ya calificaste a esta persona en este pedido");
 
     const review = await prisma.review.create({
       data: {
         orderId: order.id,
-        fromUserId: req.user!.userId,
+        fromUserId: userId,
         toUserId,
         rating,
         comment,
@@ -222,7 +342,7 @@ ordersRouter.post("/:id/reviews", async (req, res, next) => {
     await prisma.user.update({
       where: { id: toUserId },
       data: {
-        rating: stats._avg.rating || 0,
+        rating: Math.round((stats._avg.rating || 0) * 10) / 10,
         ratingCount: stats._count,
       },
     });

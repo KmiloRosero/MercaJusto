@@ -2,10 +2,13 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, requireRole } from "../middleware/auth";
+import { effectivePrice } from "../lib/pricing";
 
 export const cartRouter = Router();
 cartRouter.use(requireAuth);
+// Solo los compradores arman canasta (los productores venden, no compran)
+cartRouter.use(requireRole("BUYER"));
 
 // GET /api/cart
 cartRouter.get("/", async (req, res, next) => {
@@ -21,7 +24,7 @@ cartRouter.get("/", async (req, res, next) => {
       },
     });
 
-    const subtotal = items.reduce((acc, it) => acc + it.product.price * it.quantity, 0);
+    const subtotal = items.reduce((acc, it) => acc + effectivePrice(it.product) * it.quantity, 0);
 
     res.json({ items, subtotal, count: items.length });
   } catch (err) {
@@ -41,15 +44,21 @@ cartRouter.post("/items", async (req, res, next) => {
 
     const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product || !product.isActive) throw new NotFoundError("Producto no disponible");
-    if (product.stock < quantity) {
-      throw new BadRequestError(`Stock insuficiente. Disponible: ${product.stock} ${product.unit}`);
-    }
 
     const existing = await prisma.cartItem.findUnique({
       where: {
         userId_productId: { userId: req.user!.userId, productId },
       },
     });
+
+    const inCart = existing?.quantity ?? 0;
+    if (product.stock < inCart + quantity) {
+      throw new BadRequestError(
+        inCart > 0
+          ? `Stock insuficiente. Disponible: ${product.stock} ${product.unit} (ya tienes ${inCart} en tu canasta)`
+          : `Stock insuficiente. Disponible: ${product.stock} ${product.unit}`
+      );
+    }
 
     const item = existing
       ? await prisma.cartItem.update({
@@ -77,6 +86,12 @@ cartRouter.patch("/items/:id", async (req, res, next) => {
     if (quantity === 0) {
       await prisma.cartItem.delete({ where: { id: item.id } });
       return res.json({ ok: true, removed: true });
+    }
+
+    const product = await prisma.product.findUnique({ where: { id: item.productId } });
+    if (!product || !product.isActive) throw new NotFoundError("Producto no disponible");
+    if (product.stock < quantity) {
+      throw new BadRequestError(`Stock insuficiente. Disponible: ${product.stock} ${product.unit}`);
     }
 
     const updated = await prisma.cartItem.update({
