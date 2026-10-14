@@ -133,15 +133,17 @@ export default function Profile() {
                 </>
               ) : (
                 <>
-                  <StatBox label="Ahorro vs. plaza" value={formatCOP(metrics.totals.buyerSavingsTotal)} color={t.success} />
+                  <StatBox label="Ahorrado frente a la plaza" value={formatCOP(metrics.totals.buyerSavingsTotal)} color={t.success} />
                   <StatBox label="Pedidos" value={String(metrics.ordersCount)} color={t.primary} />
                 </>
               )}
             </View>
             <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
               {isProducer
-                ? "Recibes el 100% del precio de tu cosecha: sin intermediarios."
-                : `Pagaste ${metrics.totals.buyerSavingsPct}% menos que en plaza y el dinero llegó directo al campo.`}
+                ? "Recibes el 100 % del precio de tu cosecha: sin intermediarios."
+                : metrics.totals.buyerSavingsPct > 0
+                  ? `En los productos con precio de plaza pagaste ${metrics.totals.buyerSavingsPct.toLocaleString("es-CO")} % menos, y el dinero llegó directo al campo.`
+                  : "Tu dinero llega directo al campo, sin intermediarios."}
             </Text>
           </View>
         ) : null}
@@ -189,7 +191,7 @@ export default function Profile() {
                     <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{p.name}</Text>
                     <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
                       {formatCOP(effectivePrice(p))}/{p.unit} · Stock {p.stock}
-                      {p.isSurplus ? ` · Excedente -${p.discountPct}%` : ""}
+                      {p.isSurplus ? ` · Excedente -${p.discountPct} %` : ""}
                     </Text>
                   </View>
                   <Icon name="chevron-forward" size={16} color={t.textTertiary} />

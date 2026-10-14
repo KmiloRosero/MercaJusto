@@ -300,7 +300,7 @@ export default function PublicarCosecha() {
                   <TextInput
                     value={price}
                     onChangeText={(v) => setPrice(v.replace(/\D/g, ""))}
-                    placeholder="8500"
+                    placeholder="Ej. 8.500"
                     keyboardType="numeric"
                     placeholderTextColor={t.textTertiary}
                     style={inputStyle(t)}
@@ -312,7 +312,7 @@ export default function PublicarCosecha() {
                   <TextInput
                     value={stock}
                     onChangeText={(v) => setStock(v.replace(/\D/g, ""))}
-                    placeholder="50"
+                    placeholder="Ej. 50"
                     keyboardType="numeric"
                     placeholderTextColor={t.textTertiary}
                     style={inputStyle(t)}
@@ -321,11 +321,14 @@ export default function PublicarCosecha() {
               </View>
             </View>
 
-            <Field label="Precio en plaza de mercado (opcional)">
+            <Field
+              label="Precio en plaza de mercado (opcional)"
+              help={plazaHelp(Number(price), Number(traditionalPrice), unit)}
+            >
               <TextInput
                 value={traditionalPrice}
                 onChangeText={(v) => setTraditionalPrice(v.replace(/\D/g, ""))}
-                placeholder="Ej. 12000 — así el comprador ve cuánto ahorra"
+                placeholder="Ej. 12.000"
                 keyboardType="numeric"
                 placeholderTextColor={t.textTertiary}
                 style={inputStyle(t)}
@@ -416,7 +419,7 @@ export default function PublicarCosecha() {
                             color: selected ? t.onAccentLight : t.textSecondary,
                           }}
                         >
-                          -{d}%
+                          -{d} %
                         </Text>
                       </Pressable>
                     );
@@ -540,14 +543,32 @@ function Title({ icon, children }: { icon?: IconName; children: React.ReactNode 
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  help,
+  children,
+}: {
+  label: string;
+  help?: { text: string; tone: "info" | "good" | "warn" };
+  children: React.ReactNode;
+}) {
   const t = useTheme();
+  const helpColor = help?.tone === "good" ? t.success : help?.tone === "warn" ? t.warning : t.textSecondary;
   return (
     <View style={{ gap: 6 }}>
       <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>{label}</Text>
       {children}
+      {help ? <Text style={{ fontSize: fontSize.sm, color: helpColor, lineHeight: 18 }}>{help.text}</Text> : null}
     </View>
   );
+}
+
+/** Ayuda del precio de plaza: explica para qué sirve y anticipa lo que verá el comprador. */
+function plazaHelp(price: number, plaza: number, unit: string): { text: string; tone: "info" | "good" | "warn" } {
+  if (!plaza) return { text: "Si lo pones, los compradores ven cuánto se ahorran contigo.", tone: "info" };
+  if (!price) return { text: "Escribe también tu precio para calcular el ahorro.", tone: "info" };
+  if (plaza <= price) return { text: "Para mostrar ahorro, el precio en plaza debe ser mayor que el tuyo.", tone: "warn" };
+  return { text: `Los compradores verán: ahorras ${formatCOP(plaza - price)} por ${unit.toLowerCase()}.`, tone: "good" };
 }
 
 function inputStyle(t: ReturnType<typeof useTheme>) {

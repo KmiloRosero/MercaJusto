@@ -12,6 +12,7 @@ import { Product } from "../api/types";
 import { Icon } from "./Icon";
 import { FieldTile } from "./FieldTile";
 import { effectivePrice } from "../lib/pricing";
+import { plazaComparison } from "../lib/savings";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -35,7 +36,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
   const addStyle = useAnimatedStyle(() => ({ transform: [{ scale: addScale.value }] }));
 
   const finalPrice = effectivePrice(product);
-  const discounted = finalPrice < product.price;
+  const plaza = plazaComparison(product);
   const soldOut = product.stock <= 0;
 
   return (
@@ -44,7 +45,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
       onPressIn={() => (cardScale.value = withTiming(0.98, pressIn))}
       onPressOut={() => (cardScale.value = withSpring(1, release))}
       accessibilityRole="button"
-      accessibilityLabel={`${product.name}, ${formatCOP(finalPrice)} por ${product.unit}`}
+      accessibilityLabel={`${product.name}, ${formatCOP(finalPrice)} por ${product.unit}${plaza ? `, en plaza ${formatCOP(plaza.plaza)}` : ""}`}
       style={[cardStyle, { gap: spacing[2] }]}
     >
       {/* Foto o placeholder de categoría */}
@@ -80,7 +81,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
             }}
           >
             <Icon name="leaf" size={11} color={t.onAccent} />
-            <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "700" }}>-{product.discountPct}%</Text>
+            <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "700" }}>-{product.discountPct} %</Text>
           </View>
         ) : null}
 
@@ -148,12 +149,12 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
             {formatCOP(finalPrice)}
           </Text>
           <Text style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>/{product.unit}</Text>
-          {discounted ? (
-            <Text style={[type.footnote, { color: t.textTertiary, fontWeight: "400", textDecorationLine: "line-through" }]}>
-              {formatCOP(product.price)}
-            </Text>
-          ) : null}
         </View>
+        {plaza ? (
+          <Text numberOfLines={1} style={[type.footnote, { color: t.success, fontWeight: "600" }]}>
+            En plaza {formatCOP(plaza.plaza)}
+          </Text>
+        ) : null}
       </View>
     </AnimatedPressable>
   );

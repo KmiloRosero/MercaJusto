@@ -23,6 +23,7 @@ import { effectivePrice, orderTotals } from "../src/lib/pricing";
 import { showAlert } from "../src/lib/dialog";
 
 import { FieldTile } from "../src/components/FieldTile";
+import { SavingsNote } from "../src/components/SavingsNote";
 const PAYMENT_METHODS: Array<{
   key: PaymentMethod;
   icon: IconName;
@@ -216,6 +217,12 @@ export default function Checkout() {
               );
             })}
           </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], marginTop: spacing[3] }}>
+            <Icon name="shield-checkmark-outline" size={16} color={t.textSecondary} />
+            <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
+              Puedes cancelar el pedido hasta que el productor empiece a prepararlo.
+            </Text>
+          </View>
         </SectionCard>
 
         {/* Resumen del pedido */}
@@ -252,18 +259,7 @@ export default function Checkout() {
           <View style={{ marginTop: spacing[3], gap: spacing[1] }}>
             <TotalRow label="Subtotal" value={formatCOP(subtotal)} color={t.textSecondary} />
             <TotalRow label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
-            <TotalRow
-              label="Comisión plataforma (5%)"
-              value={formatCOP(platformFee)}
-              color={t.textTertiary}
-              small
-            />
-            <TotalRow
-              label="Ahorro directo vs. tienda"
-              value={`− ${formatCOP(savings)}`}
-              color={t.success}
-              small
-            />
+            <TotalRow label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
             <View
               style={{
                 flexDirection: "row",
@@ -279,6 +275,9 @@ export default function Checkout() {
               <Text style={{ fontSize: 22, fontWeight: "800", color: t.primary }}>
                 {formatCOP(total)}
               </Text>
+            </View>
+            <View style={{ marginTop: spacing[2] }}>
+              <SavingsNote amount={savings} />
             </View>
           </View>
         </SectionCard>

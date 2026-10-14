@@ -12,6 +12,7 @@ import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
+import { SavingsNote } from "../../src/components/SavingsNote";
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
@@ -196,10 +197,10 @@ export default function Cart() {
           >
             <Row label="Subtotal" value={formatCOP(subtotal)} color={t.textPrimary} />
             <Row label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
-            <Row label="Comisión plataforma (5%)" value={formatCOP(platformFee)} color={t.textSecondary} small />
-            <Row label="Ahorro vs. plaza" value={`− ${formatCOP(savings)}`} color={t.success} small />
+            <Row label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
             <View style={{ height: 1, backgroundColor: t.border, marginVertical: spacing[2] }} />
             <Row label="Total a pagar" value={formatCOP(total)} color={t.primary} bold />
+            <SavingsNote amount={savings} />
             <Button title="Proceder al pago" onPress={() => router.push("/checkout")} full size="lg" />
           </View>
         </>

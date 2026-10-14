@@ -7,7 +7,8 @@ import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
+import { fontSize, radius, spacing, type, useTheme, formatCOP } from "../../src/theme";
+import { plazaComparison } from "../../src/lib/savings";
 import { apiErrorMessage, deleteProduct, getProduct } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
@@ -45,6 +46,7 @@ export default function ProductDetail() {
   }
 
   const finalPrice = effectivePrice(product);
+  const plaza = plazaComparison(product);
   const isOwner = me?.id === product.producerId;
   const isBuyer = me?.role === "BUYER";
   const outOfStock = product.stock <= 0 || !product.isActive;
@@ -104,7 +106,7 @@ export default function ProductDetail() {
           {product.isSurplus ? (
             <View style={{ position: "absolute", top: spacing[4], left: spacing[4] }}>
               <Pill variant="accent" icon="sparkles">
-                Excedente -{product.discountPct}%
+                Excedente -{product.discountPct} %
               </Pill>
             </View>
           ) : null}
@@ -136,6 +138,31 @@ export default function ProductDetail() {
               ) : null}
             </View>
           </View>
+
+          {plaza ? (
+            <View
+              accessible
+              accessibilityLabel={`En plaza cuesta ${formatCOP(plaza.plaza)} por ${product.unit}. Aquí ahorras ${formatCOP(plaza.perUnit)}, un ${plaza.pct} por ciento.`}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing[3],
+                padding: spacing[4],
+                borderRadius: radius.lg,
+                backgroundColor: t.successLight,
+              }}
+            >
+              <Icon name="leaf" size={22} color={t.success} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[type.callout, { color: t.textPrimary }]}>
+                  Ahorras {formatCOP(plaza.perUnit)} por {product.unit}
+                </Text>
+                <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
+                  En plaza de mercado cuesta {formatCOP(plaza.plaza)}: pagas {plaza.pct} % menos.
+                </Text>
+              </View>
+            </View>
+          ) : null}
 
           <View style={{ flexDirection: "row", gap: spacing[2], flexWrap: "wrap" }}>
             {outOfStock ? (

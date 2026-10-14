@@ -315,7 +315,13 @@ export default function Calificacion() {
         >
           <Icon name="heart" size={28} color={t.primary} />
           <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
-            Al comprar directo al productor, <Text style={{ fontWeight: "700", color: t.primary }}>ahorraste {formatCOP(savings)}</Text> frente al precio de plaza, y el productor recibió el valor completo de su cosecha.
+            {savings > 0 ? (
+              <>
+                Al comprar directo al productor, <Text style={{ fontWeight: "700", color: t.primary }}>ahorraste {formatCOP(savings)}</Text> frente a la plaza de mercado, y el productor recibió el valor completo de su cosecha.
+              </>
+            ) : (
+              "Al comprar directo al productor, él recibió el valor completo de su cosecha."
+            )}
           </Text>
         </View>
       </ScrollView>

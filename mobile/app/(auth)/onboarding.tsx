@@ -571,7 +571,7 @@ function PriceScene({
               backgroundColor: t.successLight,
             }}
           >
-            <Text style={{ fontSize: 12, fontWeight: "700", color: t.success }}>Ahorras {savingPct}%</Text>
+            <Text style={{ fontSize: 12, fontWeight: "700", color: t.success }}>Ahorras {savingPct} %</Text>
           </View>
         </View>
         <View style={{ gap: spacing[4] }}>
