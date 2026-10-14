@@ -74,6 +74,18 @@ EXPO_PUBLIC_API_URL=http://192.168.0.36:4000
 
 ---
 
+## 🌐 Despliegue
+
+| Parte | URL | Plataforma |
+|-------|-----|------------|
+| App web | https://mercajusto.vercel.app | Vercel (`mobile/`, variable `EXPO_PUBLIC_API_URL`) |
+| API | https://mercajusto-backend.onrender.com | Render, plan gratuito (`render.yaml`) |
+
+- **Render gratuito:** se duerme tras 15 min sin uso. El primer acceso tarda unos 50 s en despertar, así que conviene abrirlo antes de presentar.
+- **Datos:** cada reinicio vuelve a cargar los datos demo.
+- **Redesplegar la web:** `cd mobile && vercel deploy --prod`.
+- **Backend en Railway:** también está listo con `backend/railway.json`. Necesita el plan Hobby y un volumen en `/data`.
+
 ## 👤 Cuentas demo
 
 El modo OTP de desarrollo está activo: el código siempre es **123456** (la app lo muestra en pantalla).
