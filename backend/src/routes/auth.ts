@@ -25,7 +25,7 @@ authRouter.post("/otp", async (req, res, next) => {
     const { code, dev } = await issueOtp(phone);
     res.json({
       ok: true,
-      message: dev ? "Modo desarrollo: el código es 123456" : "Código enviado por SMS",
+      message: dev ? `Modo desarrollo: el código es ${code}` : "Código enviado por SMS",
       ...(dev ? { devCode: code } : {}),
     });
   } catch (err) {
@@ -38,10 +38,13 @@ authRouter.post("/verify", async (req, res, next) => {
   try {
     const { phone, code, name, role } = verifySchema.parse(req.body);
 
-    const valid = await verifyOtp(phone, code);
-    if (!valid) throw new BadRequestError("Código inválido o expirado");
-
     let user = await prisma.user.findUnique({ where: { phone } });
+
+    // Usuario nuevo sin nombre: validamos el código SIN consumirlo para que
+    // pueda completar el registro con el mismo código.
+    const needsRegistration = !user && !name;
+    const valid = await verifyOtp(phone, code, { consume: !needsRegistration });
+    if (!valid) throw new BadRequestError("Código inválido o expirado");
 
     if (!user) {
       if (!name) {

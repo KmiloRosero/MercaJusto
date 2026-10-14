@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { JwtPayload, verifyToken } from "../lib/jwt";
-import { UnauthorizedError } from "./errorHandler";
+import { ForbiddenError, UnauthorizedError } from "./errorHandler";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -30,7 +30,7 @@ export function requireRole(...roles: string[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.user) return next(new UnauthorizedError());
     if (!roles.includes(req.user.role)) {
-      return next(new UnauthorizedError(`Se requiere rol: ${roles.join(" o ")}`));
+      return next(new ForbiddenError(`Esta acción requiere rol: ${roles.join(" o ")}`));
     }
     next();
   };

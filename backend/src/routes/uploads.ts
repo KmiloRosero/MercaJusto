@@ -11,15 +11,25 @@ export const uploadsRouter = Router();
 const UPLOAD_DIR = path.resolve(process.cwd(), "uploads");
 if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${Number(process.env.PORT) || 4000}`;
+// Si PUBLIC_URL no está definido se usa el host con el que llegó la petición,
+// así las fotos funcionan aunque cambie la IP de la red local.
+function publicBaseUrl(req: Request): string {
+  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, "");
+  return `${req.protocol}://${req.get("host")}`;
+}
 
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp"]);
+// La extensión se deriva del mimetype validado, nunca del nombre que manda el cliente
+const ALLOWED: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
+    const ext = ALLOWED[file.mimetype] ?? ".jpg";
     cb(null, `${Date.now()}-${randomUUID()}${ext}`);
   },
 });
@@ -28,7 +38,7 @@ const upload = multer({
   storage,
   limits: { fileSize: MAX_SIZE },
   fileFilter: (_req, file, cb) => {
-    if (!ALLOWED.has(file.mimetype)) {
+    if (!ALLOWED[file.mimetype]) {
       return cb(new BadRequestError("Formato no permitido. Usa JPEG, PNG o WEBP."));
     }
     cb(null, true);
@@ -49,5 +59,5 @@ function uploadSingle(req: Request, res: Response, next: NextFunction) {
 // POST /api/uploads — sube una imagen y devuelve su URL pública
 uploadsRouter.post("/", requireAuth, uploadSingle, (req, res) => {
   if (!req.file) throw new BadRequestError("No se recibió ningún archivo");
-  res.status(201).json({ url: `${PUBLIC_URL}/uploads/${req.file.filename}` });
+  res.status(201).json({ url: `${publicBaseUrl(req)}/uploads/${req.file.filename}` });
 });

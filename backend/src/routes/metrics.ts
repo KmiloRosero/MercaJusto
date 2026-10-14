@@ -51,6 +51,14 @@ metricsRouter.get("/fair-price", async (req, res, next) => {
       })
       .parse(req.query);
 
+    // Cada usuario solo ve sus propias cifras (compras o ventas)
+    const me = req.user!;
+    if (me.role === "BUYER") {
+      q.buyerId = me.userId;
+    } else if (me.role === "PRODUCER") {
+      q.producerId = me.userId;
+    }
+
     const createdAt: Record<string, Date> = {};
     if (q.from) createdAt.gte = new Date(q.from);
     if (q.to) createdAt.lte = new Date(q.to);

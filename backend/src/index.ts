@@ -1,4 +1,5 @@
 import "dotenv/config";
+import os from "os";
 import path from "path";
 import express from "express";
 import cors from "cors";
@@ -22,7 +23,12 @@ app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 
 // Imágenes subidas (fotos de cosecha) servidas como estáticos
-app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.resolve(process.cwd(), "uploads"), {
+    setHeaders: (res) => res.setHeader("X-Content-Type-Options", "nosniff"),
+  })
+);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok", service: "mercajusto-api", time: new Date().toISOString() });
@@ -48,5 +54,11 @@ app.listen(PORT, () => {
   console.log("🛒 MercaJusto API");
   console.log(`   http://localhost:${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/health`);
+  // IPs de la red local: úsalas en EXPO_PUBLIC_API_URL para un celular físico
+  for (const iface of Object.values(os.networkInterfaces()).flat()) {
+    if (iface && iface.family === "IPv4" && !iface.internal) {
+      console.log(`   Red local: http://${iface.address}:${PORT}/api`);
+    }
+  }
   console.log("");
 });

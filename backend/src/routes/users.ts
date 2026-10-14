@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { NotFoundError } from "../middleware/errorHandler";
+import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
 import { requireAuth } from "../middleware/auth";
 
 export const usersRouter = Router();
@@ -58,19 +58,30 @@ usersRouter.get("/:id", async (req, res, next) => {
         ratingCount: true,
         role: true,
         createdAt: true,
-        addresses: {
-          select: { municipio: true, departamento: true, vereda: true },
+        reviewsReceived: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            createdAt: true,
+            fromUser: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 5,
         },
       },
     });
     if (!user) throw new NotFoundError();
 
     if (user.role === "PRODUCER") {
+      // Solo el municipio/vereda de las fincas: nunca la dirección exacta
       const products = await prisma.product.findMany({
         where: { producerId: user.id, isActive: true },
         include: { category: true },
+        orderBy: { createdAt: "desc" },
       });
-      return res.json({ ...user, products });
+      const municipios = [...new Set(products.map((p) => p.municipio))];
+      return res.json({ ...user, products, municipios });
     }
 
     res.json(user);
@@ -118,6 +129,10 @@ usersRouter.delete("/me/addresses/:id", requireAuth, async (req, res, next) => {
   try {
     const existing = await prisma.address.findUnique({ where: { id: req.params.id } });
     if (!existing || existing.userId !== req.user!.userId) throw new NotFoundError();
+    const used = await prisma.order.count({ where: { deliveryAddressId: existing.id } });
+    if (used > 0) {
+      throw new BadRequestError("Esta dirección tiene pedidos asociados y no se puede eliminar");
+    }
     await prisma.address.delete({ where: { id: req.params.id } });
     res.json({ ok: true });
   } catch (err) {

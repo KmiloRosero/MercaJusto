@@ -52,7 +52,7 @@ productsRouter.get("/", async (req, res, next) => {
       include: {
         category: true,
         producer: {
-          select: { id: true, name: true, rating: true, ratingCount: true, phone: true },
+          select: { id: true, name: true, rating: true, ratingCount: true, avatarUrl: true },
         },
       },
       orderBy,

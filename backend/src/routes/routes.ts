@@ -3,10 +3,12 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { optimizeRoutes, haversineKm, type DeliveryStop } from "../lib/routing";
 import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth, requireRole } from "../middleware/auth";
 
 export const routesRouter = Router();
 routesRouter.use(requireAuth);
+// La planeación logística es para repartidores y productores
+routesRouter.use(requireRole("COURIER", "PRODUCER"));
 
 // Velocidad promedio rural y tiempo de atención por parada (para ETAs)
 const AVG_SPEED_KMH = 30;
