@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -20,8 +19,11 @@ import * as ImagePicker from "expo-image-picker";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { Icon, IconName } from "../src/components/Icon";
-import { fontSize, radius, spacing, useTheme } from "../src/theme";
+import { fontSize, formatCOP, radius, spacing, useTheme } from "../src/theme";
 import { apiErrorMessage, createProduct, getCategories, uploadImage } from "../src/api/client";
+import { chooseOption, showAlert } from "../src/lib/dialog";
+import { DEFAULT_COORDS, municipioCoords } from "../src/lib/municipios";
+import { toast } from "../src/store/toast";
 
 const UNITS = ["Kilo", "Libra", "Atado", "Docena", "Unidad", "Litro"];
 const DISCOUNTS = [10, 20, 30];
@@ -39,6 +41,7 @@ export default function PublicarCosecha() {
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [price, setPrice] = useState("");
+  const [traditionalPrice, setTraditionalPrice] = useState("");
   const [unit, setUnit] = useState("Kilo");
   const [stock, setStock] = useState("");
   const [description, setDescription] = useState("");
@@ -50,6 +53,7 @@ export default function PublicarCosecha() {
   const [locating, setLocating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [photoMime, setPhotoMime] = useState<string | null>(null);
 
   const pickPhoto = async (useCamera: boolean) => {
     try {
@@ -57,7 +61,7 @@ export default function PublicarCosecha() {
         ? await ImagePicker.requestCameraPermissionsAsync()
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
+        showAlert(
           "Permiso denegado",
           "Necesitamos permiso para acceder a la cámara/galería para subir la foto."
         );
@@ -79,18 +83,20 @@ export default function PublicarCosecha() {
 
       if (!result.canceled && result.assets[0]?.uri) {
         setPhotoUri(result.assets[0].uri);
+        setPhotoMime(result.assets[0].mimeType ?? null);
       }
-    } catch (err) {
-      Alert.alert("Error", "No se pudo cargar la imagen.");
+    } catch {
+      showAlert("Error", "No se pudo cargar la imagen.");
     }
   };
 
-  const choosePhotoSource = () => {
-    Alert.alert("Foto de cosecha", "Selecciona el origen", [
-      { text: "Tomar foto con cámara", onPress: () => pickPhoto(true) },
-      { text: "Elegir de galería", onPress: () => pickPhoto(false) },
-      { text: "Cancelar", style: "cancel" },
+  const choosePhotoSource = async () => {
+    // En web no hay cámara nativa: se abre directamente el selector de archivos
+    const source = await chooseOption("Foto de cosecha", "Selecciona el origen", [
+      { key: "camera", text: "Tomar foto con cámara" },
+      { key: "gallery", text: "Elegir de galería", web: true },
     ]);
+    if (source) pickPhoto(source === "camera");
   };
 
   const useMyLocation = async () => {
@@ -98,7 +104,10 @@ export default function PublicarCosecha() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permiso denegado", "Se necesita permiso de ubicación.");
+        showAlert(
+          "Ubicación no disponible",
+          "Sin permiso de ubicación usaremos la ubicación aproximada del municipio."
+        );
         setLocating(false);
         return;
       }
@@ -116,36 +125,42 @@ export default function PublicarCosecha() {
         if (rev?.subregion && !vereda) setVereda(rev.subregion);
       } catch {}
     } catch (err) {
-      Alert.alert("Error", "No se pudo obtener la ubicación actual.");
+      showAlert("No se pudo obtener la ubicación", "Usaremos la ubicación aproximada del municipio.");
     } finally {
       setLocating(false);
     }
   };
 
   const submit = async () => {
-    if (!name.trim()) return Alert.alert("Falta información", "Ingresa el nombre del producto.");
-    if (!categoryId) return Alert.alert("Falta información", "Selecciona una categoría.");
-    const numPrice = Number(price);
-    if (!numPrice || numPrice <= 0) return Alert.alert("Precio inválido", "Ingresa un precio mayor a 0.");
-    const numStock = Number(stock);
-    if (!numStock || numStock <= 0) return Alert.alert("Stock inválido", "Ingresa la cantidad disponible.");
-    if (!municipio.trim()) return Alert.alert("Falta información", "Ingresa el municipio de la finca.");
+    if (name.trim().length < 2) return showAlert("Falta información", "Ingresa el nombre del producto.");
+    if (!categoryId) return showAlert("Falta información", "Selecciona una categoría.");
+    const numPrice = Math.round(Number(price));
+    if (!numPrice || numPrice <= 0) return showAlert("Precio inválido", "Ingresa un precio mayor a 0.");
+    const numStock = Math.floor(Number(stock));
+    if (!numStock || numStock <= 0) return showAlert("Stock inválido", "Ingresa la cantidad disponible.");
+    const numTraditional = traditionalPrice ? Math.round(Number(traditionalPrice)) : undefined;
+    if (numTraditional !== undefined && (!numTraditional || numTraditional <= 0)) {
+      return showAlert("Precio de plaza inválido", "Déjalo vacío o ingresa un valor mayor a 0.");
+    }
+    if (!municipio.trim()) return showAlert("Falta información", "Ingresa el municipio de la finca.");
 
     setSaving(true);
     try {
       let serverPhotoUrl: string | undefined = undefined;
       if (photoUri && !photoUri.startsWith("http")) {
-        serverPhotoUrl = await uploadImage(photoUri);
+        serverPhotoUrl = await uploadImage(photoUri, photoMime);
       } else if (photoUri) {
         serverPhotoUrl = photoUri;
       }
 
-      const defaultCoords = coords || { lat: 1.2136, lng: -77.2811 };
+      // Sin GPS: cabecera del municipio escrito (o Pasto si no lo conocemos)
+      const defaultCoords = coords ?? municipioCoords(municipio) ?? DEFAULT_COORDS;
       await createProduct({
         categoryId,
         name: name.trim(),
         description: description.trim() || undefined,
         price: numPrice,
+        traditionalPrice: numTraditional,
         unit,
         stock: numStock,
         photoUrl: serverPhotoUrl,
@@ -158,11 +173,10 @@ export default function PublicarCosecha() {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["products"] });
-      Alert.alert("¡Publicación exitosa!", "Tu cosecha ya está disponible en MercaJusto.", [
-        { text: "Ver en catálogo", onPress: () => router.replace("/(tabs)/home") },
-      ]);
+      toast.success("¡Publicación exitosa! Tu cosecha ya está en el catálogo");
+      router.replace("/(tabs)/home");
     } catch (err) {
-      Alert.alert("Error al publicar", apiErrorMessage(err));
+      showAlert("Error al publicar", apiErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -285,7 +299,7 @@ export default function PublicarCosecha() {
                 <Field label="Precio (COP)">
                   <TextInput
                     value={price}
-                    onChangeText={setPrice}
+                    onChangeText={(v) => setPrice(v.replace(/\D/g, ""))}
                     placeholder="8500"
                     keyboardType="numeric"
                     placeholderTextColor={t.textTertiary}
@@ -297,7 +311,7 @@ export default function PublicarCosecha() {
                 <Field label="Cantidad">
                   <TextInput
                     value={stock}
-                    onChangeText={setStock}
+                    onChangeText={(v) => setStock(v.replace(/\D/g, ""))}
                     placeholder="50"
                     keyboardType="numeric"
                     placeholderTextColor={t.textTertiary}
@@ -306,6 +320,17 @@ export default function PublicarCosecha() {
                 </Field>
               </View>
             </View>
+
+            <Field label="Precio en plaza de mercado (opcional)">
+              <TextInput
+                value={traditionalPrice}
+                onChangeText={(v) => setTraditionalPrice(v.replace(/\D/g, ""))}
+                placeholder="Ej. 12000 — así el comprador ve cuánto ahorra"
+                keyboardType="numeric"
+                placeholderTextColor={t.textTertiary}
+                style={inputStyle(t)}
+              />
+            </Field>
 
             <Field label="Unidad de venta">
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing[2] }}>
@@ -397,6 +422,15 @@ export default function PublicarCosecha() {
                     );
                   })}
                 </View>
+                {Number(price) > 0 ? (
+                  <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+                    El comprador pagará{" "}
+                    <Text style={{ fontWeight: "800", color: t.success }}>
+                      {formatCOP(Math.round(Number(price) * (1 - discountPct / 100)))}
+                    </Text>{" "}
+                    por {unit.toLowerCase()} (antes {formatCOP(Number(price))}).
+                  </Text>
+                ) : null}
               </View>
             ) : null}
           </Card>

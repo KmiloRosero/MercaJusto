@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -9,14 +9,17 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../../src/theme";
-import { getOrder } from "../../src/api/client";
-import { OrderStatus } from "../../src/api/types";
+import { apiErrorMessage, getOrder, updateOrderStatus } from "../../src/api/client";
+import { OrderStatus, PaymentMethod } from "../../src/api/types";
+import { useAuth } from "../../src/store/auth";
+import { BUYER_CAN_CANCEL, NEXT_ACTION } from "../../src/lib/orderStatus";
+import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import MapPreview from "../../src/components/MapPreview";
 
 const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string }> = [
@@ -25,6 +28,12 @@ const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string
   { key: "IN_TRANSIT", label: "En camino", icon: "in_transit", desc: "El repartidor va hacia tu dirección" },
   { key: "DELIVERED", label: "Entregado", icon: "delivered", desc: "¡Disfruta tu cosecha fresca!" },
 ];
+
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  NEQUI: "Nequi",
+  DAVIPLATA: "Daviplata",
+  CASH: "Efectivo",
+};
 
 const STATUS_INDEX: Record<OrderStatus, number> = {
   PENDING: 0,
@@ -39,8 +48,11 @@ export default function Seguimiento() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const t = useTheme();
+  const queryClient = useQueryClient();
+  const me = useAuth((s) => s.user);
+  const [updating, setUpdating] = useState(false);
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isLoading, error } = useQuery({
     queryKey: ["order", id],
     queryFn: () => getOrder(id!),
     enabled: !!id,
@@ -69,6 +81,43 @@ export default function Seguimiento() {
     return { origin: orig, destination: dest };
   }, [order]);
 
+  const changeStatus = async (status: OrderStatus) => {
+    if (!order) return;
+    setUpdating(true);
+    try {
+      await updateOrderStatus(order.id, status);
+      await queryClient.invalidateQueries({ queryKey: ["order", order.id] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (err) {
+      showAlert("No se pudo actualizar el pedido", apiErrorMessage(err));
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const onCancel = async () => {
+    const ok = await confirmDialog(
+      "¿Cancelar pedido?",
+      "Los productos volverán al inventario del productor.",
+      { confirmText: "Sí, cancelar", cancelText: "No", destructive: true }
+    );
+    if (ok) changeStatus("CANCELLED");
+  };
+
+  if (error && !order) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
+        <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
+          <Icon name="alert-circle-outline" size={40} color={t.danger} />
+          <Text style={{ color: t.textSecondary, textAlign: "center" }}>{apiErrorMessage(error)}</Text>
+          <Button title="Volver" variant="outline" onPress={() => router.back()} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (isLoading || !order) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
@@ -81,6 +130,10 @@ export default function Seguimiento() {
   }
 
   const currentStep = STATUS_INDEX[order.status];
+  const isBuyerView = order.buyerId === me?.id;
+  const nextAction = !isBuyerView ? NEXT_ACTION[order.status] : undefined;
+  const canCancel = isBuyerView && BUYER_CAN_CANCEL.includes(order.status);
+  const reviewed = isBuyerView && (order.reviews ?? []).some((r) => r.fromUserId === me?.id);
   const isCancelled = order.status === "CANCELLED";
   const isDelivered = order.status === "DELIVERED";
 
@@ -194,9 +247,15 @@ export default function Seguimiento() {
                 <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
                   {order.courier.name}
                 </Text>
-                <Text style={{ fontSize: 12, color: t.textSecondary }}>
-                  Tu repartidor · ⭐ {order.courier.rating?.toFixed(1) || "—"}
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Text style={{ fontSize: 12, color: t.textSecondary }}>
+                    {isBuyerView ? "Tu repartidor" : "Repartidor"} ·
+                  </Text>
+                  <Icon name="star" size={12} color={t.warning} />
+                  <Text style={{ fontSize: 12, color: t.textSecondary }}>
+                    {order.courier.rating ? order.courier.rating.toFixed(1) : "Nuevo"}
+                  </Text>
+                </View>
               </View>
               {order.courier.phone ? (
                 <Pressable
@@ -272,14 +331,11 @@ export default function Seguimiento() {
                         justifyContent: "center",
                       }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 10,
-                          color: state === "pending" ? t.textTertiary : "#FFF",
-                        }}
-                      >
-                        {state === "completed" ? "✓" : step.icon}
-                      </Text>
+                      <Icon
+                        name={state === "completed" ? "checkmark" : step.icon}
+                        size={12}
+                        color={state === "pending" ? t.textTertiary : "#FFFFFF"}
+                      />
                     </View>
                     <Text
                       style={{
@@ -329,9 +385,12 @@ export default function Seguimiento() {
               marginBottom: spacing[3],
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
-              🧺 Tu pedido
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Icon name="basket-outline" size={16} color={t.primary} />
+              <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
+                {isBuyerView ? "Tu pedido" : `Pedido de ${order.buyer?.name ?? "cliente"}`}
+              </Text>
+            </View>
             <Text style={{ fontSize: 12, color: t.textTertiary }}>
               {order.items.length} item{order.items.length !== 1 ? "s" : ""}
             </Text>
@@ -350,7 +409,7 @@ export default function Seguimiento() {
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], flex: 1 }}>
-                <Text style={{ fontSize: 18 }}>{it.product?.category?.icon || "🌾"}</Text>
+                <Icon name={it.product?.category?.name || "leaf"} size={20} color={t.primary} />
                 <View>
                   <Text style={{ fontSize: 13, fontWeight: "500", color: t.textPrimary }}>
                     {it.product?.name}
@@ -388,7 +447,8 @@ export default function Seguimiento() {
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
               <Text style={{ fontSize: 12, color: t.textTertiary }}>Pago</Text>
               <Pill variant={order.paymentStatus === "PAID" ? "success" : "warning"}>
-                {order.paymentMethod} · {order.paymentStatus === "PAID" ? "Pagado" : "Pendiente"}
+                {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod} ·{" "}
+                {order.paymentStatus === "PAID" ? "Pagado" : order.paymentMethod === "CASH" ? "Contraentrega" : "Pendiente"}
               </Pill>
             </View>
           </View>
@@ -406,38 +466,61 @@ export default function Seguimiento() {
               ...shadow.sm,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary, marginBottom: spacing[2] }}>
-              📍 Dirección de entrega
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[2] }}>
+              <Icon name="location" size={16} color={t.primary} />
+              <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
+                Dirección de entrega
+              </Text>
+            </View>
             <Text style={{ fontSize: 13, color: t.textSecondary }}>
               {[order.deliveryAddress.detail, order.deliveryAddress.vereda, order.deliveryAddress.municipio, order.deliveryAddress.departamento]
                 .filter(Boolean)
                 .join(", ")}
             </Text>
             {order.notes ? (
-              <Text style={{ fontSize: 12, color: t.textTertiary, marginTop: spacing[2], fontStyle: "italic" }}>
-                📝 "{order.notes}"
-              </Text>
+              <View style={{ flexDirection: "row", gap: 6, marginTop: spacing[2] }}>
+                <Icon name="create-outline" size={14} color={t.textTertiary} />
+                <Text style={{ flex: 1, fontSize: 12, color: t.textTertiary, fontStyle: "italic" }}>
+                  "{order.notes}"
+                </Text>
+              </View>
             ) : null}
           </View>
         ) : null}
 
         {/* ═══ CTA calificar ═══ */}
-        {isDelivered ? (
-          <View style={{ marginHorizontal: spacing[4], marginTop: spacing[5], gap: spacing[2] }}>
+        <View style={{ marginHorizontal: spacing[4], marginTop: spacing[5], gap: spacing[2] }}>
+          {nextAction ? (
             <Button
-              title="⭐ Calificar pedido"
+              title={nextAction.label}
+              icon={<Icon name={nextAction.icon} size={20} color="#FFFFFF" />}
               full
               size="lg"
+              loading={updating}
+              variant={nextAction.next === "DELIVERED" ? "accent" : "primary"}
+              onPress={() => changeStatus(nextAction.next)}
+            />
+          ) : null}
+          {isDelivered && isBuyerView ? (
+            <Button
+              title={reviewed ? "Ya calificaste este pedido" : "Calificar pedido"}
+              icon={<Icon name="star" size={20} color={reviewed ? t.gray400 : "#FFFFFF"} />}
+              full
+              size="lg"
+              disabled={reviewed}
               onPress={() => router.push(`/calificacion/${order.id}`)}
             />
-            <Button title="Volver al inicio" variant="ghost" full onPress={() => router.replace("/(tabs)/home")} />
-          </View>
-        ) : (
-          <View style={{ marginHorizontal: spacing[4], marginTop: spacing[5] }}>
-            <Button title="Volver al inicio" variant="outline" full onPress={() => router.replace("/(tabs)/home")} />
-          </View>
-        )}
+          ) : null}
+          {canCancel ? (
+            <Button title="Cancelar pedido" variant="ghost" full loading={updating} onPress={onCancel} />
+          ) : null}
+          <Button
+            title={isBuyerView ? "Volver al inicio" : "Volver a mis ventas"}
+            variant="outline"
+            full
+            onPress={() => router.replace(isBuyerView ? "/(tabs)/home" : "/(tabs)/orders")}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

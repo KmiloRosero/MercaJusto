@@ -1,7 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Pressable,
   ScrollView,
   Text,
@@ -9,12 +8,17 @@ import {
   View,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Stars, starFeedback } from "../../src/components/Stars";
 import { Pill } from "../../src/components/Pill";
+import { Icon } from "../../src/components/Icon";
+import { orderSavings } from "../../src/lib/savings";
+import { showAlert } from "../../src/lib/dialog";
+import { toast } from "../../src/store/toast";
+import { useAuth } from "../../src/store/auth";
 import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../../src/theme";
 import { getOrder, createReview, apiErrorMessage } from "../../src/api/client";
 import { ProducerSummary } from "../../src/api/types";
@@ -23,6 +27,8 @@ interface RatingEntry {
   toUserId: string;
   name: string;
   avatarIcon: string;
+  /** Ya enviada (en un intento anterior o antes de entrar a la pantalla). */
+  done?: boolean;
   role: "productor" | "repartidor";
   rating: number;
   comment: string;
@@ -32,6 +38,9 @@ export default function Calificacion() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const meId = useAuth((s) => s.user?.id);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", id],
@@ -54,7 +63,7 @@ export default function Calificacion() {
     const list: RatingEntry[] = Array.from(producerMap.values()).map((p) => ({
       toUserId: p.id,
       name: p.name,
-      avatarIcon: "👨‍🌾",
+      avatarIcon: "preparing",
       role: "productor",
       rating: 0,
       comment: "",
@@ -63,20 +72,26 @@ export default function Calificacion() {
       list.push({
         toUserId: order.courier.id,
         name: order.courier.name,
-        avatarIcon: "🚚",
+        avatarIcon: "in_transit",
         role: "repartidor",
         rating: 0,
         comment: "",
       });
     }
-    return list;
-  }, [order]);
+    // Quienes ya fueron calificados en este pedido no se vuelven a pedir
+    const already = new Set(
+      (order.reviews ?? []).filter((r) => r.fromUserId === meId).map((r) => r.toUserId)
+    );
+    return list.filter((e) => !already.has(e.toUserId));
+  }, [order, meId]);
 
   // Sincronizar entries cuando llega la orden (una sola vez)
-  if (!initialized && targets.length > 0) {
-    setEntries(targets);
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (!initialized && order) {
+      setEntries(targets);
+      setInitialized(true);
+    }
+  }, [initialized, order, targets]);
 
   if (isLoading || !order) {
     return (
@@ -94,7 +109,7 @@ export default function Calificacion() {
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
         <TopBar showBack onBack={() => router.back()} title="Calificar" />
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
-          <Text style={{ fontSize: 64 }}>⏳</Text>
+          <Icon name="hourglass-outline" size={56} color={t.textTertiary} />
           <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary, textAlign: "center" }}>
             Aún no puedes calificar
           </Text>
@@ -111,37 +126,43 @@ export default function Calificacion() {
     setEntries((prev) => prev.map((e) => (e.toUserId === toUserId ? { ...e, ...patch } : e)));
   };
 
-  const allRated = entries.length > 0 && entries.every((e) => e.rating > 0);
+  const pending = entries.filter((e) => !e.done);
+  const allRated = pending.length > 0 && pending.every((e) => e.rating > 0);
 
   const onSubmit = async () => {
     if (!allRated) {
-      Alert.alert("Faltan estrellas", "Califica a todos con al menos 1 estrella para enviar.");
+      showAlert("Faltan estrellas", "Califica a todos con al menos 1 estrella para enviar.");
       return;
     }
     setSubmitting(true);
     try {
-      for (const e of entries) {
+      // Una por una: si alguna falla, las ya enviadas quedan marcadas y no se repiten
+      for (const e of pending) {
         await createReview(order.id, {
           rating: e.rating,
           comment: e.comment.trim() || undefined,
           toUserId: e.toUserId,
         });
+        updateEntry(e.toUserId, { done: true });
       }
-      Alert.alert("¡Gracias! 🌟", "Tu calificación ayuda a otros compradores y motiva al productor.", [
-        { text: "OK", onPress: () => router.replace("/(tabs)/home") },
-      ]);
+      queryClient.invalidateQueries({ queryKey: ["order", order.id] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      toast.success("¡Gracias! Tu calificación ayuda a otros compradores");
+      router.replace("/(tabs)/home");
     } catch (err) {
-      Alert.alert("Error al enviar", apiErrorMessage(err));
+      showAlert("Error al enviar", apiErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const savings = orderSavings(order);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
       <TopBar showBack onBack={() => router.back()} title="Calificar pedido" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 150 + insets.bottom }}>
         {/* ═══ Success hero ═══ */}
         <View
           style={{
@@ -164,7 +185,7 @@ export default function Calificacion() {
               marginBottom: spacing[4],
             }}
           >
-            <Text style={{ fontSize: 44 }}>✅</Text>
+            <Icon name="checkmark-circle" size={48} color={t.success} />
           </View>
           <Text style={{ fontSize: 22, fontWeight: "800", color: t.textPrimary, marginBottom: spacing[2] }}>
             ¡Pedido recibido!
@@ -178,6 +199,15 @@ export default function Calificacion() {
         </View>
 
         {/* ═══ Rating cards por persona ═══ */}
+        {entries.length === 0 ? (
+          <View style={{ margin: spacing[4], padding: spacing[5], alignItems: "center", gap: spacing[2] }}>
+            <Icon name="star" size={32} color={t.warning} />
+            <Text style={{ color: t.textSecondary, textAlign: "center" }}>
+              Ya calificaste a todos los participantes de este pedido. ¡Gracias!
+            </Text>
+          </View>
+        ) : null}
+
         {entries.map((entry) => (
           <View
             key={entry.toUserId}
@@ -202,7 +232,7 @@ export default function Calificacion() {
                   justifyContent: "center",
                 }}
               >
-                <Text style={{ fontSize: 26 }}>{entry.avatarIcon}</Text>
+                <Icon name={entry.avatarIcon} size={26} color={t.primary} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>
@@ -211,6 +241,13 @@ export default function Calificacion() {
                 <Text style={{ fontSize: 12, color: t.textSecondary, textTransform: "capitalize" }}>
                   {entry.role}
                 </Text>
+              </View>
+              {entry.done ? (
+                <Pill variant="success" icon="checkmark-circle">
+                  Enviada
+                </Pill>
+              ) : null}
+              <View>
               </View>
             </View>
 
@@ -278,9 +315,9 @@ export default function Calificacion() {
             gap: spacing[3],
           }}
         >
-          <Text style={{ fontSize: 28 }}>💚</Text>
+          <Icon name="heart" size={28} color={t.primary} />
           <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
-            Al comprar directo al productor, <Text style={{ fontWeight: "700", color: t.primary }}>ahorraste ~{formatCOP(Math.round(order.subtotal * 0.35))}</Text> frente a una tienda tradicional, y el productor recibió hasta 4x más que con intermediarios.
+            Al comprar directo al productor, <Text style={{ fontWeight: "700", color: t.primary }}>ahorraste {formatCOP(savings)}</Text> frente al precio de plaza, y el productor recibió el valor completo de su cosecha.
           </Text>
         </View>
       </ScrollView>
@@ -293,6 +330,7 @@ export default function Calificacion() {
           left: 0,
           right: 0,
           padding: spacing[4],
+          paddingBottom: spacing[2] + insets.bottom,
           backgroundColor: t.bgPrimary,
           borderTopWidth: 1,
           borderTopColor: t.border,
@@ -308,7 +346,9 @@ export default function Calificacion() {
           size="lg"
         />
         <Pressable onPress={() => router.replace("/(tabs)/home")} style={{ padding: spacing[2], alignItems: "center" }}>
-          <Text style={{ color: t.textTertiary, fontSize: fontSize.sm }}>Omitir por ahora</Text>
+          <Text style={{ color: t.textTertiary, fontSize: fontSize.sm }}>
+            {entries.length === 0 ? "Volver al inicio" : "Omitir por ahora"}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -1,5 +1,5 @@
-import React from "react";
-import { Alert, Pressable, ScrollView, Switch, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, ScrollView, Switch, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -7,46 +7,51 @@ import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon, IconName } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, useThemeScheme } from "../../src/theme";
+import { AddressSheet } from "../../src/components/AddressSheet";
+import { fontSize, formatCOP, radius, spacing, useTheme, useThemeScheme } from "../../src/theme";
 import { useAuth } from "../../src/store/auth";
 import { useThemePreference } from "../../src/store/theme";
-import { getProducts } from "../../src/api/client";
+import { getFairPriceMetrics, getProducts } from "../../src/api/client";
+import { confirmDialog, showAlert } from "../../src/lib/dialog";
+import { effectivePrice } from "../../src/lib/pricing";
 
 export default function Profile() {
   const router = useRouter();
   const t = useTheme();
   const themeScheme = useThemeScheme();
   const setThemeMode = useThemePreference((s) => s.setMode);
-  const { user, logout } = useAuth();
+  const { user, logout, refresh } = useAuth();
+  const [addressesOpen, setAddressesOpen] = useState(false);
 
-  const isProducerUser = user?.role === "PRODUCER";
+  const isProducer = user?.role === "PRODUCER";
+  const isBuyer = user?.role === "BUYER";
+
   const { data: myProducts } = useQuery({
     queryKey: ["products", "mine", user?.id],
-    queryFn: () => getProducts({ limit: 100 }),
-    enabled: isProducerUser,
+    queryFn: () => getProducts({ producerId: user!.id, limit: 50 }),
+    enabled: isProducer && !!user,
   });
 
-  const activeCount = isProducerUser
-    ? (myProducts?.products ?? []).filter((p) => p.producerId === user?.id && p.isActive).length
-    : 0;
+  const { data: metrics } = useQuery({
+    queryKey: ["orders", "metrics", user?.id],
+    queryFn: getFairPriceMetrics,
+    enabled: !!user && (isBuyer || isProducer),
+  });
 
-  const onLogout = () => {
-    Alert.alert("Cerrar sesión", "¿Seguro que quieres salir?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Salir",
-        style: "destructive",
-        onPress: async () => {
-          await logout();
-          router.replace("/(auth)/onboarding");
-        },
-      },
-    ]);
+  const onLogout = async () => {
+    const ok = await confirmDialog("Cerrar sesión", "¿Seguro que quieres salir?", {
+      confirmText: "Salir",
+      destructive: true,
+    });
+    if (!ok) return;
+    await logout();
+    router.replace("/(auth)/onboarding");
   };
 
   if (!user) return null;
 
-  const isProducer = user.role === "PRODUCER";
+  const products = myProducts?.products ?? [];
+  const roleLabel = isProducer ? "Productor" : user.role === "COURIER" ? "Repartidor" : "Comprador";
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
@@ -82,9 +87,7 @@ export default function Profile() {
             </Text>
           </View>
 
-          <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary }}>
-            {user.name}
-          </Text>
+          <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary }}>{user.name}</Text>
 
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Icon name="call" size={14} color={t.textSecondary} />
@@ -93,34 +96,111 @@ export default function Profile() {
 
           <View style={{ flexDirection: "row", gap: spacing[2], marginTop: spacing[2] }}>
             <Pill variant={isProducer ? "success" : "primary"} icon={isProducer ? "preparing" : "cart"}>
-              {isProducer ? "Productor" : user.role === "COURIER" ? "Repartidor" : "Comprador"}
+              {roleLabel}
             </Pill>
-            <Pill variant="warning" icon="star">
-              {user.rating.toFixed(1)} ({user.ratingCount})
-            </Pill>
+            {user.ratingCount > 0 ? (
+              <Pill variant="warning" icon="star">
+                {user.rating.toFixed(1)} ({user.ratingCount})
+              </Pill>
+            ) : null}
           </View>
         </View>
 
-        {isProducer ? (
-          <View style={{ backgroundColor: t.bgCard, borderRadius: radius.lg, padding: spacing[4], borderWidth: 1, borderColor: t.border }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[3] }}>
-              <Icon name="sparkles" size={18} color={t.primary} />
+        {/* Impacto del precio justo */}
+        {metrics && metrics.ordersCount > 0 ? (
+          <View
+            style={{
+              backgroundColor: t.bgCard,
+              borderRadius: radius.lg,
+              padding: spacing[4],
+              borderWidth: 1,
+              borderColor: t.border,
+              gap: spacing[3],
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Icon name="trending-up" size={18} color={t.success} />
               <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
-                Resumen de productor
+                {isProducer ? "Tus ventas directas" : "Tu impacto con MercaJusto"}
               </Text>
             </View>
-
             <View style={{ flexDirection: "row", gap: spacing[3] }}>
-              <StatBox label="Productos activos" value={String(activeCount)} color={t.primary} />
-              <StatBox label="Calificación" value={user.rating.toFixed(1)} color={t.warning} />
+              {isProducer ? (
+                <>
+                  <StatBox label="Ingresos" value={formatCOP(metrics.totals.producerRevenue)} color={t.success} />
+                  <StatBox label="Pedidos" value={String(metrics.ordersCount)} color={t.primary} />
+                </>
+              ) : (
+                <>
+                  <StatBox label="Ahorro vs. plaza" value={formatCOP(metrics.totals.buyerSavingsTotal)} color={t.success} />
+                  <StatBox label="Pedidos" value={String(metrics.ordersCount)} color={t.primary} />
+                </>
+              )}
             </View>
+            <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+              {isProducer
+                ? "Recibes el 100% del precio de tu cosecha: sin intermediarios."
+                : `Pagaste ${metrics.totals.buyerSavingsPct}% menos que en plaza y el dinero llegó directo al campo.`}
+            </Text>
+          </View>
+        ) : null}
+
+        {isProducer ? (
+          <View
+            style={{
+              backgroundColor: t.bgCard,
+              borderRadius: radius.lg,
+              padding: spacing[4],
+              borderWidth: 1,
+              borderColor: t.border,
+              gap: spacing[3],
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Icon name="storefront" size={18} color={t.primary} />
+              <Text style={{ flex: 1, fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
+                Mis cosechas publicadas
+              </Text>
+              <Pill variant="primary">{products.length} activas</Pill>
+            </View>
+
+            {products.length === 0 ? (
+              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>
+                Aún no has publicado cosechas. ¡Publica la primera!
+              </Text>
+            ) : (
+              products.slice(0, 6).map((p) => (
+                <Pressable
+                  key={p.id}
+                  onPress={() => router.push(`/producto/${p.id}`)}
+                  style={({ pressed }) => ({
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: spacing[3],
+                    paddingVertical: spacing[2],
+                    borderTopWidth: 1,
+                    borderTopColor: t.border,
+                    opacity: pressed ? 0.8 : 1,
+                  })}
+                >
+                  <Icon name={p.category?.name || "leaf"} size={22} color={t.primary} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{p.name}</Text>
+                    <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
+                      {formatCOP(effectivePrice(p))}/{p.unit} · Stock {p.stock}
+                      {p.isSurplus ? ` · Excedente -${p.discountPct}%` : ""}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward" size={16} color={t.textTertiary} />
+                </Pressable>
+              ))
+            )}
 
             <Button
               title="Publicar nueva cosecha"
               variant="accent"
               full
               icon={<Icon name="add" size={20} color="#FFFFFF" />}
-              style={{ marginTop: spacing[3] }}
               onPress={() => router.push("/publicar-cosecha")}
             />
           </View>
@@ -148,12 +228,10 @@ export default function Profile() {
               backgroundColor: t.primaryLight,
             }}
           >
-            <Icon name="sparkles" size={20} color={t.primary} />
+            <Icon name={themeScheme === "dark" ? "moon" : "sunny"} size={20} color={t.primary} />
           </View>
           <View style={{ flex: 1, gap: 2 }}>
-            <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>
-              Modo oscuro
-            </Text>
+            <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>Modo oscuro</Text>
             <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
               {themeScheme === "dark" ? "Apariencia oscura activa" : "Apariencia clara activa"}
             </Text>
@@ -168,18 +246,71 @@ export default function Profile() {
         </View>
 
         <View style={{ gap: spacing[2] }}>
-          <MenuItem icon="location-outline" label="Mis direcciones de entrega" onPress={() => Alert.alert("MercaJusto", "Gestión de direcciones de entrega activa")} />
-          <MenuItem icon="card-outline" label="Métodos de pago" onPress={() => Alert.alert("MercaJusto", "Soporta Nequi, Daviplata y Efectivo")} />
-          <MenuItem icon="shield-checkmark-outline" label="Garantía de precio justo" onPress={() => Alert.alert("MercaJusto", "Conexión directa sin intermediarios")} />
-          <MenuItem icon="options" label="Términos y condiciones" onPress={() => Alert.alert("MercaJusto", "Sistema MercaJusto Nariño")} />
+          <MenuItem
+            icon="location-outline"
+            label={isProducer ? "Mis direcciones y fincas" : "Mis direcciones de entrega"}
+            hint={`${user.addresses.length} guardada${user.addresses.length !== 1 ? "s" : ""}`}
+            onPress={() => setAddressesOpen(true)}
+          />
+          <MenuItem
+            icon="receipt-outline"
+            label={isBuyer ? "Mis pedidos" : "Mis ventas"}
+            onPress={() => router.push("/(tabs)/orders")}
+          />
+          <MenuItem
+            icon="card-outline"
+            label="Métodos de pago"
+            onPress={() =>
+              showAlert(
+                "Métodos de pago",
+                "Nequi y Daviplata: pago inmediato desde tu billetera.\nEfectivo: pagas al recibir el pedido."
+              )
+            }
+          />
+          <MenuItem
+            icon="shield-checkmark-outline"
+            label="Garantía de precio justo"
+            onPress={() =>
+              showAlert(
+                "Precio justo",
+                "El productor fija su precio y lo recibe completo. MercaJusto cobra solo una comisión del 5% y el envío agrupado, así el comprador paga menos que en plaza."
+              )
+            }
+          />
+          <MenuItem
+            icon="document-text-outline"
+            label="Términos y condiciones"
+            onPress={() =>
+              showAlert(
+                "Términos y condiciones",
+                "MercaJusto conecta productores campesinos de Nariño con compradores. Los datos personales se usan solo para gestionar pedidos y entregas."
+              )
+            }
+          />
         </View>
 
-        <Button title="Cerrar sesión" variant="outline" full icon={<Icon name="close" size={18} color={t.primary} />} onPress={onLogout} />
+        <Button
+          title="Cerrar sesión"
+          variant="outline"
+          full
+          icon={<Icon name="log-out-outline" size={18} color={t.primary} />}
+          onPress={onLogout}
+        />
 
         <Text style={{ textAlign: "center", color: t.textTertiary, fontSize: fontSize.xs, marginTop: spacing[2] }}>
-          MercaJusto v0.1.0 · Hecho en Nariño, Colombia
+          MercaJusto v1.0.0 · Hecho en Nariño, Colombia
         </Text>
       </ScrollView>
+
+      <AddressSheet
+        visible={addressesOpen}
+        addresses={user.addresses}
+        selectedId={(user.addresses.find((a) => a.isDefault) ?? user.addresses[0])?.id ?? null}
+        onSelect={() => {}}
+        onClose={() => setAddressesOpen(false)}
+        onCreated={() => refresh()}
+        onDeleted={() => refresh()}
+      />
     </SafeAreaView>
   );
 }
@@ -196,7 +327,9 @@ function StatBox({ label, value, color }: { label: string; value: string; color:
         alignItems: "center",
       }}
     >
-      <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color }}>{value}</Text>
+      <Text style={{ fontSize: fontSize.lg, fontWeight: "800", color }} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
       <Text style={{ fontSize: 10, color: t.textTertiary, textAlign: "center", marginTop: 2, fontWeight: "600" }}>
         {label}
       </Text>
@@ -204,7 +337,17 @@ function StatBox({ label, value, color }: { label: string; value: string; color:
   );
 }
 
-function MenuItem({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+function MenuItem({
+  icon,
+  label,
+  hint,
+  onPress,
+}: {
+  icon: IconName | string;
+  label: string;
+  hint?: string;
+  onPress: () => void;
+}) {
   const t = useTheme();
   return (
     <Pressable
@@ -222,9 +365,8 @@ function MenuItem({ icon, label, onPress }: { icon: IconName; label: string; onP
       })}
     >
       <Icon name={icon} size={20} color={t.primary} />
-      <Text style={{ flex: 1, fontSize: fontSize.base, color: t.textPrimary, fontWeight: "600" }}>
-        {label}
-      </Text>
+      <Text style={{ flex: 1, fontSize: fontSize.base, color: t.textPrimary, fontWeight: "600" }}>{label}</Text>
+      {hint ? <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>{hint}</Text> : null}
       <Icon name="chevron-forward" size={18} color={t.textTertiary} />
     </Pressable>
   );
