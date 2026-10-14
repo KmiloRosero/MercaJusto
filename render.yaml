@@ -1,0 +1,28 @@
+# Blueprint de Render: despliega el backend de MercaJusto en el plan gratuito.
+# El disco del plan gratuito no es persistente: en cada reinicio la base SQLite
+# se recrea y se cargan los datos demo (prisma/seed-if-empty.ts).
+services:
+  - type: web
+    name: mercajusto-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        value: file:./prod.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: OTP_DEV_MODE
+        value: "true"
+      - key: OTP_DEV_CODE
+        value: "123456"
+      - key: CORS_ORIGIN
+        value: "*"
