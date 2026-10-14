@@ -1,7 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Pressable, StyleProp, Text, ViewStyle } from "react-native";
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
-import { radius, useTheme } from "../theme";
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
+import { motion, radius, useTheme } from "../theme";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -17,6 +17,8 @@ interface ButtonProps {
   loading?: boolean;
   full?: boolean;
   icon?: React.ReactNode;
+  /** Ícono al final del texto (p. ej. una flecha de "Siguiente"). */
+  trailingIcon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -33,6 +35,7 @@ export function Button({
   loading,
   full,
   icon,
+  trailingIcon,
   style,
 }: ButtonProps) {
   const t = useTheme();
@@ -44,13 +47,14 @@ export function Button({
 
   const handlePressIn = () => {
     if (!disabled && !loading) {
-      scale.value = withSpring(0.96, { damping: 15, stiffness: 300 });
+      // Hundimiento inmediato; el regreso es un resorte interrumpible
+      scale.value = withTiming(0.97, { duration: 120, easing: Easing.bezier(...motion.easeOut) });
     }
   };
 
   const handlePressOut = () => {
     if (!disabled && !loading) {
-      scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+      scale.value = withSpring(1, { damping: 18, stiffness: 320 });
     }
   };
 
@@ -96,6 +100,7 @@ export function Button({
           <Text style={{ color, fontSize: fontSizes[size], fontWeight: "700" }}>
             {title}
           </Text>
+          {trailingIcon}
         </>
       )}
     </AnimatedPressable>
