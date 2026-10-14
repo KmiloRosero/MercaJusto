@@ -6,6 +6,7 @@
   "rewrites": [
     { "source": "/producto/:id", "destination": "/producto/[id].html" },
     { "source": "/seguimiento/:id", "destination": "/seguimiento/[id].html" },
-    { "source": "/calificacion/:id", "destination": "/calificacion/[id].html" }
+    { "source": "/calificacion/:id", "destination": "/calificacion/[id].html" },
+    { "source": "/productor/:id", "destination": "/productor/[id].html" }
   ]
 }

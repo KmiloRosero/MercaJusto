@@ -2,29 +2,45 @@
   "expo": {
     "name": "MercaJusto",
     "slug": "mercajusto",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "scheme": "mercajusto",
     "userInterfaceStyle": "automatic",
     "splash": {
+      "image": "./assets/splash.png",
       "backgroundColor": "#008FFF",
       "resizeMode": "contain"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "co.mercajusto.app"
+      "bundleIdentifier": "co.mercajusto.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "MercaJusto usa la cámara para que tomes fotos de tus cosechas.",
+        "NSPhotoLibraryUsageDescription": "MercaJusto accede a tus fotos para que publiques imágenes de tus cosechas.",
+        "NSLocationWhenInUseUsageDescription": "MercaJusto usa tu ubicación para registrar direcciones de entrega y la ubicación de tu finca."
+      }
     },
     "android": {
       "package": "co.mercajusto.app",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#008FFF"
       },
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "static",
+      "favicon": "./assets/favicon.png",
+      "name": "MercaJusto",
+      "themeColor": "#008FFF"
     },
     "plugins": [
       "expo-router",
@@ -32,7 +48,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "MercaJusto necesita tu ubicación para mostrarte productores cercanos y calcular rutas de entrega."
+          "locationWhenInUsePermission": "MercaJusto usa tu ubicación para registrar direcciones de entrega y la ubicación de tu finca."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MercaJusto accede a tus fotos para que publiques imágenes de tus cosechas.",
+          "cameraPermission": "MercaJusto usa la cámara para que tomes fotos de tus cosechas."
         }
       ],
       [
