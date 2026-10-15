@@ -2,7 +2,7 @@
 
 **Del campo directo a tu mesa.** Plataforma móvil que conecta productores campesinos de Nariño con compradores urbanos, eliminando intermediarios.
 
-> Proyecto de grado — Ingeniería de Sistemas · Universidad de Nariño
+> Proyecto — Ingeniería de Sistemas · Universidad de Nariño
 
 ---
 
@@ -65,57 +65,7 @@ npm run typecheck        # Verificar tipos TypeScript
 
 La app detecta sola la IP del PC en Expo Go y usa `10.0.2.2` en el emulador Android. Si algo no conecta, define la URL explícitamente:
 
-```bash
-# mobile/.env
-EXPO_PUBLIC_API_URL=http://192.168.0.36:4000
-```
 
-> En Windows, si el celular no llega al backend, permite Node.js en el Firewall (red privada).
-
----
-
-## 🌐 Despliegue
-
-| Parte | URL | Plataforma |
-|-------|-----|------------|
-| App web | https://mercajusto.vercel.app | Vercel (`mobile/`, variable `EXPO_PUBLIC_API_URL`) |
-| API | https://mercajusto-backend.onrender.com | Render, plan gratuito (`render.yaml`) |
-
-- **Render gratuito:** se duerme tras 15 min sin uso. El primer acceso tarda unos 50 s en despertar, así que conviene abrirlo antes de presentar.
-- **Datos:** cada reinicio vuelve a cargar los datos demo.
-- **Web:** se publica sola con cada `git push` a `main` (Vercel conectado al repo, raíz `mobile/`). A mano: `vercel deploy --prod` desde la raíz del repo.
-- **Backend en Railway:** también está listo con `backend/railway.json`. Necesita el plan Hobby y un volumen en `/data`.
-
-## 👤 Cuentas demo
-
-El modo OTP de desarrollo está activo: el código siempre es **123456** (la app lo muestra en pantalla).
-
-| Rol        | Celular (sin +57) | Nombre              |
-|------------|-------------------|---------------------|
-| Comprador  | 300 123 4567      | María Rodríguez     |
-| Productor  | 310 456 7890      | José Tulio Enríquez |
-| Repartidor | 301 111 2222      | Wilson López        |
-
-Cualquier otro número crea una cuenta nueva (comprador o productor).
-
-## 🎬 Guion de demostración
-
-1. **Comprador (María):** explora el catálogo, filtra excedentes y entra a un producto. Agrega a la canasta: los excedentes ya cobran con descuento. Paga en el checkout (Nequi, Daviplata o efectivo) y ve el seguimiento.
-2. **Productor (Don José):** en **Ventas** ve el pedido nuevo y lo avanza: *Empezar a preparar → Despachar → Marcar como entregado*. Al despachar se asigna un repartidor automáticamente.
-3. **Comprador:** el seguimiento se actualiza solo (cada 15 s). Al entregarse, califica al productor y al repartidor. En **Perfil** ve su ahorro frente a plaza de mercado.
-4. **Productor:** publica una cosecha nueva con foto, precio de plaza y modo excedente. En **Perfil** ve sus ingresos y sus publicaciones.
-
----
-
-## 🔐 Reglas de negocio principales
-
-- Comisión de la plataforma: 5 % del subtotal. Envío agrupado: $3.500.
-- Excedentes: el descuento se aplica igual en la app y en el backend.
-- Un pedido descuenta el stock en una sola transacción (no se sobrevende). Al cancelarlo, el stock se devuelve.
-- Solo el comprador, los productores del pedido y el repartidor pueden ver un pedido.
-  - El productor y el repartidor avanzan el estado.
-  - El comprador solo puede cancelar antes de que se empiece a preparar.
-- Solo el comprador califica, una vez por persona y por pedido.
 
 ## 📄 Licencia
 
