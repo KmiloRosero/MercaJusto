@@ -21,6 +21,7 @@ export function Chip({ icon, label, active, onPress }: ChipProps) {
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
+      hitSlop={{ top: 5, bottom: 5 }}
       style={({ pressed }) => ({
         height: 38,
         paddingHorizontal: 14,
@@ -28,14 +29,14 @@ export function Chip({ icon, label, active, onPress }: ChipProps) {
         flexDirection: "row",
         alignItems: "center",
         gap: 6,
-        backgroundColor: active ? t.textPrimary : t.bgPrimary,
-        borderWidth: 1,
-        borderColor: active ? t.textPrimary : t.border,
+        backgroundColor: active ? t.primaryLight : t.bgPrimary,
+        borderWidth: active ? 1.5 : 1,
+        borderColor: active ? t.primary : t.border,
         opacity: pressed ? 0.7 : 1,
       })}
     >
-      <Icon name={icon || label} size={16} color={active ? t.bgPrimary : t.primary} />
-      <Text style={[type.footnote, { fontWeight: "600", color: active ? t.bgPrimary : t.textPrimary }]}>
+      <Icon name={active ? "checkmark" : icon || label} size={16} color={active ? t.onPrimaryLight : t.primary} />
+      <Text style={[type.footnote, { fontWeight: "600", color: active ? t.onPrimaryLight : t.textPrimary }]}>
         {label}
       </Text>
     </Pressable>

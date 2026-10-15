@@ -1,11 +1,9 @@
-import type { CartItem, Order } from "../api/types";
+import type { CartItem, Order, Product } from "../api/types";
 import { effectivePrice } from "./pricing";
 
-// Cuando un producto no tiene precio de referencia (plaza/tienda), estimamos
-// el precio tradicional con el ahorro histórico del modelo: 35% sobre el
-// precio MercaJusto. Es el mismo fallback que usa el backend en
-// GET /api/metrics/fair-price para que las cifras coincidan.
-export const FALLBACK_SAVINGS_PCT = 0.35;
+// El ahorro solo se calcula con el precio de plaza que reporta el productor
+// (traditionalPrice). Sin ese dato no hay ahorro que mostrar: nunca se estima.
+// Es la misma regla que aplica el backend en GET /api/metrics/fair-price.
 
 /** Ahorro de una línea: (precio plaza − precio MercaJusto) × cantidad. */
 export function lineSavings(
@@ -13,12 +11,22 @@ export function lineSavings(
   traditionalPrice: number | null | undefined,
   quantity: number
 ): number {
-  const traditional =
-    traditionalPrice ?? Math.round(unitPrice * (1 + FALLBACK_SAVINGS_PCT));
-  return Math.max(0, (traditional - unitPrice) * quantity);
+  if (!traditionalPrice || traditionalPrice <= 0) return 0;
+  return Math.max(0, (traditionalPrice - unitPrice) * quantity);
 }
 
-/** Ahorro total de la canasta usando los precios de referencia reales. */
+/**
+ * Comparación con la plaza para un producto, o `null` si no hay precio de
+ * plaza o MercaJusto no sale más barato.
+ */
+export function plazaComparison(product: Product): { plaza: number; perUnit: number; pct: number } | null {
+  const plaza = product.traditionalPrice;
+  const price = effectivePrice(product);
+  if (!plaza || plaza <= price) return null;
+  return { plaza, perUnit: plaza - price, pct: Math.round(((plaza - price) / plaza) * 100) };
+}
+
+/** Ahorro total de la canasta frente a la plaza. */
 export function cartSavings(items: CartItem[]): number {
   return items.reduce(
     (acc, it) => acc + lineSavings(effectivePrice(it.product), it.product.traditionalPrice, it.quantity),

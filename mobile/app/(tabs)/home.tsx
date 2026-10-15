@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -22,6 +21,7 @@ import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
 
+import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
 const GUTTER = spacing[5];
 
 function greeting(date = new Date()) {
@@ -51,6 +51,8 @@ export default function Home() {
   const {
     data: productsData,
     isLoading: loadingProds,
+    isError: productsFailed,
+    error: productsError,
     refetch,
     isRefetching,
   } = useQuery({
@@ -82,7 +84,7 @@ export default function Home() {
             </Text>
             <Pressable
               onPress={() => router.push("/(tabs)/profile")}
-              hitSlop={8}
+              hitSlop={12}
               accessibilityRole="button"
               accessibilityLabel={`${isProducer ? "Vendiendo desde" : "Entregar en"} ${place}. Cambiar`}
               style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, opacity: pressed ? 0.6 : 1 })}
@@ -108,7 +110,7 @@ export default function Home() {
               opacity: pressed ? 0.8 : 1,
             })}
           >
-            <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "700" }}>
+            <Text style={{ color: t.onPrimary, fontSize: 17, fontWeight: "700" }}>
               {user?.name?.charAt(0).toUpperCase() || "M"}
             </Text>
           </Pressable>
@@ -157,7 +159,7 @@ export default function Home() {
             <Button
               title="Publicar cosecha"
               size="sm"
-              icon={<Icon name="add" size={16} color="#FFFFFF" />}
+              icon={<Icon name="add" size={16} color={t.onPrimary} />}
               onPress={() => router.push("/publicar-cosecha")}
             />
             <Button title="Mis ventas" size="sm" variant="outline" onPress={() => router.push("/(tabs)/orders")} />
@@ -166,7 +168,6 @@ export default function Home() {
       ) : null}
 
       <Banner
-        tag="Modo excedente"
         title="Cosecha que no se pierde"
         subtitle="Descuentos directos cuando al productor le sobra. Apoyas el campo y ahorras."
         cta="Ver ofertas"
@@ -240,10 +241,9 @@ export default function Home() {
         ListHeaderComponent={header}
         ListEmptyComponent={
           loadingProds ? (
-            <View style={{ padding: spacing[8], alignItems: "center", gap: spacing[3] }}>
-              <ActivityIndicator color={t.primary} />
-              <Text style={[type.footnote, { color: t.textSecondary }]}>Cargando cosechas…</Text>
-            </View>
+            <ProductGridSkeleton gutter={GUTTER} />
+          ) : productsFailed ? (
+            <ErrorState error={productsError} onRetry={() => refetch()} retrying={isRefetching} />
           ) : (
             <View style={{ paddingHorizontal: GUTTER * 2, paddingVertical: spacing[8], alignItems: "center", gap: spacing[2] }}>
               <Icon name="leaf-outline" size={28} color={t.textTertiary} />

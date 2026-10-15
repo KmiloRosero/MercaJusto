@@ -73,7 +73,7 @@ export default function MapPreview({ origin, destination }: MapPreviewProps) {
           />
         ) : null}
         {origin && destination ? (
-          <Polyline coordinates={[origin, destination]} strokeWidth={3} strokeColor="#008FFF" />
+          <Polyline coordinates={[origin, destination]} strokeWidth={3} strokeColor={theme.primary} />
         ) : null}
       </MapView>
     </View>

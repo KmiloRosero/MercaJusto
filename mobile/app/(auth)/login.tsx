@@ -157,6 +157,8 @@ export default function Login() {
                   placeholder="300 123 4567"
                   placeholderTextColor={t.textTertiary}
                   keyboardType="phone-pad"
+                  autoComplete="tel"
+                  textContentType="telephoneNumber"
                   style={{
                     flex: 1,
                     height: 48,
@@ -186,6 +188,9 @@ export default function Login() {
                 placeholderTextColor={t.textTertiary}
                 keyboardType="number-pad"
                 maxLength={6}
+                // Android/iOS ofrecen el código del SMS para llenarlo con un toque
+                autoComplete="sms-otp"
+                textContentType="oneTimeCode"
                 style={{
                   height: 64,
                   borderRadius: radius.md,
@@ -225,7 +230,7 @@ export default function Login() {
                 full
                 size="lg"
               />
-              <Pressable onPress={countdown === 0 ? sendOtp : undefined} style={{ padding: spacing[2] }}>
+              <Pressable onPress={countdown === 0 ? sendOtp : undefined} style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: spacing[2] }}>
                 <Text
                   style={{
                     textAlign: "center",

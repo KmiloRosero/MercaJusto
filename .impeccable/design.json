@@ -1,0 +1,417 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-14T06:57:51.711618+00:00",
+  "title": "Design System: MercaJusto",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Verde Campo Nariñense",
+        "tonalRamp": [
+          "#0A2914",
+          "#0F3D21",
+          "#16532F",
+          "#1F6B3D",
+          "#3F8A57",
+          "#6FBF86",
+          "#8FD3A1",
+          "#D7EBD3"
+        ],
+        "darkCounterpart": "dark-primary"
+      },
+      "primaryLight": {
+        "role": "primary",
+        "displayName": "Brote Tierno",
+        "tonalRamp": [
+          "#0A2914",
+          "#0F3D21",
+          "#16532F",
+          "#1F6B3D",
+          "#3F8A57",
+          "#6FBF86",
+          "#8FD3A1",
+          "#D7EBD3"
+        ],
+        "darkCounterpart": "dark-primaryLight"
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Arcilla de Excedente",
+        "tonalRamp": [
+          "#3A1704",
+          "#6A2E0B",
+          "#7D3A11",
+          "#A8501C",
+          "#C8703A",
+          "#E08A4E",
+          "#F2A56E",
+          "#F8E3D3"
+        ],
+        "darkCounterpart": "dark-accent"
+      },
+      "accentLight": {
+        "role": "secondary",
+        "displayName": "Arcilla clara",
+        "tonalRamp": [
+          "#3A1704",
+          "#6A2E0B",
+          "#7D3A11",
+          "#A8501C",
+          "#C8703A",
+          "#E08A4E",
+          "#F2A56E",
+          "#F8E3D3"
+        ],
+        "darkCounterpart": "dark-accentLight"
+      },
+      "bgPrimary": {
+        "role": "neutral",
+        "displayName": "Suelo de Neblina",
+        "tonalRamp": [
+          "#17211A",
+          "#1E2721",
+          "#2B352E",
+          "#3A453D",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#F7F8F3"
+        ],
+        "darkCounterpart": "dark-bgPrimary"
+      },
+      "bgSecondary": {
+        "role": "neutral",
+        "displayName": "Surco",
+        "tonalRamp": [
+          "#17211A",
+          "#1E2721",
+          "#2B352E",
+          "#3A453D",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#F7F8F3"
+        ],
+        "darkCounterpart": "dark-bgSecondary"
+      },
+      "bgCard": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "darkCounterpart": "dark-bgCard"
+      },
+      "textPrimary": {
+        "role": "neutral",
+        "displayName": "Tinta de Monte",
+        "tonalRamp": [
+          "#17211A",
+          "#1E2721",
+          "#2B352E",
+          "#3A453D",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#F7F8F3"
+        ],
+        "darkCounterpart": "dark-textPrimary"
+      },
+      "textSecondary": {
+        "role": "neutral",
+        "displayName": "Musgo",
+        "tonalRamp": [
+          "#17211A",
+          "#1E2721",
+          "#2B352E",
+          "#3A453D",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#F7F8F3"
+        ],
+        "darkCounterpart": "dark-textSecondary"
+      },
+      "textTertiary": {
+        "role": "neutral",
+        "displayName": "Liquen",
+        "tonalRamp": [
+          "#17211A",
+          "#1E2721",
+          "#2B352E",
+          "#3A453D",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#F7F8F3"
+        ],
+        "darkCounterpart": "dark-textTertiary"
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Lindero",
+        "tonalRamp": [
+          "#17211A",
+          "#1E2721",
+          "#2B352E",
+          "#3A453D",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#F7F8F3"
+        ],
+        "darkCounterpart": "dark-border"
+      },
+      "inverseSurface": {
+        "role": "neutral",
+        "displayName": "Superficie inversa",
+        "darkCounterpart": "dark-inverseSurface"
+      },
+      "field-tuberculos-ground": {
+        "role": "tertiary",
+        "displayName": "Ocre de tierra (tubérculos)",
+        "darkCounterpart": "dark-field-tuberculos-ground"
+      },
+      "field-verduras-ground": {
+        "role": "tertiary",
+        "displayName": "Verde hoja (verduras)",
+        "darkCounterpart": "dark-field-verduras-ground"
+      },
+      "field-frutas-ground": {
+        "role": "tertiary",
+        "displayName": "Rojo mora (frutas)",
+        "darkCounterpart": "dark-field-frutas-ground"
+      },
+      "field-granos-ground": {
+        "role": "tertiary",
+        "displayName": "Amarillo maíz (granos)",
+        "darkCounterpart": "dark-field-granos-ground"
+      },
+      "field-lacteos-huevos-ground": {
+        "role": "tertiary",
+        "displayName": "Cielo de páramo (lácteos y huevos)",
+        "darkCounterpart": "dark-field-lacteos-huevos-ground"
+      },
+      "field-cafe-cacao-ground": {
+        "role": "tertiary",
+        "displayName": "Marrón café (café y cacao)",
+        "darkCounterpart": "dark-field-cafe-cacao-ground"
+      },
+      "field-default-ground": {
+        "role": "tertiary",
+        "displayName": "Campo genérico",
+        "darkCounterpart": "dark-field-default-ground"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Titular del onboarding."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título del banner del Home."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Encabezados de sección y título de la barra superior."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto corrido y campo de búsqueda."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "Nombre del producto en la tarjeta."
+      },
+      "footnote": {
+        "displayName": "Footnote",
+        "purpose": "Metadatos, chips, acciones de sección."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Etiquetas de pestañas y pills."
+      }
+    },
+    "shadows": [
+      {
+        "name": "sm",
+        "value": "0 1px 3px rgba(0,0,0,0.08)",
+        "purpose": "Paneles de resumen en checkout y seguimiento (Android elevation 1)."
+      },
+      {
+        "name": "md",
+        "value": "0 4px 12px rgba(0,0,0,0.10)",
+        "purpose": "Tarjetas separadas del mapa en seguimiento (elevation 4)."
+      },
+      {
+        "name": "lg",
+        "value": "0 8px 24px rgba(0,0,0,0.12)",
+        "purpose": "Snackbar y barras de acción inferiores (elevation 8)."
+      },
+      {
+        "name": "add-button",
+        "value": "0 4px 10px rgba(10,20,14,0.14)",
+        "purpose": "Botón circular de agregar sobre la foto del producto (elevation 4)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "easeOut",
+        "value": "cubic-bezier(0.23, 1, 0.32, 1)",
+        "purpose": "Entradas y respuestas; hundimiento de presión en 120ms."
+      },
+      {
+        "name": "easeInOut",
+        "value": "cubic-bezier(0.77, 0, 0.175, 1)",
+        "purpose": "Transiciones de ida y vuelta."
+      },
+      {
+        "name": "press-release-spring",
+        "value": "spring(damping 18, stiffness 320)",
+        "purpose": "Regreso interrumpible tras presionar botón o tarjeta."
+      },
+      {
+        "name": "snackbar-fade",
+        "value": "FadeInDown / FadeOutDown 200ms",
+        "purpose": "Entrada y salida del snackbar; se cierra a los 2600ms."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal en verde campo.",
+      "html": "<button class=\"ds-btn-primary\">Agregar a la canasta</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:9999px;font:700 15px system-ui, Roboto, sans-serif;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);background:#1F6B3D;color:#FFFFFF;} .ds-btn-primary:active{transform:scale(0.97);} .ds-btn-primary:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Solo para acciones de excedente o descuento.",
+      "html": "<button class=\"ds-btn-accent\">Activar excedente</button>",
+      "css": ".ds-btn-accent{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:9999px;font:700 15px system-ui, Roboto, sans-serif;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);background:#A8501C;color:#FFFFFF;} .ds-btn-accent:active{transform:scale(0.97);} .ds-btn-accent:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Acción secundaria con borde verde.",
+      "html": "<button class=\"ds-btn-outline\">Ver productor</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:9999px;font:700 15px system-ui, Roboto, sans-serif;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);background:transparent;color:#1F6B3D;border:1.5px solid #1F6B3D;} .ds-btn-outline:active{transform:scale(0.97);} .ds-btn-outline:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Category Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Filtro de categoría; activo en contenedor verde con check.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-active\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M5 12l5 5 9-10\"/></svg>Todo</button><button class=\"ds-chip\">Frutas</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px;} .ds-chip{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:9999px;background:#F7F8F3;color:#17211A;border:1px solid #D9DFD2;font:600 13px/18px system-ui, Roboto, sans-serif;cursor:pointer;} .ds-chip:active{opacity:0.7;} .ds-chip:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-chip-active{background:#D7EBD3;color:#0F3D21;border:1.5px solid #1F6B3D;}"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": "product-card-media",
+      "description": "Medio cuadrado con color de campo, insignia de descuento en arcilla y botón de agregar flotante.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-media\"><span class=\"ds-badge\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M17 3C9 3 4 8 4 15c0 2 .5 3.5 1 4.5L3 22l1.4 1.4 2.3-2.3C8 21.7 9.5 22 11 22c7 0 11-6 11-14V3h-5z\"/></svg>-20%</span><button class=\"ds-add\" aria-label=\"Agregar\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button></div><div class=\"ds-card-name\">Papa pastusa</div><div class=\"ds-card-meta\">Túquerres · José</div><div class=\"ds-card-price\"><b>$ 3.040</b> <span>/kg</span> <s>$ 3.800</s></div></div>",
+      "css": ".ds-card{width:160px;display:flex;flex-direction:column;gap:2px;font-family:system-ui, Roboto, sans-serif;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-card:active{transform:scale(0.98);} .ds-card-media{position:relative;aspect-ratio:1;border-radius:16px;background:#EFE0C8;color:#6B4A1A;margin-bottom:6px;} .ds-badge{position:absolute;top:8px;left:8px;height:24px;padding:0 8px;border-radius:9999px;background:#A8501C;color:#FFFFFF;display:inline-flex;align-items:center;gap:3px;font:700 12px system-ui, Roboto, sans-serif;} .ds-add{position:absolute;right:8px;bottom:8px;width:36px;height:36px;border-radius:18px;border:none;background:#FFFFFF;color:#1F6B3D;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(10,20,14,0.14);cursor:pointer;} .ds-add:active{transform:scale(0.9);} .ds-add:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-card-name{font:600 15px/20px system-ui, Roboto, sans-serif;letter-spacing:-0.1px;color:#17211A;} .ds-card-meta{font:400 13px/18px system-ui, Roboto, sans-serif;color:#5F6B62;} .ds-card-price{margin-top:4px;font:400 13px/18px system-ui, Roboto, sans-serif;color:#5F6B62;} .ds-card-price b{font:700 16px/20px system-ui, Roboto, sans-serif;letter-spacing:-0.2px;color:#17211A;}"
+    },
+    {
+      "name": "Home Banner",
+      "kind": "custom",
+      "refersTo": "banner",
+      "description": "Bloque en verde campo con hoja de marca de agua y CTA invertido.",
+      "html": "<div class=\"ds-banner\"><div class=\"ds-banner-title\">Cosecha que no se pierde</div><div class=\"ds-banner-sub\">Descuentos directos cuando al productor le sobra.</div><span class=\"ds-banner-cta\">Ver ofertas <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></span></div>",
+      "css": ".ds-banner{max-width:340px;border-radius:24px;background:#1F6B3D;color:#FFFFFF;padding:20px;display:flex;flex-direction:column;gap:8px;font-family:system-ui, Roboto, sans-serif;} .ds-banner-title{font:700 22px/28px system-ui, Roboto, sans-serif;letter-spacing:-0.4px;max-width:82%;} .ds-banner-sub{font:400 13px/18px system-ui, Roboto, sans-serif;max-width:82%;} .ds-banner-cta{margin-top:8px;align-self:flex-start;height:36px;padding:0 16px;border-radius:9999px;background:#FFFFFF;color:#1F6B3D;display:inline-flex;align-items:center;gap:6px;font:700 13px system-ui, Roboto, sans-serif;cursor:pointer;} .ds-banner:hover{opacity:0.94;}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "Acceso a la búsqueda en el Home.",
+      "html": "<button class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#4A564D\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4-4\"/></svg><span>Busca papa, café, fresas…</span></button>",
+      "css": ".ds-search{width:320px;height:50px;border-radius:14px;background:#EEF1E8;border:none;display:flex;align-items:center;gap:12px;padding:0 16px;font:400 16px/24px system-ui, Roboto, sans-serif;color:#5F6B62;cursor:pointer;} .ds-search:active{opacity:0.8;} .ds-search:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Navegación inferior; activa en verde campo.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\">Inicio</a><a class=\"ds-tab\">Buscar</a><a class=\"ds-tab\">Canasta</a><a class=\"ds-tab\">Pedidos</a><a class=\"ds-tab\">Perfil</a></nav>",
+      "css": ".ds-tabs{display:flex;justify-content:space-around;align-items:center;height:68px;width:360px;background:#F7F8F3;border-top:1px solid #D9DFD2;} .ds-tab{font:700 11px/14px system-ui, Roboto, sans-serif;color:#5F6B62;text-decoration:none;cursor:pointer;} .ds-tab:hover{color:#1F6B3D;} .ds-tab-active{color:#1F6B3D;}"
+    },
+    {
+      "name": "Snackbar",
+      "kind": "custom",
+      "refersTo": "snackbar",
+      "description": "Aviso breve sobre superficie inversa.",
+      "html": "<div class=\"ds-snack\">Agregado a la canasta</div>",
+      "css": ".ds-snack{display:inline-flex;align-items:center;min-height:48px;padding:12px 16px;border-radius:6px;background:#26302A;color:#EEF3EC;font:600 14px system-ui, Roboto, sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.12);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "La colcha de retazos",
+    "overview": "MercaJusto se ve como las laderas de Nariño desde donde vende: un mosaico de parcelas de colores distintos cosidas por un mismo verde. Cada categoría de producto es un campo con su propio color de tierra; la acción, la selección y la marca hablan en un único verde campo; y la arcilla aparece solo cuando hay excedente o descuento. El resultado es una app de mercado que se reconoce por su paisaje y no por las convenciones de las apps de domicilios.\n\nEs una superficie de operación: controles y navegación Material 3 estándar, densidad cómoda para un teléfono Android de gama baja usado a pleno sol, superficies planas en capas tonales y sombra solo donde algo flota. Claro y oscuro son igual de normativos: el oscuro no es una inversión del claro, sino un verde casi negro con superficies tonales y tintas claras derivadas del mismo campo.\n\nEl sistema rechaza de forma explícita el lenguaje por defecto de las apps de domicilio: azul eléctrico, insignias promocionales naranjas en todo y el mismo cuadro gris para cualquier producto.",
+    "keyCharacteristics": [
+      "Un solo verde (primary) para acción, selección, foco y marca.",
+      "Arcilla (accent) reservada a excedentes y descuentos.",
+      "Cada categoría tiene su color de campo (ground + ink) que reemplaza la foto ausente.",
+      "Fondo neutro teñido de verde, tarjetas blancas; en oscuro, verde-negro con superficies tonales.",
+      "Roles al estilo Material 3 (on*, contenedores) con todo par texto/fondo a 4,5:1 o más.",
+      "Formas redondeadas: píldoras para controles, 16px para medios de producto, 24px para el banner."
+    ],
+    "rules": [
+      {
+        "name": "The One Green Rule",
+        "body": "La acción, la selección y el foco usan siempre `primary`. Ningún otro tono compite por \"esto se toca\".",
+        "section": "colors"
+      },
+      {
+        "name": "The Clay Is Earned Rule",
+        "body": "`accent` solo aparece donde hay excedente o descuento. Si la pantalla no habla de una oportunidad de precio, no lleva arcilla.",
+        "section": "colors"
+      },
+      {
+        "name": "The Field Not Grey Rule",
+        "body": "Un producto sin foto se muestra sobre el color de campo de su categoría con su ícono en la tinta del mismo campo, nunca sobre un cuadro gris genérico.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paired Roles Rule",
+        "body": "Cada fondo se usa con su rol `on*` (o la tinta del campo); no se combinan texto y fondo fuera de sus pares, que cumplen 4,5:1 en ambos temas.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tight Top Rule",
+        "body": "Desde Callout hacia arriba el tracking es negativo y crece con el tamaño; Body y menores van sin tracking.",
+        "section": "typography"
+      },
+      {
+        "name": "The Price Speaks Rule",
+        "body": "El precio es el dato más fuerte de la tarjeta (16/20, 700, tracking -0.2, textPrimary); unidad y precio anterior lo acompañan en Footnote 400 con textTertiary, el anterior tachado.",
+        "section": "typography"
+      },
+      {
+        "name": "The Float Only Rule",
+        "body": "Solo lo que flota sobre otro contenido proyecta sombra; una tarjeta que descansa en la grilla es plana.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** usar `primary` para toda acción, selección, pestaña activa y foco, y su contenedor `primaryLight` / `onPrimaryLight` para estados seleccionados tonales.",
+      "**Do** mostrar los productos sin foto con `FieldTile` y el color de campo de su categoría (`useFieldColor`).",
+      "**Do** usar la arcilla (`accent`, `accentLight`) solo para excedentes y descuentos.",
+      "**Do** emparejar cada fondo con su rol `on*` y verificar ambos temas, claro y oscuro.",
+      "**Do** hacer píldora (`rounded.full`) todo control táctil, y dejar las tarjetas planas sobre el suelo tonal.",
+      "**Do** responder al toque de botones y tarjetas con hundimiento corto (0.97-0.98, 120ms, easeOut) y regreso con resorte; los chips responden solo con color."
+    ],
+    "donts": [
+      "**Don't** usar azul eléctrico, insignias promocionales naranjas genéricas ni un mismo cuadro gris para todos los productos.",
+      "**Don't** usar `accent` para acciones generales, navegación o decoración.",
+      "**Don't** introducir un segundo color de acción que compita con `primary`.",
+      "**Don't** poner sombra a las tarjetas que descansan en la grilla; la sombra es para lo que flota.",
+      "**Don't** escribir colores sueltos en pantalla: usar los roles de `colors`, `fields` y `BRAND`."
+    ]
+  }
+}

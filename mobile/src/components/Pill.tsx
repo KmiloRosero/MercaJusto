@@ -6,11 +6,11 @@ import { Icon } from "./Icon";
 type Variant = "primary" | "accent" | "success" | "warning" | "danger";
 
 const colorMap: Record<Variant, { bg: (t: any) => string; fg: (t: any) => string }> = {
-  primary: { bg: (t) => t.primaryLight, fg: (t) => t.primary },
-  accent:  { bg: (t) => t.accentLight,  fg: (t) => t.accent },
-  success: { bg: () => "rgba(45,198,83,0.12)", fg: (t) => t.success },
-  warning: { bg: () => "rgba(255,184,0,0.12)", fg: (t) => "#B8860B" },
-  danger:  { bg: () => "rgba(240,58,71,0.12)", fg: (t) => t.danger },
+  primary: { bg: (t) => t.primaryLight, fg: (t) => t.onPrimaryLight },
+  accent:  { bg: (t) => t.accentLight,  fg: (t) => t.onAccentLight },
+  success: { bg: (t) => t.successLight, fg: (t) => t.success },
+  warning: { bg: (t) => t.warningLight, fg: (t) => t.warning },
+  danger:  { bg: (t) => t.dangerLight,  fg: (t) => t.danger },
 };
 
 export function Pill({

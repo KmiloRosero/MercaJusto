@@ -1,11 +1,9 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { radius, spacing, type } from "../theme";
+import { radius, spacing, type, useTheme, useThemeScheme } from "../theme";
 import { Icon } from "./Icon";
 
 interface BannerProps {
-  tag: string;
   title: string;
   subtitle?: string;
   cta?: string;
@@ -13,11 +11,17 @@ interface BannerProps {
   iconName?: string;
 }
 
-// Verde campo: el único bloque saturado del Home, reservado para excedentes.
-const FIELD = ["#0F5132", "#1B7A47"] as const;
-const FIELD_INK = "#0F5132";
-
-export function Banner({ tag, title, subtitle, cta, onCta, iconName = "leaf" }: BannerProps) {
+/**
+ * Bloque destacado del Home, en verde campo. En oscuro usa el contenedor
+ * tonal en vez de un bloque claro, para no invertir el tema a la ligera.
+ */
+export function Banner({ title, subtitle, cta, onCta, iconName = "leaf" }: BannerProps) {
+  const t = useTheme();
+  const dark = useThemeScheme() === "dark";
+  const ground = dark ? t.primaryLight : t.primary;
+  const ink = dark ? t.onPrimaryLight : t.onPrimary;
+  const ctaGround = dark ? t.primary : t.onPrimary;
+  const ctaInk = dark ? t.onPrimary : t.primary;
   return (
     <Pressable
       onPress={onCta}
@@ -26,47 +30,40 @@ export function Banner({ tag, title, subtitle, cta, onCta, iconName = "leaf" }: 
         marginHorizontal: spacing[5],
         borderRadius: radius.xl + 4,
         overflow: "hidden",
+        backgroundColor: ground,
+        padding: spacing[5],
+        gap: spacing[2],
         opacity: pressed ? 0.94 : 1,
       })}
     >
-      <LinearGradient
-        colors={FIELD}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{ padding: spacing[5], gap: spacing[2] }}
-      >
-        {/* Marca de agua: hoja grande recortada en la esquina */}
-        <View style={{ position: "absolute", right: -28, bottom: -32, opacity: 0.14 }}>
-          <Icon name={iconName} size={168} color="#FFFFFF" />
+      {/* Marca de agua: hoja grande recortada en la esquina */}
+      <View style={{ position: "absolute", right: -28, bottom: -32, opacity: 0.16 }}>
+        <Icon name={iconName} size={168} color={ink} />
+      </View>
+
+      <Text style={[type.title, { color: ink, maxWidth: "82%" }]}>{title}</Text>
+      {subtitle ? (
+        <Text style={[type.footnote, { color: ink, fontWeight: "400", maxWidth: "82%" }]}>{subtitle}</Text>
+      ) : null}
+
+      {cta ? (
+        <View
+          style={{
+            marginTop: spacing[2],
+            height: 36,
+            paddingHorizontal: spacing[4],
+            borderRadius: radius.full,
+            backgroundColor: ctaGround,
+            alignSelf: "flex-start",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <Text style={[type.footnote, { color: ctaInk, fontWeight: "700" }]}>{cta}</Text>
+          <Icon name="arrow-forward" size={14} color={ctaInk} />
         </View>
-
-        <Text style={[type.overline, { color: "#B7F0C8", textTransform: "uppercase" }]}>{tag}</Text>
-        <Text style={[type.title, { color: "#FFFFFF", maxWidth: "82%" }]}>{title}</Text>
-        {subtitle ? (
-          <Text style={[type.footnote, { color: "rgba(255,255,255,0.86)", fontWeight: "400", maxWidth: "82%" }]}>
-            {subtitle}
-          </Text>
-        ) : null}
-
-        {cta ? (
-          <View
-            style={{
-              marginTop: spacing[2],
-              height: 36,
-              paddingHorizontal: spacing[4],
-              borderRadius: radius.full,
-              backgroundColor: "#FFFFFF",
-              alignSelf: "flex-start",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Text style={[type.footnote, { color: FIELD_INK, fontWeight: "700" }]}>{cta}</Text>
-            <Icon name="arrow-forward" size={14} color={FIELD_INK} />
-          </View>
-        ) : null}
-      </LinearGradient>
+      ) : null}
     </Pressable>
   );
 }

@@ -6,15 +6,24 @@ import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
+import { FieldTile } from "../../src/components/FieldTile";
+import { fontSize, nav, radius, spacing, useTheme, formatCOP } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
+import { SavingsNote } from "../../src/components/SavingsNote";
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
+import { QuantityStepper } from "../../src/components/QuantityStepper";
+import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
-  const { items, subtotal, fetch, updateQty, error } = useCart();
+  const insets = useSafeAreaInsets();
+  // El resumen va sobre las pestañas: el snackbar se ancla encima de ambos.
+  const onSummaryLayout = useSnackbarAnchor(nav.bottomHeight + insets.bottom);
+  const { items, subtotal, fetch, updateQty, remove, pendingIds, error, loaded, loading, loadError } = useCart();
 
   useEffect(() => {
     fetch();
@@ -33,14 +42,23 @@ export default function Cart() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
       <TopBar title="Mi canasta" />
-      {error ? (
+      {!loaded ? (
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          {loadError ? (
+            <ErrorState error={loadError} onRetry={fetch} retrying={loading} />
+          ) : (
+            <LoadingState label="Cargando tu canasta…" />
+          )}
+        </View>
+      ) : null}
+      {loaded && error ? (
         <Pressable
           onPress={() => useCart.setState({ error: null })}
           style={{
             flexDirection: "row",
             alignItems: "center",
             gap: spacing[2],
-            backgroundColor: `${t.danger}1A`,
+            backgroundColor: t.dangerLight,
             marginHorizontal: spacing[4],
             marginTop: spacing[2],
             padding: spacing[3],
@@ -53,7 +71,7 @@ export default function Cart() {
         </Pressable>
       ) : null}
 
-      {items.length === 0 ? (
+      {!loaded ? null : items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
           <View
             style={{
@@ -106,84 +124,49 @@ export default function Cart() {
                   <View
                     key={it.id}
                     style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: spacing[3],
+                      gap: spacing[2],
                       paddingVertical: spacing[2],
                       borderTopWidth: 1,
                       borderTopColor: t.border,
                     }}
                   >
-                    <View
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: radius.md,
-                        backgroundColor: t.gray100,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon name={it.product.category?.name || "leaf"} size={26} color={t.primary} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
-                        {it.product.name}
-                      </Text>
-                      <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, marginTop: 2 }}>
-                        {formatCOP(effectivePrice(it.product))} / {it.product.unit}
-                        {effectivePrice(it.product) < it.product.price ? (
-                          <Text style={{ textDecorationLine: "line-through" }}>
-                            {"  "}{formatCOP(it.product.price)}
-                          </Text>
-                        ) : null}
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+                      <FieldTile category={it.product.category} size={52} iconSize={26} radius={radius.md} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>{it.product.name}</Text>
+                        <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginTop: 2 }}>
+                          {formatCOP(effectivePrice(it.product))} / {it.product.unit}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>
+                        {formatCOP(effectivePrice(it.product) * it.quantity)}
                       </Text>
                     </View>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        backgroundColor: t.bgSecondary,
-                        borderRadius: radius.full,
-                        paddingHorizontal: 6,
-                        paddingVertical: 4,
-                        gap: 6,
-                        borderWidth: 1,
-                        borderColor: t.border,
-                      }}
-                    >
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
                       <Pressable
-                        onPress={() => updateQty(it.id, it.quantity - 1)}
+                        onPress={() => remove(it)}
+                        disabled={!!pendingIds[it.id]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Quitar ${it.product.name} de la canasta`}
                         style={({ pressed }) => ({
-                          width: 26,
-                          height: 26,
-                          borderRadius: radius.full,
+                          minHeight: 48,
+                          flexDirection: "row",
                           alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: pressed ? t.gray200 : "transparent",
+                          gap: 6,
+                          paddingRight: spacing[3],
+                          opacity: pressed ? 0.6 : 1,
                         })}
                       >
-                        <Icon name={it.quantity === 1 ? "trash-outline" : "remove"} size={14} color={t.textPrimary} />
+                        <Icon name="trash-outline" size={18} color={t.danger} />
+                        <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.danger }}>Quitar</Text>
                       </Pressable>
-
-                      <Text style={{ fontSize: 14, fontWeight: "800", color: t.textPrimary, minWidth: 18, textAlign: "center" }}>
-                        {it.quantity}
-                      </Text>
-
-                      <Pressable
-                        onPress={() => updateQty(it.id, it.quantity + 1)}
-                        disabled={it.quantity >= it.product.stock}
-                        style={({ pressed }) => ({
-                          width: 26,
-                          height: 26,
-                          borderRadius: radius.full,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          backgroundColor: pressed ? t.gray200 : "transparent",
-                        })}
-                      >
-                        <Icon name="add" size={14} color={t.textPrimary} />
-                      </Pressable>
+                      <QuantityStepper
+                        value={it.quantity}
+                        max={it.product.stock}
+                        pending={!!pendingIds[it.id]}
+                        label={it.product.name}
+                        onChange={(q) => updateQty(it.id, q)}
+                      />
                     </View>
                   </View>
                 ))}
@@ -192,6 +175,7 @@ export default function Cart() {
           />
 
           <View
+            onLayout={onSummaryLayout}
             style={{
               position: "absolute",
               bottom: 0,
@@ -206,10 +190,10 @@ export default function Cart() {
           >
             <Row label="Subtotal" value={formatCOP(subtotal)} color={t.textPrimary} />
             <Row label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
-            <Row label="Comisión plataforma (5%)" value={formatCOP(platformFee)} color={t.textSecondary} small />
-            <Row label="Ahorro vs. plaza" value={`− ${formatCOP(savings)}`} color={t.success} small />
+            <Row label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
             <View style={{ height: 1, backgroundColor: t.border, marginVertical: spacing[2] }} />
             <Row label="Total a pagar" value={formatCOP(total)} color={t.primary} bold />
+            <SavingsNote amount={savings} />
             <Button title="Proceder al pago" onPress={() => router.push("/checkout")} full size="lg" />
           </View>
         </>

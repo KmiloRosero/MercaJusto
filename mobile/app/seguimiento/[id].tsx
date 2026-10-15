@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Linking,
   Pressable,
   ScrollView,
   Text,
-  View,
-} from "react-native";
+  View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,6 +20,8 @@ import { BUYER_CAN_CANCEL, NEXT_ACTION } from "../../src/lib/orderStatus";
 import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import MapPreview from "../../src/components/MapPreview";
 
+import { FieldTile } from "../../src/components/FieldTile";
+import { ErrorState, LoadingState } from "../../src/components/QueryState";
 const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string }> = [
   { key: "CONFIRMED", label: "Pedido confirmado", icon: "checkmark-circle", desc: "El productor recibió tu pedido" },
   { key: "PREPARING", label: "Preparando", icon: "preparing", desc: "Están alistando tus productos" },
@@ -32,8 +32,7 @@ const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   NEQUI: "Nequi",
   DAVIPLATA: "Daviplata",
-  CASH: "Efectivo",
-};
+  CASH: "Efectivo" };
 
 const STATUS_INDEX: Record<OrderStatus, number> = {
   PENDING: 0,
@@ -41,18 +40,19 @@ const STATUS_INDEX: Record<OrderStatus, number> = {
   PREPARING: 1,
   IN_TRANSIT: 2,
   DELIVERED: 3,
-  CANCELLED: -1,
-};
+  CANCELLED: -1 };
 
 export default function Seguimiento() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, nuevo } = useLocalSearchParams<{ id: string; nuevo?: string }>();
   const router = useRouter();
   const t = useTheme();
   const queryClient = useQueryClient();
   const me = useAuth((s) => s.user);
   const [updating, setUpdating] = useState(false);
+  // Recién creado desde el checkout: se confirma el envío antes del seguimiento.
+  const [justPlaced, setJustPlaced] = useState(nuevo === "1");
 
-  const { data: order, isLoading, error } = useQuery({
+  const { data: order, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["order", id],
     queryFn: () => getOrder(id!),
     enabled: !!id,
@@ -109,10 +109,8 @@ export default function Seguimiento() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
         <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing[6], gap: spacing[3] }}>
-          <Icon name="alert-circle-outline" size={40} color={t.danger} />
-          <Text style={{ color: t.textSecondary, textAlign: "center" }}>{apiErrorMessage(error)}</Text>
-          <Button title="Volver" variant="outline" onPress={() => router.back()} />
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <ErrorState error={error} onRetry={() => refetch()} retrying={isRefetching} />
         </View>
       </SafeAreaView>
     );
@@ -122,8 +120,8 @@ export default function Seguimiento() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
         <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <ActivityIndicator color={t.primary} />
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <LoadingState label="Cargando tu pedido…" />
         </View>
       </SafeAreaView>
     );
@@ -142,6 +140,10 @@ export default function Seguimiento() {
     isDelivered ? "¡Entregado!" :
     STEPS[currentStep]?.label || "Procesando";
 
+  const producerNames = [...new Set(order.items.map((it) => it.product?.producer?.name).filter(Boolean))]
+    .map((n) => n!.split(" ")[0])
+    .join(" y ");
+
   const currentDesc =
     isCancelled ? "Este pedido fue cancelado." :
     STEPS[currentStep]?.desc || "Estamos procesando tu pedido.";
@@ -151,6 +153,39 @@ export default function Seguimiento() {
       <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[10] }}>
+        {justPlaced && order.buyerId === me?.id ? (
+          <View
+            accessibilityRole="alert"
+            style={{
+              margin: spacing[4],
+              padding: spacing[4],
+              gap: spacing[2],
+              borderRadius: radius.lg,
+              backgroundColor: t.successLight,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+              <Icon name="checkmark-circle" size={24} color={t.success} />
+              <Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: t.textPrimary }}>
+                ¡Pedido enviado{producerNames ? ` a ${producerNames}` : ""}!
+              </Text>
+            </View>
+            <Text style={{ fontSize: fontSize.sm, color: t.textPrimary, lineHeight: 20 }}>
+              {order.paymentMethod === "CASH"
+                ? `Pagas ${formatCOP(order.total)} en efectivo cuando recibas tu cosecha.`
+                : `Pago con ${PAYMENT_LABEL[order.paymentMethod]} por ${formatCOP(order.total)}: aparece como pendiente hasta que se confirme.`}{" "}
+              Te avisaremos cuando el productor empiece a prepararlo.
+            </Text>
+            <Pressable
+              onPress={() => setJustPlaced(false)}
+              accessibilityRole="button"
+              style={{ alignSelf: "flex-start", minHeight: 48, justifyContent: "center" }}
+            >
+              <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.success }}>Entendido</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {/* ═══ Mapa en vivo ═══ */}
         <MapPreview origin={origin} destination={destination} />
 
@@ -163,8 +198,7 @@ export default function Seguimiento() {
             marginTop: -spacing[6],
             padding: spacing[5],
             ...shadow.md,
-            overflow: "hidden",
-          }}
+            overflow: "hidden" }}
         >
           {/* Barra de gradiente superior */}
           <View
@@ -174,8 +208,7 @@ export default function Seguimiento() {
               left: 0,
               right: 0,
               height: 4,
-              backgroundColor: t.primary,
-            }}
+              backgroundColor: t.primary }}
           />
 
           <View
@@ -183,8 +216,7 @@ export default function Seguimiento() {
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              marginBottom: spacing[4],
-            }}
+              marginBottom: spacing[4] }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <View
@@ -192,15 +224,13 @@ export default function Seguimiento() {
                   width: 8,
                   height: 8,
                   borderRadius: 4,
-                  backgroundColor: isCancelled ? t.danger : t.success,
-                }}
+                  backgroundColor: isCancelled ? t.danger : t.success }}
               />
               <Text
                 style={{
                   fontSize: 12,
                   fontWeight: "600",
-                  color: isCancelled ? t.danger : t.success,
-                }}
+                  color: isCancelled ? t.danger : t.success }}
               >
                 {isCancelled ? "Cancelado" : isDelivered ? "Completado" : "En tiempo real"}
               </Text>
@@ -226,8 +256,7 @@ export default function Seguimiento() {
                 gap: spacing[3],
                 padding: spacing[3],
                 backgroundColor: t.bgSecondary,
-                borderRadius: radius.lg,
-              }}
+                borderRadius: radius.lg }}
             >
               <View
                 style={{
@@ -238,8 +267,7 @@ export default function Seguimiento() {
                   borderWidth: 2,
                   borderColor: t.primary,
                   alignItems: "center",
-                  justifyContent: "center",
-                }}
+                  justifyContent: "center" }}
               >
                 <Icon name="in_transit" size={24} color={t.primary} />
               </View>
@@ -267,10 +295,9 @@ export default function Seguimiento() {
                     backgroundColor: t.success,
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: pressed ? 0.8 : 1,
-                  })}
+                    opacity: pressed ? 0.8 : 1 })}
                 >
-                  <Icon name="call" size={18} color="#FFFFFF" />
+                  <Icon name="call" size={18} color={t.onPrimary} />
                 </Pressable>
               ) : null}
             </View>
@@ -286,8 +313,7 @@ export default function Seguimiento() {
               marginHorizontal: spacing[4],
               marginTop: spacing[4],
               padding: spacing[4],
-              ...shadow.sm,
-            }}
+              ...shadow.sm }}
           >
             <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary, marginBottom: spacing[4] }}>
               Línea de tiempo
@@ -307,8 +333,7 @@ export default function Seguimiento() {
                           top: 22,
                           bottom: -spacing[5],
                           width: 2,
-                          backgroundColor: i < currentStep ? t.success : t.border,
-                        }}
+                          backgroundColor: i < currentStep ? t.success : t.border }}
                       />
                     ) : null}
                     {/* Dot */}
@@ -328,21 +353,19 @@ export default function Seguimiento() {
                           state === "completed" ? t.success :
                           state === "active" ? t.primary : t.border,
                         alignItems: "center",
-                        justifyContent: "center",
-                      }}
+                        justifyContent: "center" }}
                     >
                       <Icon
                         name={state === "completed" ? "checkmark" : step.icon}
                         size={12}
-                        color={state === "pending" ? t.textTertiary : "#FFFFFF"}
+                        color={state === "pending" ? t.textTertiary : t.onPrimary}
                       />
                     </View>
                     <Text
                       style={{
                         fontSize: 14,
                         fontWeight: "600",
-                        color: state === "pending" ? t.textTertiary : t.textPrimary,
-                      }}
+                        color: state === "pending" ? t.textTertiary : t.textPrimary }}
                     >
                       {step.label}
                     </Text>
@@ -355,8 +378,7 @@ export default function Seguimiento() {
                           day: "numeric",
                           month: "short",
                           hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                          minute: "2-digit" })}
                       </Text>
                     ) : null}
                   </View>
@@ -374,16 +396,14 @@ export default function Seguimiento() {
             marginHorizontal: spacing[4],
             marginTop: spacing[4],
             padding: spacing[4],
-            ...shadow.sm,
-          }}
+            ...shadow.sm }}
         >
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: spacing[3],
-            }}
+              marginBottom: spacing[3] }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Icon name="basket-outline" size={16} color={t.primary} />
@@ -405,11 +425,10 @@ export default function Seguimiento() {
                 alignItems: "center",
                 paddingVertical: spacing[2],
                 borderBottomWidth: 1,
-                borderBottomColor: t.border,
-              }}
+                borderBottomColor: t.border }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], flex: 1 }}>
-                <Icon name={it.product?.category?.name || "leaf"} size={20} color={t.primary} />
+                <FieldTile category={it.product?.category} size={36} iconSize={18} radius={radius.sm} />
                 <View>
                   <Text style={{ fontSize: 13, fontWeight: "500", color: t.textPrimary }}>
                     {it.product?.name}
@@ -436,8 +455,7 @@ export default function Seguimiento() {
                 paddingTop: spacing[2],
                 marginTop: spacing[1],
                 borderTopWidth: 2,
-                borderTopColor: t.border,
-              }}
+                borderTopColor: t.border }}
             >
               <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>Total</Text>
               <Text style={{ fontSize: 18, fontWeight: "800", color: t.primary }}>
@@ -463,8 +481,7 @@ export default function Seguimiento() {
               marginHorizontal: spacing[4],
               marginTop: spacing[4],
               padding: spacing[4],
-              ...shadow.sm,
-            }}
+              ...shadow.sm }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[2] }}>
               <Icon name="location" size={16} color={t.primary} />
@@ -493,18 +510,18 @@ export default function Seguimiento() {
           {nextAction ? (
             <Button
               title={nextAction.label}
-              icon={<Icon name={nextAction.icon} size={20} color="#FFFFFF" />}
+              icon={<Icon name={nextAction.icon} size={20} color={t.onPrimary} />}
               full
               size="lg"
               loading={updating}
-              variant={nextAction.next === "DELIVERED" ? "accent" : "primary"}
+              variant="primary"
               onPress={() => changeStatus(nextAction.next)}
             />
           ) : null}
           {isDelivered && isBuyerView ? (
             <Button
               title={reviewed ? "Ya calificaste este pedido" : "Calificar pedido"}
-              icon={<Icon name="star" size={20} color={reviewed ? t.gray400 : "#FFFFFF"} />}
+              icon={<Icon name="star" size={20} color={reviewed ? t.gray400 : t.onPrimary} />}
               full
               size="lg"
               disabled={reviewed}
@@ -530,8 +547,7 @@ function Row({
   label,
   value,
   color,
-  small,
-}: {
+  small }: {
   label: string;
   value: string;
   color: string;

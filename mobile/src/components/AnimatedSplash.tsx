@@ -3,25 +3,22 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 import Animated, {
   Easing,
-  runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withDelay,
   withTiming,
 } from "react-native-reanimated";
-import { LogoMark } from "./Logo";
+import { scheduleOnRN } from "react-native-worklets";
+import { BRAND, LogoMark } from "./Logo";
 import { motion } from "../theme";
 
-const BLUE = "#008FFF";
 const easeOut = Easing.bezier(...motion.easeOut);
 
-// Geometría del splash nativo (assets/splash.png, 1284×2778, resizeMode contain):
-// la marca mide 520 px y está centrada. Reproducirla aquí evita cualquier salto
-// en el instante en que se oculta el splash nativo.
-const NATIVE_W = 1284;
-const NATIVE_H = 2778;
-const NATIVE_MARK = 520;
+// Geometría del splash nativo (plugin expo-splash-screen en app.json): la marca
+// (assets/splash-icon.png) se dibuja centrada a 200 pt de ancho. Reproducirla
+// aquí evita cualquier salto en el instante en que se oculta el splash nativo.
+const NATIVE_MARK = 200;
 
 /** Tiempo mínimo en pantalla: deja leer la marca sin hacer esperar de más. */
 const MIN_VISIBLE_MS = 1400;
@@ -39,12 +36,12 @@ interface AnimatedSplashProps {
  * duración mayor a la de la UI normal.
  */
 export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
-  const { width, height } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const [introDone, setIntroDone] = useState(false);
   const mountedAt = useRef(Date.now());
 
-  const markSize = NATIVE_MARK * Math.min(width / NATIVE_W, height / NATIVE_H);
+  const markSize = NATIVE_MARK;
 
   const lift = useSharedValue(0); // 0 → posición centrada, 1 → posición final
   const word = useSharedValue(0);
@@ -61,7 +58,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
     tagline.value = withDelay(
       lead + 220,
       withTiming(1, { duration: 480, easing: easeOut }, (finished) => {
-        if (finished) runOnJS(setIntroDone)(true);
+        if (finished) scheduleOnRN(setIntroDone, true);
       })
     );
   }, [reduceMotion, lift, word, tagline]);
@@ -71,7 +68,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
     const wait = Math.max(0, MIN_VISIBLE_MS - (Date.now() - mountedAt.current));
     const id = setTimeout(() => {
       exit.value = withTiming(1, { duration: 280, easing: easeOut }, (finished) => {
-        if (finished) runOnJS(onFinish)();
+        if (finished) scheduleOnRN(onFinish);
       });
     }, wait);
     return () => clearTimeout(id);
@@ -116,7 +113,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: BLUE,
+    backgroundColor: BRAND.field,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 100,

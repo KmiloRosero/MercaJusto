@@ -19,6 +19,7 @@ cartRouter.get("/", async (req, res, next) => {
         product: {
           include: {
             producer: { select: { id: true, name: true, rating: true, avatarUrl: true } },
+            category: true,
           },
         },
       },

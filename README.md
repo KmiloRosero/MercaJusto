@@ -29,7 +29,7 @@ MercaJusto/
 
 ## 🚀 Puesta en marcha
 
-Requisitos: Node 18+ y, para probar en el celular, la app **Expo Go** (SDK 51).
+Requisitos: Node 18+ y, para probar en el celular, la app **Expo Go** (SDK 57, la versión actual de las tiendas).
 
 ### 1. Backend + base de datos
 

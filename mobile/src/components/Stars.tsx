@@ -52,7 +52,7 @@ function StarItem({
       <Icon
         name={filled ? "star" : "star-outline"}
         size={size}
-        color={filled ? "#FFB800" : t.gray300}
+        color={filled ? t.rating : t.gray300}
       />
     </AnimatedPressable>
   );

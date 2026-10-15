@@ -13,7 +13,7 @@ import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { AddressSheet } from "../src/components/AddressSheet";
 import { Icon, IconName } from "../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../src/theme";
+import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../src/theme";
 import { Address, PaymentMethod } from "../src/api/types";
 import { createOrder, apiErrorMessage } from "../src/api/client";
 import { useAuth } from "../src/store/auth";
@@ -22,6 +22,8 @@ import { cartSavings } from "../src/lib/savings";
 import { effectivePrice, orderTotals } from "../src/lib/pricing";
 import { showAlert } from "../src/lib/dialog";
 
+import { FieldTile } from "../src/components/FieldTile";
+import { SavingsNote } from "../src/components/SavingsNote";
 const PAYMENT_METHODS: Array<{
   key: PaymentMethod;
   icon: IconName;
@@ -63,7 +65,9 @@ export default function Checkout() {
   useEffect(() => {
     if (items.length === 0 && !submitting) {
       const id = setTimeout(() => {
-        if (useCart.getState().items.length === 0) {
+        // Solo si la canasta cargó de verdad: un fallo de red no es "canasta vacía".
+        const cart = useCart.getState();
+        if (cart.loaded && cart.items.length === 0) {
           showAlert("Canasta vacía", "Agrega productos antes de finalizar la compra.").then(() =>
             router.replace("/(tabs)/home")
           );
@@ -92,7 +96,7 @@ export default function Checkout() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       await refresh();
-      router.replace(`/seguimiento/${order.id}`);
+      router.replace(`/seguimiento/${order.id}?nuevo=1`);
     } catch (err) {
       setSubmitting(false);
       await showAlert("No se pudo crear el pedido", apiErrorMessage(err));
@@ -189,7 +193,7 @@ export default function Checkout() {
                       justifyContent: "center",
                     }}
                   >
-                    <Icon name={m.icon} size={20} color={selected ? "#FFFFFF" : t.primary} />
+                    <Icon name={m.icon} size={20} color={selected ? t.onPrimary : t.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{m.name}</Text>
@@ -208,12 +212,18 @@ export default function Checkout() {
                     }}
                   >
                     {selected ? (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#FFF" }} />
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.onPrimary }} />
                     ) : null}
                   </View>
                 </Pressable>
               );
             })}
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], marginTop: spacing[3] }}>
+            <Icon name="shield-checkmark-outline" size={16} color={t.textSecondary} />
+            <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
+              Puedes cancelar el pedido hasta que el productor empiece a prepararlo.
+            </Text>
           </View>
         </SectionCard>
 
@@ -232,18 +242,7 @@ export default function Checkout() {
                   borderBottomColor: t.border,
                 }}
               >
-                <View
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: radius.sm,
-                    backgroundColor: t.bgSecondary,
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Icon name={it.product.category?.name || "leaf"} size={20} color={t.primary} />
-                </View>
+                <FieldTile category={it.product.category} size={40} iconSize={20} radius={radius.sm} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
                     {it.product.name}
@@ -262,18 +261,7 @@ export default function Checkout() {
           <View style={{ marginTop: spacing[3], gap: spacing[1] }}>
             <TotalRow label="Subtotal" value={formatCOP(subtotal)} color={t.textSecondary} />
             <TotalRow label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
-            <TotalRow
-              label="Comisión plataforma (5%)"
-              value={formatCOP(platformFee)}
-              color={t.textTertiary}
-              small
-            />
-            <TotalRow
-              label="Ahorro directo vs. tienda"
-              value={`− ${formatCOP(savings)}`}
-              color={t.success}
-              small
-            />
+            <TotalRow label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
             <View
               style={{
                 flexDirection: "row",
@@ -289,6 +277,9 @@ export default function Checkout() {
               <Text style={{ fontSize: 22, fontWeight: "800", color: t.primary }}>
                 {formatCOP(total)}
               </Text>
+            </View>
+            <View style={{ marginTop: spacing[2] }}>
+              <SavingsNote amount={savings} />
             </View>
           </View>
         </SectionCard>
@@ -337,7 +328,7 @@ export default function Checkout() {
       >
         <Button
           title={submitting ? "Procesando..." : `Confirmar pedido · ${formatCOP(total)}`}
-          icon={<Icon name="checkmark-circle" size={20} color="#FFFFFF" />}
+          icon={<Icon name="checkmark-circle" size={20} color={t.onPrimary} />}
           onPress={onConfirm}
           disabled={!canSubmit}
           loading={submitting}
@@ -377,16 +368,8 @@ function SectionCard({ title, icon, children }: { title: string; icon?: IconName
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[3] }}>
-        {icon ? <Icon name={icon} size={16} color={t.primary} /> : null}
-        <Text
-          style={{
-            fontSize: 13,
-            fontWeight: "800",
-            color: t.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-          }}
-        >
+        {icon ? <Icon name={icon} size={18} color={t.primary} /> : null}
+        <Text style={[type.headline, { fontSize: 16, color: t.textPrimary }]} accessibilityRole="header">
           {title}
         </Text>
       </View>

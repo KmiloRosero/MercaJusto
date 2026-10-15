@@ -6,10 +6,9 @@ import { requireAuth } from "../middleware/auth";
 export const metricsRouter = Router();
 metricsRouter.use(requireAuth);
 
-// Cuando un producto no tiene precio de referencia cargado, estimamos el
-// precio de plaza con el ahorro histórico del modelo (35% sobre el precio
-// MercaJusto). Es un fallback: la mayoría del catálogo sí tiene traditionalPrice.
-const FALLBACK_SAVINGS_PCT = 0.35;
+// El ahorro solo se calcula con precios de plaza reales (traditionalPrice).
+// Las líneas sin precio de referencia no suman ahorro ni entran al porcentaje:
+// nunca se estima una cifra que el productor no reportó.
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
@@ -79,6 +78,8 @@ metricsRouter.get("/fair-price", async (req, res, next) => {
     });
 
     let mercaJustoTotal = 0;
+    // Solo líneas con precio de plaza: base honesta para el porcentaje.
+    let comparedMercaTotal = 0;
     let traditionalTotal = 0;
     let itemsCount = 0;
     let platformFees = 0;
@@ -97,13 +98,15 @@ metricsRouter.get("/fair-price", async (req, res, next) => {
       for (const item of order.items) {
         const p = item.product;
         const lineMerca = item.subtotal;
-        const lineTraditional = p.traditionalPrice
-          ? p.traditionalPrice * item.quantity
-          : lineMerca + Math.round(lineMerca * FALLBACK_SAVINGS_PCT);
-        const lineSavings = lineTraditional - lineMerca;
+        const hasReference = !!p.traditionalPrice && p.traditionalPrice > 0;
+        const lineTraditional = hasReference ? p.traditionalPrice! * item.quantity : 0;
+        const lineSavings = hasReference ? Math.max(0, lineTraditional - lineMerca) : 0;
 
         mercaJustoTotal += lineMerca;
-        traditionalTotal += lineTraditional;
+        if (hasReference) {
+          comparedMercaTotal += lineMerca;
+          traditionalTotal += lineTraditional;
+        }
         itemsCount += item.quantity;
         if (p.isSurplus) surplusUnits += item.quantity;
 
@@ -143,7 +146,7 @@ metricsRouter.get("/fair-price", async (req, res, next) => {
       }
     }
 
-    const savingsTotal = traditionalTotal - mercaJustoTotal;
+    const savingsTotal = Math.max(0, traditionalTotal - comparedMercaTotal);
 
     res.json({
       generatedAt: new Date().toISOString(),

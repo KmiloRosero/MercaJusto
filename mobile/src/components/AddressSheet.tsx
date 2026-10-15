@@ -171,7 +171,7 @@ export function AddressSheet({
                     <Icon
                       name={addr.label === "Finca" ? "leaf" : addr.label === "Trabajo" ? "briefcase" : "location"}
                       size={20}
-                      color={selected ? "#FFFFFF" : t.primary}
+                      color={selected ? t.onPrimary : t.primary}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -184,7 +184,9 @@ export function AddressSheet({
                   </View>
                   {onDeleted ? (
                     <Pressable
-                      hitSlop={8}
+                      hitSlop={15}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Eliminar dirección ${addr.label}`}
                       onPress={async () => {
                         const ok = await confirmDialog(
                           "¿Eliminar dirección?",
@@ -216,7 +218,7 @@ export function AddressSheet({
                     }}
                   >
                     {selected ? (
-                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#FFF" }} />
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: t.onPrimary }} />
                     ) : null}
                   </View>
                 </Pressable>
@@ -239,6 +241,7 @@ export function AddressSheet({
                 <Pressable
                   key={l}
                   onPress={() => setLabel(l)}
+                  hitSlop={{ top: 6, bottom: 6 }}
                   style={{
                     paddingHorizontal: spacing[3],
                     paddingVertical: 8,
@@ -304,7 +307,7 @@ export function AddressSheet({
               borderWidth: 1.5,
               borderStyle: "dashed",
               borderColor: coords ? t.success : t.primary,
-              backgroundColor: coords ? "rgba(45,198,83,0.08)" : t.primaryLight,
+              backgroundColor: coords ? t.successLight : t.primaryLight,
             }}
           >
             {locating ? (

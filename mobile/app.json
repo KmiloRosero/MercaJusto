@@ -7,12 +7,6 @@
     "icon": "./assets/icon.png",
     "scheme": "mercajusto",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash.png",
-      "backgroundColor": "#008FFF",
-      "resizeMode": "contain"
-    },
-    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "co.mercajusto.app",
@@ -26,7 +20,7 @@
       "package": "co.mercajusto.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#008FFF"
+        "backgroundColor": "#1F6B3D"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
@@ -40,10 +34,19 @@
       "output": "static",
       "favicon": "./assets/favicon.png",
       "name": "MercaJusto",
-      "themeColor": "#008FFF"
+      "themeColor": "#1F6B3D"
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#1F6B3D"
+        }
+      ],
       "expo-secure-store",
       [
         "expo-location",
@@ -61,7 +64,7 @@
       [
         "expo-notifications",
         {
-          "color": "#008FFF"
+          "color": "#1F6B3D"
         }
       ]
     ],
