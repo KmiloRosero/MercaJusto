@@ -30,3 +30,6 @@ build/
 .impeccable/review/
 .impeccable/live/
 .impeccable/config.local.json
+
+# Configuración local de Claude Code
+.claude/settings.local.json
