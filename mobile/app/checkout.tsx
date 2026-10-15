@@ -23,7 +23,7 @@ import { effectivePrice, orderTotals } from "../src/lib/pricing";
 import { showAlert } from "../src/lib/dialog";
 
 import { FieldTile } from "../src/components/FieldTile";
-import { SavingsNote } from "../src/components/SavingsNote";
+import { FeeExplainer, SavingsNote } from "../src/components/SavingsNote";
 const PAYMENT_METHODS: {
   key: PaymentMethod;
   icon: IconName;
@@ -168,6 +168,9 @@ export default function Checkout() {
                 <Pressable
                   key={m.key}
                   onPress={() => setPayment(m.key)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  accessibilityLabel={`${m.name}. ${m.desc}`}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -221,6 +224,14 @@ export default function Checkout() {
               Puedes cancelar el pedido hasta que el productor empiece a prepararlo.
             </Text>
           </View>
+          {payment !== "CASH" ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], marginTop: spacing[2] }}>
+              <Icon name="information-circle-outline" size={16} color={t.textSecondary} />
+              <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
+                Modo demo: el pago con {payment === "NEQUI" ? "Nequi" : "Daviplata"} se simula y queda registrado al confirmar.
+              </Text>
+            </View>
+          ) : null}
         </SectionCard>
 
         {/* Resumen del pedido */}
@@ -258,6 +269,7 @@ export default function Checkout() {
             <TotalRow label="Subtotal" value={formatCOP(subtotal)} color={t.textSecondary} />
             <TotalRow label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
             <TotalRow label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
+            <FeeExplainer />
             <View
               style={{
                 flexDirection: "row",
@@ -270,7 +282,7 @@ export default function Checkout() {
               }}
             >
               <Text style={{ fontSize: 16, fontWeight: "800", color: t.textPrimary }}>Total a pagar</Text>
-              <Text style={{ fontSize: 22, fontWeight: "800", color: t.primary }}>
+              <Text style={{ fontSize: 22, fontWeight: "800", color: t.textPrimary }}>
                 {formatCOP(total)}
               </Text>
             </View>
@@ -301,7 +313,7 @@ export default function Checkout() {
               textAlignVertical: "top",
             }}
           />
-          <Text style={{ fontSize: 11, color: t.textTertiary, marginTop: 4, textAlign: "right" }}>
+          <Text style={[type.footnote, { fontWeight: "400", color: t.textTertiary, marginTop: 4, textAlign: "right" }]}>
             {notes.length}/300
           </Text>
         </SectionCard>
@@ -323,7 +335,7 @@ export default function Checkout() {
         }}
       >
         <Button
-          title={submitting ? "Procesando..." : `Confirmar pedido · ${formatCOP(total)}`}
+          title={submitting ? "Procesando…" : `Confirmar pedido · ${formatCOP(total)}`}
           icon={<Icon name="checkmark-circle" size={20} color={t.onPrimary} />}
           onPress={onConfirm}
           disabled={!canSubmit}
@@ -332,7 +344,7 @@ export default function Checkout() {
           size="lg"
         />
         {!selectedAddress ? (
-          <Text style={{ fontSize: 11, color: t.danger, textAlign: "center", marginTop: 6, fontWeight: "600" }}>
+          <Text style={[type.footnote, { color: t.danger, textAlign: "center", marginTop: 6, fontWeight: "600" }]}>
             Selecciona una dirección de entrega para continuar
           </Text>
         ) : null}

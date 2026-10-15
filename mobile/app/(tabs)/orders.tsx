@@ -166,7 +166,7 @@ export default function Orders() {
                   borderTopColor: t.border,
                 }}
               >
-                <Text style={{ fontSize: 16, fontWeight: "800", color: t.primary }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: t.textPrimary }}>
                   {formatCOP(isBuyer ? item.total : lines.reduce((acc, it) => acc + it.subtotal, 0))}
                 </Text>
 
@@ -184,7 +184,6 @@ export default function Orders() {
                   icon={<Icon name={action.icon} size={18} color={t.onPrimary} />}
                   onPress={() => advance(item)}
                   loading={advancingId === item.id}
-                  variant={action.next === "DELIVERED" ? "accent" : "primary"}
                   full
                   style={{ marginTop: spacing[2] }}
                 />

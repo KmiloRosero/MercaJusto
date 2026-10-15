@@ -12,7 +12,7 @@ import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, formatCOP, shadow } from "../../src/theme";
+import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../../src/theme";
 import { apiErrorMessage, getOrder, updateOrderStatus } from "../../src/api/client";
 import { OrderStatus, PaymentMethod } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
@@ -166,14 +166,14 @@ export default function Seguimiento() {
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
               <Icon name="checkmark-circle" size={24} color={t.success} />
-              <Text style={{ flex: 1, fontSize: 18, fontWeight: "800", color: t.textPrimary }}>
+              <Text style={[type.headline, { flex: 1, color: t.textPrimary }]}>
                 ¡Pedido enviado{producerNames ? ` a ${producerNames}` : ""}!
               </Text>
             </View>
             <Text style={{ fontSize: fontSize.sm, color: t.textPrimary, lineHeight: 20 }}>
               {order.paymentMethod === "CASH"
                 ? `Pagas ${formatCOP(order.total)} en efectivo cuando recibas tu cosecha.`
-                : `Pago con ${PAYMENT_LABEL[order.paymentMethod]} por ${formatCOP(order.total)}: aparece como pendiente hasta que se confirme.`}{" "}
+                : `Registramos tu pago con ${PAYMENT_LABEL[order.paymentMethod]} por ${formatCOP(order.total)}.`}{" "}
               Te avisaremos cuando el productor empiece a prepararlo.
             </Text>
             <Pressable
@@ -197,20 +197,8 @@ export default function Seguimiento() {
             marginHorizontal: spacing[4],
             marginTop: -spacing[6],
             padding: spacing[5],
-            ...shadow.md,
-            overflow: "hidden" }}
+            ...shadow.md }}
         >
-          {/* Barra de gradiente superior */}
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 4,
-              backgroundColor: t.primary }}
-          />
-
           <View
             style={{
               flexDirection: "row",
@@ -226,24 +214,19 @@ export default function Seguimiento() {
                   borderRadius: 4,
                   backgroundColor: isCancelled ? t.danger : t.success }}
               />
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  color: isCancelled ? t.danger : t.success }}
-              >
+              <Text style={[type.footnote, { fontWeight: "600", color: isCancelled ? t.danger : t.success }]}>
                 {isCancelled ? "Cancelado" : isDelivered ? "Completado" : "En tiempo real"}
               </Text>
             </View>
-            <Text style={{ fontSize: 12, color: t.textTertiary, fontWeight: "500" }}>
+            <Text style={[type.footnote, { color: t.textTertiary }]}>
               #{order.id.slice(-8).toUpperCase()}
             </Text>
           </View>
 
-          <Text style={{ fontSize: 20, fontWeight: "800", color: t.textPrimary, marginBottom: 4 }}>
+          <Text style={[type.title, { color: t.textPrimary, marginBottom: spacing[1] }]}>
             {currentLabel}
           </Text>
-          <Text style={{ fontSize: 13, color: t.textSecondary, marginBottom: spacing[4] }}>
+          <Text style={[type.footnote, { fontWeight: "400", color: t.textSecondary, marginBottom: spacing[4] }]}>
             {currentDesc}
           </Text>
 
@@ -272,15 +255,15 @@ export default function Seguimiento() {
                 <Icon name="in_transit" size={24} color={t.primary} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
+                <Text style={[type.callout, { color: t.textPrimary }]}>
                   {order.courier.name}
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Text style={{ fontSize: 12, color: t.textSecondary }}>
+                  <Text style={[type.footnote, { fontWeight: "400", color: t.textSecondary }]}>
                     {isBuyerView ? "Tu repartidor" : "Repartidor"} ·
                   </Text>
-                  <Icon name="star" size={12} color={t.warning} />
-                  <Text style={{ fontSize: 12, color: t.textSecondary }}>
+                  <Icon name="star" size={12} color={t.rating} />
+                  <Text style={[type.footnote, { fontWeight: "400", color: t.textSecondary }]}>
                     {order.courier.rating ? order.courier.rating.toFixed(1) : "Nuevo"}
                   </Text>
                 </View>
@@ -288,16 +271,18 @@ export default function Seguimiento() {
               {order.courier.phone ? (
                 <Pressable
                   onPress={() => Linking.openURL(`tel:${order.courier!.phone}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Llamar a ${order.courier.name}`}
                   style={({ pressed }) => ({
-                    width: 40,
-                    height: 40,
+                    width: 48,
+                    height: 48,
                     borderRadius: radius.full,
-                    backgroundColor: t.success,
+                    backgroundColor: t.primary,
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: pressed ? 0.8 : 1 })}
                 >
-                  <Icon name="call" size={18} color={t.onPrimary} />
+                  <Icon name="call" size={20} color={t.onPrimary} />
                 </Pressable>
               ) : null}
             </View>
@@ -315,7 +300,7 @@ export default function Seguimiento() {
               padding: spacing[4],
               ...shadow.sm }}
           >
-            <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary, marginBottom: spacing[4] }}>
+            <Text style={[type.callout, { color: t.textPrimary, marginBottom: spacing[4] }]} accessibilityRole="header">
               Línea de tiempo
             </Text>
 
@@ -361,19 +346,14 @@ export default function Seguimiento() {
                         color={state === "pending" ? t.textTertiary : t.onPrimary}
                       />
                     </View>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: "600",
-                        color: state === "pending" ? t.textTertiary : t.textPrimary }}
-                    >
+                    <Text style={[type.callout, { color: state === "pending" ? t.textTertiary : t.textPrimary }]}>
                       {step.label}
                     </Text>
-                    <Text style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }}>
+                    <Text style={[type.footnote, { fontWeight: "400", color: t.textSecondary, marginTop: 2 }]}>
                       {step.desc}
                     </Text>
                     {state === "active" && order.createdAt ? (
-                      <Text style={{ fontSize: 11, color: t.textTertiary, marginTop: 2 }}>
+                      <Text style={[type.footnote, { fontWeight: "400", color: t.textTertiary, marginTop: 2 }]}>
                         {new Date(order.createdAt).toLocaleString("es-CO", {
                           day: "numeric",
                           month: "short",
@@ -407,12 +387,12 @@ export default function Seguimiento() {
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <Icon name="basket-outline" size={16} color={t.primary} />
-              <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
+              <Text style={[type.callout, { color: t.textPrimary }]} accessibilityRole="header">
                 {isBuyerView ? "Tu pedido" : `Pedido de ${order.buyer?.name ?? "cliente"}`}
               </Text>
             </View>
-            <Text style={{ fontSize: 12, color: t.textTertiary }}>
-              {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+            <Text style={[type.footnote, { fontWeight: "400", color: t.textTertiary }]}>
+              {order.items.length} producto{order.items.length !== 1 ? "s" : ""}
             </Text>
           </View>
 
@@ -429,16 +409,16 @@ export default function Seguimiento() {
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], flex: 1 }}>
                 <FieldTile category={it.product?.category} size={36} iconSize={18} radius={radius.sm} />
-                <View>
-                  <Text style={{ fontSize: 13, fontWeight: "500", color: t.textPrimary }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[type.footnote, { color: t.textPrimary }]}>
                     {it.product?.name}
                   </Text>
-                  <Text style={{ fontSize: 11, color: t.textTertiary }}>
+                  <Text style={[type.footnote, { fontWeight: "400", color: t.textTertiary }]}>
                     {it.quantity} {it.product?.unit}
                   </Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
+              <Text style={[type.footnote, { fontWeight: "700", color: t.textPrimary }]}>
                 {formatCOP(it.subtotal)}
               </Text>
             </View>
@@ -447,23 +427,24 @@ export default function Seguimiento() {
           <View style={{ marginTop: spacing[3], gap: 4 }}>
             <Row label="Subtotal" value={formatCOP(order.subtotal)} color={t.textSecondary} />
             <Row label="Envío" value={formatCOP(order.deliveryFee)} color={t.textSecondary} />
-            <Row label="Comisión" value={formatCOP(order.platformFee)} color={t.textTertiary} small />
+            <Row label="Comisión MercaJusto (5 %)" value={formatCOP(order.platformFee)} color={t.textSecondary} />
             <View
               style={{
                 flexDirection: "row",
                 justifyContent: "space-between",
+                alignItems: "center",
                 paddingTop: spacing[2],
                 marginTop: spacing[1],
                 borderTopWidth: 2,
                 borderTopColor: t.border }}
             >
-              <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>Total</Text>
-              <Text style={{ fontSize: 18, fontWeight: "800", color: t.primary }}>
+              <Text style={[type.callout, { color: t.textPrimary }]}>Total</Text>
+              <Text style={[type.headline, { color: t.textPrimary }]}>
                 {formatCOP(order.total)}
               </Text>
             </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 4 }}>
-              <Text style={{ fontSize: 12, color: t.textTertiary }}>Pago</Text>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+              <Text style={[type.footnote, { fontWeight: "400", color: t.textTertiary }]}>Pago</Text>
               <Pill variant={order.paymentStatus === "PAID" ? "success" : "warning"}>
                 {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod} ·{" "}
                 {order.paymentStatus === "PAID" ? "Pagado" : order.paymentMethod === "CASH" ? "Contraentrega" : "Pendiente"}
@@ -485,11 +466,11 @@ export default function Seguimiento() {
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[2] }}>
               <Icon name="location" size={16} color={t.primary} />
-              <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>
+              <Text style={[type.callout, { color: t.textPrimary }]} accessibilityRole="header">
                 Dirección de entrega
               </Text>
             </View>
-            <Text style={{ fontSize: 13, color: t.textSecondary }}>
+            <Text style={[type.footnote, { fontWeight: "400", color: t.textSecondary }]}>
               {[order.deliveryAddress.detail, order.deliveryAddress.vereda, order.deliveryAddress.municipio, order.deliveryAddress.departamento]
                 .filter(Boolean)
                 .join(", ")}
@@ -497,7 +478,7 @@ export default function Seguimiento() {
             {order.notes ? (
               <View style={{ flexDirection: "row", gap: 6, marginTop: spacing[2] }}>
                 <Icon name="create-outline" size={14} color={t.textTertiary} />
-                <Text style={{ flex: 1, fontSize: 12, color: t.textTertiary, fontStyle: "italic" }}>
+                <Text style={[type.footnote, { flex: 1, fontWeight: "400", color: t.textTertiary, fontStyle: "italic" }]}>
                   “{order.notes}”
                 </Text>
               </View>
@@ -543,20 +524,11 @@ export default function Seguimiento() {
   );
 }
 
-function Row({
-  label,
-  value,
-  color,
-  small }: {
-  label: string;
-  value: string;
-  color: string;
-  small?: boolean;
-}) {
+function Row({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 }}>
-      <Text style={{ fontSize: small ? 12 : 13, color }}>{label}</Text>
-      <Text style={{ fontSize: small ? 12 : 13, fontWeight: "600", color }}>{value}</Text>
+      <Text style={[type.footnote, { fontWeight: "400", color }]}>{label}</Text>
+      <Text style={[type.footnote, { fontWeight: "600", color }]}>{value}</Text>
     </View>
   );
 }

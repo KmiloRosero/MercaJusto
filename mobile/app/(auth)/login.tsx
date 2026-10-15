@@ -58,7 +58,7 @@ export default function Login() {
       setStep("code");
       setDevCode(res.devCode ?? null);
     } catch (err) {
-      showAlert("Error", apiErrorMessage(err));
+      showAlert("No se pudo enviar el código", apiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ export default function Login() {
       if (msg === "USUARIO_NUEVO") {
         setStep("register");
       } else {
-        showAlert("Error", msg);
+        showAlert(withRegistration ? "No se pudo crear la cuenta" : "No se pudo verificar el código", msg);
       }
     } finally {
       setLoading(false);
@@ -279,6 +279,8 @@ export default function Login() {
                     <Pressable
                       key={r}
                       onPress={() => setRole(r)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: role === r }}
                       style={{
                         flex: 1,
                         padding: spacing[3],
