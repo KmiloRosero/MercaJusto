@@ -1,27 +1,24 @@
-import React, { useState } from "react";
-import { FlatList, Pressable, RefreshControl, Text, View } from "react-native";
+import React from "react";
+import { FlatList, RefreshControl, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
-import { Pill } from "../../src/components/Pill";
 import { Button } from "../../src/components/Button";
 import { Icon } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme, formatCOP } from "../../src/theme";
-import { apiErrorMessage, getMyOrders, updateOrderStatus } from "../../src/api/client";
-import { Order } from "../../src/api/types";
+import { OrderCard } from "../../src/components/OrderCard";
+import { fontSize, radius, spacing, useTheme } from "../../src/theme";
+import { getMyOrders } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
-import { NEXT_ACTION, ORDER_STATUS } from "../../src/lib/orderStatus";
-import { showAlert } from "../../src/lib/dialog";
-
+import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
+
 export default function Orders() {
   const router = useRouter();
   const t = useTheme();
-  const queryClient = useQueryClient();
   const user = useAuth((s) => s.user);
   const isBuyer = user?.role === "BUYER";
-  const [advancingId, setAdvancingId] = useState<string | null>(null);
+  const { advance, advancingId } = useAdvanceOrder();
 
   const { data = [], isLoading, isError, error, isRefetching, refetch } = useQuery({
     queryKey: ["orders"],
@@ -29,21 +26,6 @@ export default function Orders() {
     // Los estados cambian desde el otro lado (productor ↔ comprador)
     refetchInterval: 15_000,
   });
-
-  const advance = async (order: Order) => {
-    const action = NEXT_ACTION[order.status];
-    if (!action) return;
-    setAdvancingId(order.id);
-    try {
-      await updateOrderStatus(order.id, action.next);
-      await queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["order", order.id] });
-    } catch (err) {
-      showAlert("No se pudo actualizar", apiErrorMessage(err));
-    } finally {
-      setAdvancingId(null);
-    }
-  };
 
   const active = data.filter((o) => o.status !== "DELIVERED" && o.status !== "CANCELLED").length;
 
@@ -110,87 +92,16 @@ export default function Orders() {
             </View>
           )
         }
-        renderItem={({ item }) => {
-          const status = ORDER_STATUS[item.status];
-          const action = !isBuyer ? NEXT_ACTION[item.status] : undefined;
-          // El productor ve solo sus líneas del pedido
-          const lines = isBuyer
-            ? item.items
-            : item.items.filter((it) => it.product?.producerId === user?.id);
-          return (
-            <Pressable
-              onPress={() => router.push(`/seguimiento/${item.id}`)}
-              style={({ pressed }) => ({
-                backgroundColor: t.bgCard,
-                borderRadius: radius.lg,
-                padding: spacing[4],
-                gap: spacing[2],
-                borderWidth: 1,
-                borderColor: t.border,
-                opacity: pressed ? 0.92 : 1,
-              })}
-            >
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, fontWeight: "700" }}>
-                  #{item.id.slice(-8).toUpperCase()}
-                </Text>
-                <Pill variant={status.variant} icon={status.icon}>
-                  {status.label}
-                </Pill>
-              </View>
-
-              <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }} numberOfLines={2}>
-                {lines.map((it) => `${it.quantity} × ${it.product?.name ?? "Producto"}`).join(", ") ||
-                  `${item.items.length} producto${item.items.length !== 1 ? "s" : ""}`}
-              </Text>
-
-              <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
-                {!isBuyer && item.buyer ? `${item.buyer.name} · ` : ""}
-                {item.deliveryAddress ? `${item.deliveryAddress.municipio} · ` : ""}
-                {new Date(item.createdAt).toLocaleDateString("es-CO", {
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: spacing[2],
-                  paddingTop: spacing[2],
-                  borderTopWidth: 1,
-                  borderTopColor: t.border,
-                }}
-              >
-                <Text style={{ fontSize: 16, fontWeight: "800", color: t.textPrimary }}>
-                  {formatCOP(isBuyer ? item.total : lines.reduce((acc, it) => acc + it.subtotal, 0))}
-                </Text>
-
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <Text style={{ color: t.primary, fontSize: fontSize.sm, fontWeight: "700" }}>
-                    {isBuyer ? "Seguimiento" : "Ver detalle"}
-                  </Text>
-                  <Icon name="arrow-forward" size={14} color={t.primary} />
-                </View>
-              </View>
-
-              {action ? (
-                <Button
-                  title={action.label}
-                  icon={<Icon name={action.icon} size={18} color={t.onPrimary} />}
-                  onPress={() => advance(item)}
-                  loading={advancingId === item.id}
-                  full
-                  style={{ marginTop: spacing[2] }}
-                />
-              ) : null}
-            </Pressable>
-          );
-        }}
+        renderItem={({ item }) => (
+          <OrderCard
+            order={item}
+            isBuyer={isBuyer}
+            userId={user?.id}
+            onPress={() => router.push(`/seguimiento/${item.id}`)}
+            onAdvance={advance}
+            advancing={advancingId === item.id}
+          />
+        )}
       />
     </SafeAreaView>
   );
