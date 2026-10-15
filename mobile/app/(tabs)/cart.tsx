@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView , useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
@@ -16,7 +16,7 @@ import { SavingsNote } from "../../src/components/SavingsNote";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();

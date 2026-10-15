@@ -1,6 +1,6 @@
 import React from "react";
 import { Platform, Pressable, Text, View } from "react-native";
-import { fontSize, radius, spacing, type, useTheme } from "../theme";
+import { radius, spacing, type, useTheme } from "../theme";
 import { Icon } from "./Icon";
 import { BRAND, LogoMark } from "./Logo";
 

@@ -135,13 +135,13 @@ export async function getMe(): Promise<MeResponse> {
 export interface PublicProfile extends User {
   products?: Product[];
   municipios?: string[];
-  reviewsReceived?: Array<{
+  reviewsReceived?: {
     id: string;
     rating: number;
     comment?: string | null;
     createdAt: string;
     fromUser: { id: string; name: string };
-  }>;
+  }[];
 }
 
 export async function getUser(id: string): Promise<PublicProfile> {

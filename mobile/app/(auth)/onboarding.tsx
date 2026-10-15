@@ -442,7 +442,7 @@ function ProducerScene({ t }: { t: ThemeColors }) {
 }
 
 function TrackingScene({ t }: { t: ThemeColors }) {
-  const steps: Array<{ label: string; state: "done" | "active" | "todo" }> = [
+  const steps: { label: string; state: "done" | "active" | "todo" }[] = [
     { label: "Pedido confirmado", state: "done" },
     { label: "Preparando", state: "done" },
     { label: "En camino", state: "active" },

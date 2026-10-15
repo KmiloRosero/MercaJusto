@@ -52,7 +52,7 @@ export function confirmDialog(
 export function chooseOption<K extends string>(
   title: string,
   message: string | undefined,
-  options: Array<{ key: K; text: string; web?: boolean }>
+  options: { key: K; text: string; web?: boolean }[]
 ): Promise<K | null> {
   if (Platform.OS === "web") {
     const pick = options.find((o) => o.web) ?? options[0];

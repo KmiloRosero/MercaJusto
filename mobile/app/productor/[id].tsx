@@ -131,7 +131,7 @@ export default function ProducerProfile() {
                       </Text>
                     </View>
                     {r.comment ? (
-                      <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>"{r.comment}"</Text>
+                      <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>“{r.comment}”</Text>
                     ) : null}
                   </View>
                 ))}

@@ -36,9 +36,11 @@ function StarItem({
 
   const handlePress = () => {
     if (readOnly) return;
-    scale.value = withSpring(1.3, { damping: 10, stiffness: 400 }, () => {
-      scale.value = withSpring(1);
-    });
+    scale.set(
+      withSpring(1.3, { damping: 10, stiffness: 400 }, () => {
+        scale.set(withSpring(1));
+      })
+    );
     onChange?.(star);
   };
 

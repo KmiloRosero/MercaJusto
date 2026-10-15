@@ -42,8 +42,8 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
   return (
     <AnimatedPressable
       onPress={onPress}
-      onPressIn={() => (cardScale.value = withTiming(0.98, pressIn))}
-      onPressOut={() => (cardScale.value = withSpring(1, release))}
+      onPressIn={() => cardScale.set(withTiming(0.98, pressIn))}
+      onPressOut={() => cardScale.set(withSpring(1, release))}
       accessibilityRole="button"
       accessibilityLabel={`${product.name}, ${formatCOP(finalPrice)} por ${product.unit}${plaza ? `, en plaza ${formatCOP(plaza.plaza)}` : ""}`}
       style={[cardStyle, { gap: spacing[2] }]}
@@ -88,8 +88,8 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
         {onAdd && !soldOut ? (
           <AnimatedPressable
             onPress={onAdd}
-            onPressIn={() => (addScale.value = withTiming(0.9, pressIn))}
-            onPressOut={() => (addScale.value = withSpring(1, release))}
+            onPressIn={() => addScale.set(withTiming(0.9, pressIn))}
+            onPressOut={() => addScale.set(withSpring(1, release))}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel={`Agregar ${product.name} a la canasta`}
