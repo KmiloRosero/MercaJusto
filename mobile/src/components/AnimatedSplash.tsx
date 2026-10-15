@@ -39,7 +39,7 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const { height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   const [introDone, setIntroDone] = useState(false);
-  const mountedAt = useRef(Date.now());
+  const mountedAt = useRef(0);
 
   const markSize = NATIVE_MARK;
 
@@ -47,6 +47,11 @@ export function AnimatedSplash({ ready, onFinish }: AnimatedSplashProps) {
   const word = useSharedValue(0);
   const tagline = useSharedValue(0);
   const exit = useSharedValue(0);
+
+  // Se marca en un efecto (no en el render) para que el render siga siendo puro
+  useEffect(() => {
+    mountedAt.current = Date.now();
+  }, []);
 
   useEffect(() => {
     // El overlay ya cubre la pantalla: se puede soltar el splash nativo.

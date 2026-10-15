@@ -118,7 +118,7 @@ export default function PublicarCosecha() {
       }
       setDraftLoaded(true);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, []);
 
   const draftJson = JSON.stringify(currentDraft);
@@ -214,7 +214,7 @@ export default function PublicarCosecha() {
         if (rev?.city) setMunicipio(rev.city);
         if (rev?.subregion && !vereda) setVereda(rev.subregion);
       } catch {}
-    } catch (err) {
+    } catch {
       showAlert("No se pudo obtener la ubicación", "Usaremos la ubicación aproximada del municipio.");
     } finally {
       setLocating(false);

@@ -27,9 +27,11 @@ export default function Search() {
   const [sort, setSort] = useState<"recent" | "price_asc" | "price_desc">("recent");
 
   // El banner "Ver ofertas" puede abrir esta pestaña ya montada con ?surplus=true
-  useEffect(() => {
+  const [lastSurplusParam, setLastSurplusParam] = useState(params.surplus);
+  if (params.surplus !== lastSurplusParam) {
+    setLastSurplusParam(params.surplus);
     if (params.surplus === "true") setSurplusOnly(true);
-  }, [params.surplus]);
+  }
 
   // Esperar a que el usuario deje de escribir antes de consultar
   useEffect(() => {

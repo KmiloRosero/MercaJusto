@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -82,12 +82,10 @@ export default function Calificacion() {
   }, [order, meId]);
 
   // Sincronizar entries cuando llega la orden (una sola vez)
-  useEffect(() => {
-    if (!initialized && order) {
-      setEntries(targets);
-      setInitialized(true);
-    }
-  }, [initialized, order, targets]);
+  if (!initialized && order) {
+    setEntries(targets);
+    setInitialized(true);
+  }
 
   if (isLoading || !order) {
     return (

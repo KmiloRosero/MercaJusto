@@ -48,13 +48,13 @@ export function Button({
   const handlePressIn = () => {
     if (!disabled && !loading) {
       // Hundimiento inmediato; el regreso es un resorte interrumpible
-      scale.value = withTiming(0.97, { duration: 120, easing: Easing.bezier(...motion.easeOut) });
+      scale.set(withTiming(0.97, { duration: 120, easing: Easing.bezier(...motion.easeOut) }));
     }
   };
 
   const handlePressOut = () => {
     if (!disabled && !loading) {
-      scale.value = withSpring(1, { damping: 18, stiffness: 320 });
+      scale.set(withSpring(1, { damping: 18, stiffness: 320 }));
     }
   };
 

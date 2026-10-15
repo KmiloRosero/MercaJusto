@@ -5,11 +5,11 @@ import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import * as SplashScreen from "expo-splash-screen";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { isRetryableError } from "../src/api/client";
+import { isRetryableError , registerPushToken } from "../src/api/client";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useAuth } from "../src/store/auth";
-import { registerPushToken } from "../src/api/client";
+
 import { registerForPushNotifications } from "../src/lib/notifications";
 import { useTheme, useThemeScheme } from "../src/theme";
 import { Toast } from "../src/components/Toast";

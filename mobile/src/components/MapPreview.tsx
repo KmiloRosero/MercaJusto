@@ -18,8 +18,11 @@ export default function MapPreview({ origin, destination }: MapPreviewProps) {
   );
 
   useEffect(() => {
-    if (coordinates.length > 0) {
-      mapRef.current?.fitToCoordinates(coordinates, {
+    const points = [origin, destination].filter(
+      (coordinate): coordinate is Coordinate => coordinate !== null
+    );
+    if (points.length > 0) {
+      mapRef.current?.fitToCoordinates(points, {
         edgePadding: { top: 40, right: 40, bottom: 40, left: 40 },
         animated: true,
       });

@@ -24,12 +24,12 @@ import { showAlert } from "../src/lib/dialog";
 
 import { FieldTile } from "../src/components/FieldTile";
 import { SavingsNote } from "../src/components/SavingsNote";
-const PAYMENT_METHODS: Array<{
+const PAYMENT_METHODS: {
   key: PaymentMethod;
   icon: IconName;
   name: string;
   desc: string;
-}> = [
+}[] = [
   { key: "NEQUI", icon: "wallet-outline", name: "Nequi", desc: "Pago instantáneo sin recargo" },
   { key: "DAVIPLATA", icon: "card-outline", name: "Daviplata", desc: "Billetera digital rápida" },
   { key: "CASH", icon: "cash-outline", name: "Efectivo contraentrega", desc: "Pagas al recibir tu cosecha" },
@@ -45,7 +45,10 @@ export default function Checkout() {
 
   const addresses = user?.addresses ?? [];
 
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  // Sin elección explícita, se usa la dirección predeterminada (o la primera)
+  const [pickedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const selectedAddress =
+    pickedAddress ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null;
   const [addressSheetOpen, setAddressSheetOpen] = useState(false);
   const [payment, setPayment] = useState<PaymentMethod>("NEQUI");
   const [notes, setNotes] = useState("");
@@ -54,13 +57,6 @@ export default function Checkout() {
   useEffect(() => {
     fetchCart();
   }, [fetchCart]);
-
-  useEffect(() => {
-    if (!selectedAddress && addresses.length > 0) {
-      const def = addresses.find((a) => a.isDefault) || addresses[0];
-      setSelectedAddress(def);
-    }
-  }, [addresses, selectedAddress]);
 
   useEffect(() => {
     if (items.length === 0 && !submitting) {

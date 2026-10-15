@@ -9,14 +9,14 @@ import { Icon } from "./Icon";
 export function useSlowFlag(active: boolean, ms = 6000): boolean {
   const [slow, setSlow] = useState(false);
   useEffect(() => {
-    if (!active) {
-      setSlow(false);
-      return;
-    }
+    if (!active) return;
     const id = setTimeout(() => setSlow(true), ms);
-    return () => clearTimeout(id);
+    return () => {
+      clearTimeout(id);
+      setSlow(false);
+    };
   }, [active, ms]);
-  return slow;
+  return active && slow;
 }
 
 /** Aviso honesto para esperas largas (el servidor gratuito tarda en despertar). */

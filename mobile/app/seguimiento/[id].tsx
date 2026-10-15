@@ -22,7 +22,7 @@ import MapPreview from "../../src/components/MapPreview";
 
 import { FieldTile } from "../../src/components/FieldTile";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
-const STEPS: Array<{ key: OrderStatus; label: string; icon: string; desc: string }> = [
+const STEPS: { key: OrderStatus; label: string; icon: string; desc: string }[] = [
   { key: "CONFIRMED", label: "Pedido confirmado", icon: "checkmark-circle", desc: "El productor recibió tu pedido" },
   { key: "PREPARING", label: "Preparando", icon: "preparing", desc: "Están alistando tus productos" },
   { key: "IN_TRANSIT", label: "En camino", icon: "in_transit", desc: "El repartidor va hacia tu dirección" },
@@ -498,7 +498,7 @@ export default function Seguimiento() {
               <View style={{ flexDirection: "row", gap: 6, marginTop: spacing[2] }}>
                 <Icon name="create-outline" size={14} color={t.textTertiary} />
                 <Text style={{ flex: 1, fontSize: 12, color: t.textTertiary, fontStyle: "italic" }}>
-                  "{order.notes}"
+                  “{order.notes}”
                 </Text>
               </View>
             ) : null}
