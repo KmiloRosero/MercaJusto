@@ -274,4 +274,9 @@ export const type = {
 export const motion = {
   easeOut: [0.23, 1, 0.32, 1] as const,
   easeInOut: [0.77, 0, 0.175, 1] as const,
+  // Hojas que suben desde abajo (curva de los drawers de iOS)
+  drawer: [0.32, 0.72, 0, 1] as const,
+  // Hundimiento al tocar y regreso con resorte, compartidos por todo lo presionable
+  pressIn: 120,
+  release: { damping: 18, stiffness: 320 },
 } as const;

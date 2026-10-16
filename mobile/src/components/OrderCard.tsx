@@ -1,11 +1,12 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { fontSize, radius, spacing, useTheme, formatCOP } from "../theme";
 import type { Order } from "../api/types";
 import { NEXT_ACTION, ORDER_STATUS } from "../lib/orderStatus";
 import { Pill } from "./Pill";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
+import { PressableScale } from "./PressableScale";
 
 interface OrderCardProps {
   order: Order;
@@ -24,17 +25,16 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
   const lines = isBuyer ? order.items : order.items.filter((it) => it.product?.producerId === userId);
 
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         backgroundColor: t.bgCard,
         borderRadius: radius.lg,
         padding: spacing[4],
         gap: spacing[2],
         borderWidth: 1,
         borderColor: t.border,
-        opacity: pressed ? 0.92 : 1,
-      })}
+      }}
     >
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, fontWeight: "700" }}>
@@ -94,6 +94,6 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
           style={{ marginTop: spacing[2] }}
         />
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }

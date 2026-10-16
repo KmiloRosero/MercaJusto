@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
 import { Pressable, Text } from "react-native";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
+import Animated, { Easing, FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useToast } from "../store/toast";
-import { radius, shadow, spacing, useTheme } from "../theme";
+import { motion, radius, shadow, spacing, useTheme } from "../theme";
 import { Icon } from "./Icon";
 
 const DURATION_MS = 2600;
+// Entra con la curva fuerte de salida; se va más rápido de lo que entró.
+const ENTER = FadeInDown.duration(220).easing(Easing.bezier(...motion.easeOut));
+const EXIT = FadeOutDown.duration(150).easing(Easing.bezier(...motion.easeOut));
 
 /** Aviso flotante breve. Se monta una sola vez en el layout raíz. */
 export function Toast() {
@@ -28,8 +31,8 @@ export function Toast() {
   return (
     <Animated.View
       key={key}
-      entering={FadeInDown.duration(200)}
-      exiting={FadeOutDown.duration(200)}
+      entering={ENTER}
+      exiting={EXIT}
       pointerEvents="box-none"
       style={{
         position: "absolute",

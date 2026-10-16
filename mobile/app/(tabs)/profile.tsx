@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pressable, ScrollView, Switch, Text, View } from "react-native";
+import { ScrollView, Switch, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
@@ -16,6 +16,7 @@ import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import { effectivePrice } from "../../src/lib/pricing";
 
 import { FieldTile } from "../../src/components/FieldTile";
+import { PressableScale } from "../../src/components/PressableScale";
 export default function Profile() {
   const router = useRouter();
   const t = useTheme();
@@ -176,18 +177,17 @@ export default function Profile() {
               </Text>
             ) : (
               products.slice(0, 6).map((p) => (
-                <Pressable
+                <PressableScale
                   key={p.id}
                   onPress={() => router.push(`/producto/${p.id}`)}
-                  style={({ pressed }) => ({
+                  style={{
                     flexDirection: "row",
                     alignItems: "center",
                     gap: spacing[3],
                     paddingVertical: spacing[2],
                     borderTopWidth: 1,
                     borderTopColor: t.border,
-                    opacity: pressed ? 0.8 : 1,
-                  })}
+                  }}
                 >
                   <FieldTile category={p.category} size={40} iconSize={20} radius={radius.sm} />
                   <View style={{ flex: 1 }}>
@@ -198,7 +198,7 @@ export default function Profile() {
                     </Text>
                   </View>
                   <Icon name="chevron-forward" size={16} color={t.textTertiary} />
-                </Pressable>
+                </PressableScale>
               ))
             )}
 
@@ -340,9 +340,9 @@ function MenuItem({
 }) {
   const t = useTheme();
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
-      style={({ pressed }) => ({
+      style={{
         flexDirection: "row",
         alignItems: "center",
         backgroundColor: t.bgCard,
@@ -351,13 +351,12 @@ function MenuItem({
         gap: spacing[3],
         borderWidth: 1,
         borderColor: t.border,
-        opacity: pressed ? 0.9 : 1,
-      })}
+      }}
     >
       <Icon name={icon} size={20} color={t.primary} />
       <Text style={{ flex: 1, fontSize: fontSize.base, color: t.textPrimary, fontWeight: "600" }}>{label}</Text>
       {hint ? <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>{hint}</Text> : null}
       <Icon name="chevron-forward" size={18} color={t.textTertiary} />
-    </Pressable>
+    </PressableScale>
   );
 }

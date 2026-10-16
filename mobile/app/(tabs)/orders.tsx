@@ -12,6 +12,8 @@ import { getMyOrders } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
+import Animated from "react-native-reanimated";
+import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
 
 export default function Orders() {
   const router = useRouter();
@@ -26,6 +28,7 @@ export default function Orders() {
     // Los estados cambian desde el otro lado (productor ↔ comprador)
     refetchInterval: 15_000,
   });
+  const staggerIn = useFirstLoadStagger(data.length > 0);
 
   const active = data.filter((o) => o.status !== "DELIVERED" && o.status !== "CANCELLED").length;
 
@@ -92,15 +95,17 @@ export default function Orders() {
             </View>
           )
         }
-        renderItem={({ item }) => (
-          <OrderCard
-            order={item}
-            isBuyer={isBuyer}
-            userId={user?.id}
-            onPress={() => router.push(`/seguimiento/${item.id}`)}
-            onAdvance={advance}
-            advancing={advancingId === item.id}
-          />
+        renderItem={({ item, index }) => (
+          <Animated.View entering={staggerIn(index)}>
+            <OrderCard
+              order={item}
+              isBuyer={isBuyer}
+              userId={user?.id}
+              onPress={() => router.push(`/seguimiento/${item.id}`)}
+              onAdvance={advance}
+              advancing={advancingId === item.id}
+            />
+          </Animated.View>
         )}
       />
     </SafeAreaView>

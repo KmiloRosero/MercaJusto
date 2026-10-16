@@ -16,6 +16,7 @@ import { Icon, IconName } from "../src/components/Icon";
 import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../src/theme";
 import { Address, PaymentMethod } from "../src/api/types";
 import { createOrder, apiErrorMessage } from "../src/api/client";
+import { success } from "../src/lib/haptics";
 import { useAuth } from "../src/store/auth";
 import { useCart } from "../src/store/cart";
 import { cartSavings } from "../src/lib/savings";
@@ -25,6 +26,7 @@ import { payOnline } from "../src/lib/payOnline";
 
 import { FieldTile } from "../src/components/FieldTile";
 import { FeeExplainer, SavingsNote } from "../src/components/SavingsNote";
+import { PressableScale } from "../src/components/PressableScale";
 const PAYMENT_METHODS: {
   key: PaymentMethod;
   icon: IconName;
@@ -93,10 +95,12 @@ export default function Checkout() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       if (payment === "WOMPI") {
         try {
-          await payOnline(order.id);
+          if ((await payOnline(order.id)) === "PAID") success();
         } catch {
           // El pedido ya existe: desde el seguimiento se puede volver a intentar el pago
         }
+      } else {
+        success();
       }
       await refresh();
       router.replace(`/seguimiento/${order.id}?nuevo=1`);
@@ -123,15 +127,14 @@ export default function Checkout() {
         {/* Dirección de entrega */}
         <SectionCard title="Dirección de entrega" icon="location">
           {selectedAddress ? (
-            <Pressable
+            <PressableScale
               onPress={() => setAddressSheetOpen(true)}
-              style={({ pressed }) => ({
+              style={{
                 flexDirection: "row",
                 alignItems: "center",
                 gap: spacing[3],
                 paddingVertical: spacing[2],
-                opacity: pressed ? 0.8 : 1,
-              })}
+              }}
             >
               <View
                 style={{
@@ -155,7 +158,7 @@ export default function Checkout() {
                 </Text>
               </View>
               <Text style={{ fontSize: 12, color: t.primary, fontWeight: "700" }}>Cambiar</Text>
-            </Pressable>
+            </PressableScale>
           ) : (
             <Button
               title={addresses.length === 0 ? "+ Agregar dirección de entrega" : "Seleccionar dirección"}

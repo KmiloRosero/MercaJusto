@@ -409,9 +409,10 @@ Filtros de categoría que responden con color, no con movimiento.
 - **Agotado:** píldora de 24px en `inverseSurface` abajo a la izquierda.
 - **Botón de agregar:** círculo de 36px en `bgCard` abajo a la derecha, "+" de 22px en `primary`, con la sombra flotante; escala a 0.9 al presionar.
 - **Paneles de resumen:** fondo de superficie, `rounded.lg`, padding 16px, borde 1px `border`, sombra sm.
+- **Tarjetas y filas presionables** (pedidos, filas del perfil, banner, dirección del checkout): `PressableScale`, que se hunde a 0.98 y vuelve con el resorte de `motion.release`. Los controles pequeños sueltos (avatar, botón de llamar) bajan a 0.95. Los enlaces de texto responden con opacidad.
 
 ### Inputs / Fields
-- **Búsqueda del Home:** acceso de 50px a 14px de radio, `bgSecondary`, ícono de lupa de 18px en `textSecondary` y placeholder Body en `textTertiary`. Opacidad 0.8 al presionar.
+- **Búsqueda del Home:** acceso de 50px a 14px de radio, `bgSecondary`, ícono de lupa de 18px en `textSecondary` y placeholder Body en `textTertiary`. Se hunde a 0.98 al presionar.
 - **Campo de texto:** 48px de alto a 12px (`rounded.md`), `bgInput`, borde 1.5px `border`, padding lateral 16px y texto 16px en `textPrimary`; placeholder en `textTertiary`. La etiqueta va encima en Footnote 500 `textSecondary`, a 6px, y la ayuda debajo en Footnote `textTertiary`.
 - **Celular:** el prefijo `+57` es un recuadro fijo con el mismo estilo del campo, a la izquierda y separado 8px; el número solo acepta 10 dígitos.
 - **Contraseña (`PasswordInput`):** campo de texto con un ojo de 20px en `textSecondary` a la derecha, dentro de un objetivo táctil de 48px, para mostrarla u ocultarla mientras se escribe.
@@ -422,8 +423,17 @@ Filtros de categoría que responden con color, no con movimiento.
 - **Barra de pestañas:** `bgPrimary` con borde superior `border`, íconos de 22px (contorno en reposo, relleno cuando activa), etiquetas Label. Activa en `primary`, inactiva en `textTertiary`. La insignia de la canasta va en `primary` con `onPrimary`.
 - **Encabezado de sección:** título Headline y acción en Footnote 600 `primary` con chevron.
 
+### Hoja inferior (BottomSheet)
+El fondo `scrim` aparece con fundido y la hoja sube con la curva `motion.drawer` en 320ms; al cerrar baja en 200ms con easeOut, más rápido de lo que entró. Se cierra arrastrando la manija o el título hacia abajo: basta pasar el 30% de su altura o un gesto rápido (más de 600 px/s). Hacia arriba tiene fricción en vez de un tope. Una sola variable mueve la hoja y el fondo, así abrir, cerrar y arrastrar se interrumpen sin saltos. Con movimiento reducido, aparece y se va sin desplazarse.
+
+### Movimiento de listas e insignias
+- Los primeros 8 elementos del Home y de Pedidos entran escalonados (40ms entre cada uno, 260ms, easeOut) solo en la primera carga. Al desplazarse, cambiar de categoría o buscar no se anima nada.
+- La insignia de la canasta es propia (18px, `primary` con borde `bgPrimary`) y da un salto a 1.3 cuando entra un producto; al quitar no se mueve.
+- El aviso de pedido enviado entra con fundido hacia arriba (320ms) y el check aparece con un rebote corto: se ve una vez por compra.
+- Vibraciones: toque leve al agregar a la canasta y confirmación al enviar el pedido (o al aprobarse el pago en línea). En ningún otro lugar.
+
 ### Snackbar
-Aviso breve en `inverseSurface` con texto 14px 600 `onInverseSurface`, ícono de 18px (en error, `dangerLight`), radio `rounded.sm`, mínimo 48px, sombra lg. Entra y sale con fundido hacia abajo de 200ms y se cierra solo a los 2,6 segundos o al tocarlo. Con acción (p. ej. "Deshacer" al quitar algo de la canasta), la acción va a la derecha en 14px 800 `inversePrimary`, con objetivo de 48px, y el aviso dura el doble. En pantallas con barra de acciones fija, se ancla encima de ella (`useSnackbarAnchor`).
+Aviso breve en `inverseSurface` con texto 14px 600 `onInverseSurface`, ícono de 18px (en error, `dangerLight`), radio `rounded.sm`, mínimo 48px, sombra lg. Entra con fundido hacia abajo de 220ms en easeOut, sale en 150ms y se cierra solo a los 2,6 segundos o al tocarlo. Con acción (p. ej. "Deshacer" al quitar algo de la canasta), la acción va a la derecha en 14px 800 `inversePrimary`, con objetivo de 48px, y el aviso dura el doble. En pantallas con barra de acciones fija, se ancla encima de ella (`useSnackbarAnchor`).
 
 ### Estado del pago (seguimiento)
 Píldora con el método y el estado ("En línea · Pagado"): "Pagado" en `success`, "Rechazado" en `danger`, y "Pendiente" o "Contraentrega" en `warning`. Mientras un pedido en línea espera el pago, el encabezado dice "Esperando tu pago" y la acción principal es "Pagar ahora · $total"; si Wompi lo rechaza, "Pago rechazado" e "Intentar pagar de nuevo".
