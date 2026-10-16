@@ -28,7 +28,8 @@ usersRouter.get("/me", requireAuth, async (req, res, next) => {
 // PATCH /api/users/me
 const updateMeSchema = z.object({
   name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
+  // El correo no se cambia aquí: es con el que se entra.
+  phone: z.string().regex(/^\+573\d{9}$/, "Escribe un celular colombiano de 10 dígitos").optional(),
   avatarUrl: z.string().url().optional(),
 });
 

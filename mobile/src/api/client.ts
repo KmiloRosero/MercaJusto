@@ -101,14 +101,15 @@ api.interceptors.response.use(
 // AUTH
 // ═══════════════════════════════════════════
 
-export async function login(phone: string, password: string): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/login", { phone, password });
+export async function login(email: string, password: string): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/login", { email, password });
   await tokenStorage.set(data.token);
   return data;
 }
 
 export async function register(input: {
   name: string;
+  email: string;
   phone: string;
   password: string;
   role: Role;

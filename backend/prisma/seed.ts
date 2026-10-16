@@ -24,7 +24,7 @@ async function main() {
   // USUARIOS
   // ═══════════════════════════════════════════
 
-  // Todas las cuentas demo entran con la contraseña "mercajusto".
+  // Todas las cuentas demo entran con su correo (@example.com) y la contraseña "mercajusto".
   const demoPassword = await hashPassword("mercajusto");
 
   const buyer = await prisma.user.create({
@@ -57,6 +57,7 @@ async function main() {
       phone: "+573156789012",
       passwordHash: demoPassword,
       name: "Rosa Amelia Chávez",
+      email: "rosa@example.com",
       role: "PRODUCER",
       rating: 5.0,
       ratingCount: 89,
@@ -68,6 +69,7 @@ async function main() {
       phone: "+573207890123",
       passwordHash: demoPassword,
       name: "Luis Alberto Burbano",
+      email: "luis@example.com",
       role: "PRODUCER",
       rating: 4.6,
       ratingCount: 51,
@@ -79,6 +81,7 @@ async function main() {
       phone: "+573258901234",
       passwordHash: demoPassword,
       name: "Carmen Inés Jojoa",
+      email: "carmen@example.com",
       role: "PRODUCER",
       rating: 4.9,
       ratingCount: 203,
@@ -90,6 +93,7 @@ async function main() {
       phone: "+573011112222",
       passwordHash: demoPassword,
       name: "Wilson López",
+      email: "wilson@example.com",
       role: "COURIER",
       rating: 4.7,
       ratingCount: 312,
