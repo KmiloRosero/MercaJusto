@@ -76,7 +76,9 @@ export type OrderStatus =
   | "DELIVERED"
   | "CANCELLED";
 
-export type PaymentMethod = "NEQUI" | "DAVIPLATA" | "CASH";
+/** WOMPI: pago en línea (Nequi, PSE, tarjeta) · CASH: contraentrega. */
+export type PaymentMethod = "WOMPI" | "CASH";
+export type PaymentStatus = "PENDING" | "PAID" | "FAILED";
 
 export interface OrderItem {
   id: string;
@@ -108,7 +110,8 @@ export interface Order {
   platformFee: number;
   total: number;
   paymentMethod: PaymentMethod;
-  paymentStatus: string;
+  paymentStatus: PaymentStatus;
+  paidAt?: string | null;
   deliveryAddressId: string;
   notes?: string | null;
   createdAt: string;

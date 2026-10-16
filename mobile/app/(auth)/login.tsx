@@ -14,11 +14,18 @@ import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
-import { requestOtp, verifyOtp, apiErrorMessage } from "../../src/api/client";
+import { apiErrorDetails, apiErrorMessage, registerAccount, requestOtp, verifyOtp } from "../../src/api/client";
+import type { Role } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { showAlert } from "../../src/lib/dialog";
 
 type Step = "phone" | "code" | "register";
+
+const ROLES: { key: Role; label: string; icon: string }[] = [
+  { key: "BUYER", label: "Comprador", icon: "bag-handle-outline" },
+  { key: "PRODUCER", label: "Productor", icon: "preparing" },
+  { key: "COURIER", label: "Repartidor", icon: "in_transit" },
+];
 
 export default function Login() {
   const router = useRouter();
@@ -30,12 +37,14 @@ export default function Login() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"BUYER" | "PRODUCER">(
-    (params.role as "BUYER" | "PRODUCER") || "BUYER"
+  const [role, setRole] = useState<Role>(
+    ROLES.some((r) => r.key === params.role) ? (params.role as Role) : "BUYER"
   );
+  // Prueba de que el celular ya se verificó, para crear la cuenta sin otro código.
+  const [registrationToken, setRegistrationToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  // En modo desarrollo el backend devuelve el código: lo mostramos en pantalla
+  // Solo con el backend local en modo desarrollo: el código llega en la respuesta
   const [devCode, setDevCode] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,14 +54,13 @@ export default function Login() {
   }, [countdown]);
 
   const sendOtp = async () => {
-    if (phone.replace(/\D/g, "").length < 10) {
-      showAlert("Teléfono inválido", "Ingresa un número de 10 dígitos");
+    if (!/^3\d{9}$/.test(phone)) {
+      showAlert("Revisa tu número", "Escribe tu celular de 10 dígitos; empieza por 3.");
       return;
     }
     setLoading(true);
     try {
-      const fullPhone = phone.startsWith("+") ? phone : `+57${phone}`;
-      const res = await requestOtp(fullPhone);
+      const res = await requestOtp(`+57${phone}`);
       setCountdown(60);
       setCode("");
       setStep("code");
@@ -64,27 +72,43 @@ export default function Login() {
     }
   };
 
-  const confirmOtp = async (withRegistration = false) => {
+  const confirmOtp = async () => {
     if (code.length !== 6) {
-      showAlert("Código inválido", "El código tiene 6 dígitos");
+      showAlert("Código incompleto", "El código tiene 6 dígitos");
       return;
     }
     setLoading(true);
     try {
-      const fullPhone = phone.startsWith("+") ? phone : `+57${phone}`;
-      const res = await verifyOtp(
-        fullPhone,
-        code,
-        withRegistration ? { name, role } : undefined
-      );
+      const res = await verifyOtp(`+57${phone}`, code);
       await setSession(res.user, res.token);
       router.replace("/(tabs)/home");
     } catch (err) {
-      const msg = apiErrorMessage(err);
-      if (msg === "USUARIO_NUEVO") {
+      const token = apiErrorDetails<{ registrationToken?: string }>(err)?.registrationToken;
+      if (token) {
+        setRegistrationToken(token);
         setStep("register");
       } else {
-        showAlert(withRegistration ? "No se pudo crear la cuenta" : "No se pudo verificar el código", msg);
+        showAlert("No se pudo verificar el código", apiErrorMessage(err));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createAccount = async () => {
+    if (!registrationToken) return;
+    setLoading(true);
+    try {
+      const res = await registerAccount(registrationToken, name.trim(), role);
+      await setSession(res.user, res.token);
+      router.replace("/(tabs)/home");
+    } catch (err) {
+      await showAlert("No se pudo crear la cuenta", apiErrorMessage(err));
+      // Si venció el tiempo para registrarse, se vuelve a pedir el código
+      if (apiErrorMessage(err).includes("Pide un código nuevo")) {
+        setRegistrationToken(null);
+        setCode("");
+        setStep("phone");
       }
     } finally {
       setLoading(false);
@@ -225,7 +249,7 @@ export default function Login() {
               ) : null}
               <Button
                 title="Verificar"
-                onPress={() => confirmOtp(false)}
+                onPress={confirmOtp}
                 loading={loading}
                 full
                 size="lg"
@@ -275,36 +299,34 @@ export default function Login() {
                   Soy...
                 </Text>
                 <View style={{ flexDirection: "row", gap: spacing[2] }}>
-                  {(["BUYER", "PRODUCER"] as const).map((r) => (
+                  {ROLES.map((r) => (
                     <Pressable
-                      key={r}
-                      onPress={() => setRole(r)}
+                      key={r.key}
+                      onPress={() => setRole(r.key)}
                       accessibilityRole="radio"
-                      accessibilityState={{ checked: role === r }}
+                      accessibilityState={{ checked: role === r.key }}
                       style={{
                         flex: 1,
+                        minHeight: 72,
                         padding: spacing[3],
                         borderRadius: radius.md,
                         borderWidth: 1.5,
-                        borderColor: role === r ? t.primary : t.border,
-                        backgroundColor: role === r ? t.primaryLight : t.bgPrimary,
+                        borderColor: role === r.key ? t.primary : t.border,
+                        backgroundColor: role === r.key ? t.primaryLight : t.bgPrimary,
                         alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Icon
-                        name={r === "BUYER" ? "bag-handle-outline" : "preparing"}
-                        size={24}
-                        color={role === r ? t.primary : t.textSecondary}
-                      />
+                      <Icon name={r.icon} size={24} color={role === r.key ? t.primary : t.textSecondary} />
                       <Text
                         style={{
                           fontSize: fontSize.sm,
                           fontWeight: "600",
-                          color: role === r ? t.primary : t.textSecondary,
+                          color: role === r.key ? t.primary : t.textSecondary,
                           marginTop: 4,
                         }}
                       >
-                        {r === "BUYER" ? "Comprador" : "Productor"}
+                        {r.label}
                       </Text>
                     </Pressable>
                   ))}
@@ -312,11 +334,11 @@ export default function Login() {
               </View>
               <Button
                 title="Crear cuenta y entrar"
-                onPress={() => confirmOtp(true)}
+                onPress={createAccount}
                 loading={loading}
                 full
                 size="lg"
-                disabled={name.length < 2}
+                disabled={name.trim().length < 2}
               />
             </View>
           ) : null}

@@ -263,7 +263,7 @@ export default function Profile() {
             onPress={() =>
               showAlert(
                 "Métodos de pago",
-                "Nequi y Daviplata: pago inmediato desde tu billetera.\nEfectivo: pagas al recibir el pedido."
+                "En línea: pagas con Nequi, PSE o tarjeta a través de Wompi, al confirmar el pedido.\nEfectivo: pagas al recibir el pedido."
               )
             }
           />

@@ -21,6 +21,7 @@ import { useCart } from "../src/store/cart";
 import { cartSavings } from "../src/lib/savings";
 import { effectivePrice, orderTotals } from "../src/lib/pricing";
 import { showAlert } from "../src/lib/dialog";
+import { payOnline } from "../src/lib/payOnline";
 
 import { FieldTile } from "../src/components/FieldTile";
 import { FeeExplainer, SavingsNote } from "../src/components/SavingsNote";
@@ -30,8 +31,7 @@ const PAYMENT_METHODS: {
   name: string;
   desc: string;
 }[] = [
-  { key: "NEQUI", icon: "wallet-outline", name: "Nequi", desc: "Pago instantáneo sin recargo" },
-  { key: "DAVIPLATA", icon: "card-outline", name: "Daviplata", desc: "Billetera digital rápida" },
+  { key: "WOMPI", icon: "card-outline", name: "Pago en línea", desc: "Nequi, PSE o tarjeta, con Wompi" },
   { key: "CASH", icon: "cash-outline", name: "Efectivo contraentrega", desc: "Pagas al recibir tu cosecha" },
 ];
 
@@ -50,7 +50,7 @@ export default function Checkout() {
   const selectedAddress =
     pickedAddress ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null;
   const [addressSheetOpen, setAddressSheetOpen] = useState(false);
-  const [payment, setPayment] = useState<PaymentMethod>("NEQUI");
+  const [payment, setPayment] = useState<PaymentMethod>("WOMPI");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -91,6 +91,13 @@ export default function Checkout() {
       useCart.setState({ items: [], subtotal: 0, error: null });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      if (payment === "WOMPI") {
+        try {
+          await payOnline(order.id);
+        } catch {
+          // El pedido ya existe: desde el seguimiento se puede volver a intentar el pago
+        }
+      }
       await refresh();
       router.replace(`/seguimiento/${order.id}?nuevo=1`);
     } catch (err) {
@@ -224,11 +231,11 @@ export default function Checkout() {
               Puedes cancelar el pedido hasta que el productor empiece a prepararlo.
             </Text>
           </View>
-          {payment !== "CASH" ? (
+          {payment === "WOMPI" ? (
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], marginTop: spacing[2] }}>
               <Icon name="information-circle-outline" size={16} color={t.textSecondary} />
               <Text style={{ flex: 1, fontSize: 13, color: t.textSecondary, lineHeight: 18 }}>
-                Modo demo: el pago con {payment === "NEQUI" ? "Nequi" : "Daviplata"} se simula y queda registrado al confirmar.
+                Al confirmar abrimos Wompi para que pagues. Tus productos quedan apartados 30 minutos.
               </Text>
             </View>
           ) : null}

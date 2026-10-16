@@ -17,6 +17,9 @@ import { Button } from "../../src/components/Button";
 import { Icon, IconName } from "../../src/components/Icon";
 import { BRAND, LogoMark } from "../../src/components/Logo";
 import { formatCOP, radius, spacing, type, useTheme, useFieldColor, ThemeColors } from "../../src/theme";
+import { useQuery } from "@tanstack/react-query";
+import { getProducts } from "../../src/api/client";
+import { plazaComparison } from "../../src/lib/savings";
 
 type Role = "BUYER" | "PRODUCER";
 
@@ -552,31 +555,55 @@ function PriceScene({
   scrollX: SharedValue<number>;
   width: number;
 }) {
-  // Precios reales del catálogo demo (papa pastusa, kilo).
-  const plaza = 5500;
-  const justo = 3800;
-  const savingPct = Math.round(((plaza - justo) / plaza) * 100);
+  // El ejemplo sale del catálogo real: el producto que hoy más ahorra frente a la plaza.
+  const { data } = useQuery({
+    queryKey: ["products", "onboarding"],
+    queryFn: () => getProducts({ limit: 40 }),
+  });
+  const best = (data?.products ?? [])
+    .map((product) => ({ product, cmp: plazaComparison(product) }))
+    .filter((x): x is { product: (typeof x)["product"]; cmp: NonNullable<(typeof x)["cmp"]> } => x.cmp !== null)
+    .sort((a, b) => b.cmp.pct - a.cmp.pct)[0];
 
   return (
     <SceneFrame t={t}>
       <Card t={t}>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginBottom: spacing[4] }}>
-          <Text style={[type.callout, { color: t.textPrimary }]}>Papa pastusa · 1 kg</Text>
-          <View
-            style={{
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: radius.full,
-              backgroundColor: t.successLight,
-            }}
-          >
-            <Text style={{ fontSize: 12, fontWeight: "700", color: t.success }}>Ahorras {savingPct} %</Text>
+        {best ? (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: spacing[2], marginBottom: spacing[4] }}>
+              <Text style={[type.callout, { color: t.textPrimary, flexShrink: 1 }]} numberOfLines={1}>
+                {best.product.name} · 1 {best.product.unit.toLowerCase()}
+              </Text>
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: radius.full,
+                  backgroundColor: t.successLight,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: "700", color: t.success }}>Ahorras {best.cmp.pct} %</Text>
+              </View>
+            </View>
+            <View style={{ gap: spacing[4] }}>
+              <PriceBar label="Plaza de mercado" value={best.cmp.plaza} ratio={1} color={t.gray300} {...{ t, i, scrollX, width }} />
+              <PriceBar
+                label="MercaJusto"
+                value={best.cmp.plaza - best.cmp.perUnit}
+                ratio={(best.cmp.plaza - best.cmp.perUnit) / best.cmp.plaza}
+                color={t.primary}
+                {...{ t, i, scrollX, width }}
+              />
+            </View>
+          </>
+        ) : (
+          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+            <Icon name="leaf-outline" size={20} color={t.primary} />
+            <Text style={[type.footnote, { flex: 1, color: t.textPrimary }]}>
+              Cada cosecha muestra su precio frente al de la plaza de mercado, para que veas cuánto ahorras.
+            </Text>
           </View>
-        </View>
-        <View style={{ gap: spacing[4] }}>
-          <PriceBar label="Plaza de mercado" value={plaza} ratio={1} color={t.gray300} {...{ t, i, scrollX, width }} />
-          <PriceBar label="MercaJusto" value={justo} ratio={justo / plaza} color={t.primary} {...{ t, i, scrollX, width }} />
-        </View>
+        )}
       </Card>
 
       <Card t={t} inset={spacing[5]}>

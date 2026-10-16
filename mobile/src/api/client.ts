@@ -10,7 +10,9 @@ import {
   Category,
   Order,
   PaymentMethod,
+  PaymentStatus,
   Product,
+  Role,
   User,
 } from "./types";
 
@@ -104,12 +106,19 @@ export async function requestOtp(phone: string): Promise<{ message: string; devC
   return data;
 }
 
-export async function verifyOtp(
-  phone: string,
-  code: string,
-  extra?: { name?: string; role?: "BUYER" | "PRODUCER" }
+export async function verifyOtp(phone: string, code: string): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/verify", { phone, code });
+  await tokenStorage.set(data.token);
+  return data;
+}
+
+/** Crea la cuenta de un teléfono recién verificado (el token llega con USUARIO_NUEVO). */
+export async function registerAccount(
+  registrationToken: string,
+  name: string,
+  role: Role
 ): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/verify", { phone, code, ...extra });
+  const { data } = await api.post("/auth/verify", { registrationToken, name, role });
   await tokenStorage.set(data.token);
   return data;
 }
@@ -342,6 +351,24 @@ export async function updateOrderStatus(
 }
 
 // ═══════════════════════════════════════════
+// PAGOS EN LÍNEA (Wompi)
+// ═══════════════════════════════════════════
+
+/** URL del checkout de Wompi para pagar (o reintentar) un pedido. */
+export async function startPayment(orderId: string, returnUrl: string): Promise<string> {
+  const { data } = await api.post(`/payments/wompi/${orderId}/checkout`, { returnUrl });
+  return data.checkoutUrl;
+}
+
+/** Pregunta a Wompi cómo quedó el pago y devuelve el estado actualizado. */
+export async function syncPayment(
+  orderId: string
+): Promise<{ id: string; status: Order["status"]; paymentStatus: PaymentStatus }> {
+  const { data } = await api.post(`/payments/wompi/${orderId}/sync`);
+  return data;
+}
+
+// ═══════════════════════════════════════════
 // MÉTRICAS — precio justo (ahorro del comprador / ingresos del productor)
 // ═══════════════════════════════════════════
 
@@ -410,6 +437,11 @@ export function describeError(err: unknown): { kind: ErrorKind; title: string; m
 export function isRetryableError(err: unknown): boolean {
   const kind = describeError(err).kind;
   return kind === "offline" || kind === "timeout" || kind === "server";
+}
+
+/** Datos extra que el backend manda junto al error (p. ej. el token de registro). */
+export function apiErrorDetails<T = Record<string, unknown>>(err: unknown): T | undefined {
+  return err instanceof AxiosError ? (err.response?.data as { details?: T } | undefined)?.details : undefined;
 }
 
 export function apiErrorMessage(err: unknown): string {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import { toast } from "../../src/store/toast";
 
 import { FieldTile } from "../../src/components/FieldTile";
+import { sizedImage } from "../../src/lib/image";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
@@ -25,6 +26,7 @@ export default function ProductDetail() {
   const router = useRouter();
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const onActionBarLayout = useSnackbarAnchor();
   const queryClient = useQueryClient();
   const me = useAuth((s) => s.user);
@@ -101,7 +103,8 @@ export default function ProductDetail() {
         >
           {product.photoUrl ? (
             <Image
-              source={{ uri: product.photoUrl }}
+              source={{ uri: sizedImage(product.photoUrl, width, 1.3) }}
+              accessibilityIgnoresInvertColors
               style={{ width: "100%", height: "100%" }}
               resizeMode="cover"
             />

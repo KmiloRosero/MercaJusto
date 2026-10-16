@@ -13,6 +13,10 @@ import { Icon } from "./Icon";
 import { FieldTile } from "./FieldTile";
 import { effectivePrice } from "../lib/pricing";
 import { plazaComparison } from "../lib/savings";
+import { sizedImage } from "../lib/image";
+
+/** Ancho máximo de la tarjeta en la grilla de dos columnas (dp). */
+const CARD_IMAGE_DP = 200;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -60,7 +64,12 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
         }}
       >
         {product.photoUrl ? (
-          <Image source={{ uri: product.photoUrl }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          <Image
+            source={{ uri: sizedImage(product.photoUrl, CARD_IMAGE_DP, 1) }}
+            style={{ width: "100%", height: "100%" }}
+            resizeMode="cover"
+            accessibilityIgnoresInvertColors
+          />
         ) : (
           <FieldTile category={product.category} iconSize={44} radius={0} />
         )}
