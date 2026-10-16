@@ -19,7 +19,9 @@ import type { Role } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { showAlert } from "../../src/lib/dialog";
 
-type Step = "phone" | "code" | "register";
+type Step = "email" | "code" | "register";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const ROLES: { key: Role; label: string; icon: string }[] = [
   { key: "BUYER", label: "Comprador", icon: "bag-handle-outline" },
@@ -33,14 +35,15 @@ export default function Login() {
   const params = useLocalSearchParams<{ role?: string }>();
   const setSession = useAuth((s) => s.setSession);
 
-  const [step, setStep] = useState<Step>("phone");
+  const [step, setStep] = useState<Step>("email");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<Role>(
     ROLES.some((r) => r.key === params.role) ? (params.role as Role) : "BUYER"
   );
-  // Prueba de que el celular ya se verificó, para crear la cuenta sin otro código.
+  // Prueba de que el correo ya se verificó, para crear la cuenta sin otro código.
   const [registrationToken, setRegistrationToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -53,14 +56,16 @@ export default function Login() {
     return () => clearInterval(id);
   }, [countdown]);
 
+  const cleanEmail = email.trim().toLowerCase();
+
   const sendOtp = async () => {
-    if (!/^3\d{9}$/.test(phone)) {
-      showAlert("Revisa tu número", "Escribe tu celular de 10 dígitos; empieza por 3.");
+    if (!EMAIL_RE.test(cleanEmail)) {
+      showAlert("Revisa tu correo", "Escríbelo completo, por ejemplo nombre@gmail.com.");
       return;
     }
     setLoading(true);
     try {
-      const res = await requestOtp(`+57${phone}`);
+      const res = await requestOtp(cleanEmail);
       setCountdown(60);
       setCode("");
       setStep("code");
@@ -79,7 +84,7 @@ export default function Login() {
     }
     setLoading(true);
     try {
-      const res = await verifyOtp(`+57${phone}`, code);
+      const res = await verifyOtp(cleanEmail, code);
       await setSession(res.user, res.token);
       router.replace("/(tabs)/home");
     } catch (err) {
@@ -97,9 +102,13 @@ export default function Login() {
 
   const createAccount = async () => {
     if (!registrationToken) return;
+    if (!/^3\d{9}$/.test(phone)) {
+      showAlert("Revisa tu celular", "Escribe tu celular de 10 dígitos; empieza por 3.");
+      return;
+    }
     setLoading(true);
     try {
-      const res = await registerAccount(registrationToken, name.trim(), role);
+      const res = await registerAccount(registrationToken, name.trim(), `+57${phone}`, role);
       await setSession(res.user, res.token);
       router.replace("/(tabs)/home");
     } catch (err) {
@@ -108,7 +117,7 @@ export default function Login() {
       if (apiErrorMessage(err).includes("Pide un código nuevo")) {
         setRegistrationToken(null);
         setCode("");
-        setStep("phone");
+        setStep("email");
       }
     } finally {
       setLoading(false);
@@ -138,64 +147,52 @@ export default function Login() {
                 marginBottom: spacing[2],
               }}
             >
-              <Icon name={step === "phone" ? "call" : "shield-checkmark-outline"} size={36} color={t.primary} />
+              <Icon name={step === "email" ? "mail-outline" : "shield-checkmark-outline"} size={36} color={t.primary} />
             </View>
             <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
-              {step === "phone"
-                ? "Ingresa tu celular"
+              {step === "email"
+                ? "Ingresa tu correo"
                 : step === "code"
                 ? "Verifica tu código"
                 : "Crea tu cuenta"}
             </Text>
             <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, textAlign: "center" }}>
-              {step === "phone"
-                ? "Te enviaremos un código de 6 dígitos por SMS."
+              {step === "email"
+                ? "Te enviaremos un código de 6 dígitos para entrar, sin contraseñas."
                 : step === "code"
-                ? `Enviamos un código al ${phone}. Revisa tus mensajes.`
+                ? `Enviamos un código a ${cleanEmail}. Si no lo ves, revisa la carpeta de spam.`
                 : "Primera vez en MercaJusto. Cuéntanos quién eres."}
             </Text>
           </View>
 
-          {step === "phone" ? (
+          {step === "email" ? (
             <View style={{ gap: spacing[3] }}>
               <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, fontWeight: "500" }}>
-                Número de celular
+                Correo electrónico
               </Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-                <View
-                  style={{
-                    height: 48,
-                    paddingHorizontal: spacing[4],
-                    borderRadius: radius.md,
-                    backgroundColor: t.bgInput,
-                    borderWidth: 1.5,
-                    borderColor: t.border,
-                    justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ color: t.textPrimary, fontSize: fontSize.base }}>+57</Text>
-                </View>
-                <TextInput
-                  value={phone}
-                  onChangeText={(v) => setPhone(v.replace(/\D/g, "").slice(0, 10))}
-                  placeholder="300 123 4567"
-                  placeholderTextColor={t.textTertiary}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  textContentType="telephoneNumber"
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    paddingHorizontal: spacing[4],
-                    borderRadius: radius.md,
-                    backgroundColor: t.bgInput,
-                    borderWidth: 1.5,
-                    borderColor: t.border,
-                    fontSize: fontSize.base,
-                    color: t.textPrimary,
-                  }}
-                />
-              </View>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="nombre@gmail.com"
+                placeholderTextColor={t.textTertiary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType="emailAddress"
+                onSubmitEditing={sendOtp}
+                returnKeyType="send"
+                style={{
+                  height: 48,
+                  paddingHorizontal: spacing[4],
+                  borderRadius: radius.md,
+                  backgroundColor: t.bgInput,
+                  borderWidth: 1.5,
+                  borderColor: t.border,
+                  fontSize: fontSize.base,
+                  color: t.textPrimary,
+                }}
+              />
               <Button title="Enviar código" onPress={sendOtp} loading={loading} full size="lg" />
             </View>
           ) : null}
@@ -212,8 +209,7 @@ export default function Login() {
                 placeholderTextColor={t.textTertiary}
                 keyboardType="number-pad"
                 maxLength={6}
-                // Android/iOS ofrecen el código del SMS para llenarlo con un toque
-                autoComplete="sms-otp"
+                // iOS ofrece el código que llega al correo para llenarlo con un toque
                 textContentType="oneTimeCode"
                 style={{
                   height: 64,
@@ -296,6 +292,49 @@ export default function Login() {
               </View>
               <View>
                 <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginBottom: 6, fontWeight: "500" }}>
+                  Celular
+                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+                  <View
+                    style={{
+                      height: 48,
+                      paddingHorizontal: spacing[4],
+                      borderRadius: radius.md,
+                      backgroundColor: t.bgInput,
+                      borderWidth: 1.5,
+                      borderColor: t.border,
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ color: t.textPrimary, fontSize: fontSize.base }}>+57</Text>
+                  </View>
+                  <TextInput
+                    value={phone}
+                    onChangeText={(v) => setPhone(v.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="300 123 4567"
+                    placeholderTextColor={t.textTertiary}
+                    keyboardType="phone-pad"
+                    autoComplete="tel"
+                    textContentType="telephoneNumber"
+                    style={{
+                      flex: 1,
+                      height: 48,
+                      paddingHorizontal: spacing[4],
+                      borderRadius: radius.md,
+                      backgroundColor: t.bgInput,
+                      borderWidth: 1.5,
+                      borderColor: t.border,
+                      fontSize: fontSize.base,
+                      color: t.textPrimary,
+                    }}
+                  />
+                </View>
+                <Text style={{ fontSize: fontSize.sm, color: t.textTertiary, marginTop: 6 }}>
+                  Para coordinar las entregas.
+                </Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginBottom: 6, fontWeight: "500" }}>
                   Soy...
                 </Text>
                 <View style={{ flexDirection: "row", gap: spacing[2] }}>
@@ -338,7 +377,7 @@ export default function Login() {
                 loading={loading}
                 full
                 size="lg"
-                disabled={name.trim().length < 2}
+                disabled={name.trim().length < 2 || phone.length !== 10}
               />
             </View>
           ) : null}

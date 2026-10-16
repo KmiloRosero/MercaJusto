@@ -28,7 +28,7 @@ Compra directa al campesino que cultiva la comida, con nombre, municipio y calif
 
 - Flujo del comprador: catálogo y búsqueda → detalle del producto y del productor → canasta → checkout (Nequi, Daviplata o efectivo) → seguimiento en tiempo real (actualiza cada 15 s) → calificación del productor y del repartidor.
 - Flujo del productor: publicar cosecha con foto, precio de plaza y modo excedente → Ventas: Empezar a preparar → Despachar (asigna repartidor) → Entregado.
-- Acceso por número de celular colombiano (+57) con código OTP por SMS (en demo el código es 123456).
+- Acceso con el correo electrónico y un código de 6 dígitos que llega por correo (Brevo). Al registrarse se pide el celular (+57) para coordinar entregas.
 - Geografía real: municipios y veredas de Nariño (Pasto, Túquerres, Guaitarilla, Buesaco, La Vega…), con GPS y coordenadas de respaldo por municipio.
 - Demostración en vivo ante jurado con cuentas demo (María compradora, José Tulio productor, Wilson repartidor), contra el backend desplegado en Render.
 

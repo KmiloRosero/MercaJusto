@@ -64,7 +64,7 @@ app.listen(PORT, () => {
   console.log("🛒 MercaJusto API");
   console.log(`   http://localhost:${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/health`);
-  console.log(`   SMS: ${otpMode === "twilio" ? "Twilio Verify" : otpMode === "dev" ? "modo desarrollo (código fijo)" : "SIN CONFIGURAR"}`);
+  console.log(`   Códigos de acceso: ${otpMode === "email" ? "correo con Brevo" : otpMode === "dev" ? "modo desarrollo (en pantalla)" : "SIN CONFIGURAR"}`);
   console.log(`   Fotos: ${cloudinaryEnabled ? "Cloudinary" : "disco local"}`);
   console.log(`   Pagos en línea: ${wompiEnabled ? `Wompi (${wompiSandbox ? "pruebas" : "producción"})` : "SIN CONFIGURAR"}`);
   // IPs de la red local: úsalas en EXPO_PUBLIC_API_URL para un celular físico

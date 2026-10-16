@@ -101,24 +101,25 @@ api.interceptors.response.use(
 // AUTH
 // ═══════════════════════════════════════════
 
-export async function requestOtp(phone: string): Promise<{ message: string; devCode?: string }> {
-  const { data } = await api.post("/auth/otp", { phone });
+export async function requestOtp(email: string): Promise<{ message: string; devCode?: string }> {
+  const { data } = await api.post("/auth/otp", { email });
   return data;
 }
 
-export async function verifyOtp(phone: string, code: string): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/verify", { phone, code });
+export async function verifyOtp(email: string, code: string): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/verify", { email, code });
   await tokenStorage.set(data.token);
   return data;
 }
 
-/** Crea la cuenta de un teléfono recién verificado (el token llega con USUARIO_NUEVO). */
+/** Crea la cuenta de un correo recién verificado (el token llega con USUARIO_NUEVO). */
 export async function registerAccount(
   registrationToken: string,
   name: string,
+  phone: string,
   role: Role
 ): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/verify", { registrationToken, name, role });
+  const { data } = await api.post("/auth/verify", { registrationToken, name, phone, role });
   await tokenStorage.set(data.token);
   return data;
 }

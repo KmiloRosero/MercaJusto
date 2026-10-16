@@ -30,13 +30,13 @@ services:
       # Neon → Connection string (con ?sslmode=require)
       - key: DATABASE_URL
         sync: false
-      # Twilio → Account SID, Auth Token y el SID del servicio Verify (VA...)
-      - key: TWILIO_ACCOUNT_SID
+      # Brevo → SMTP & API → API Keys; el remitente verificado en Senders
+      - key: BREVO_API_KEY
         sync: false
-      - key: TWILIO_AUTH_TOKEN
+      - key: MAIL_FROM_EMAIL
         sync: false
-      - key: TWILIO_VERIFY_SERVICE_SID
-        sync: false
+      - key: MAIL_FROM_NAME
+        value: MercaJusto
       # Cloudinary → Dashboard
       - key: CLOUDINARY_CLOUD_NAME
         sync: false

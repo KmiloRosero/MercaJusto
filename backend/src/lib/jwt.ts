@@ -11,7 +11,6 @@ const REGISTRATION_TTL = "15m";
 
 export interface JwtPayload {
   userId: string;
-  phone: string;
   role: string;
 }
 
@@ -27,15 +26,15 @@ export function verifyToken(token: string): JwtPayload {
 }
 
 /**
- * Prueba de que el teléfono ya se verificó, para crear la cuenta sin pedir
- * otro código (Twilio consume el código al aprobarlo).
+ * Prueba de que el correo ya se verificó, para crear la cuenta sin pedir
+ * otro código (el código se gasta al aprobarlo).
  */
-export function signRegistrationToken(phone: string): string {
-  return jwt.sign({ purpose: "register", phone }, SECRET, { expiresIn: REGISTRATION_TTL } as jwt.SignOptions);
+export function signRegistrationToken(email: string): string {
+  return jwt.sign({ purpose: "register", email }, SECRET, { expiresIn: REGISTRATION_TTL } as jwt.SignOptions);
 }
 
 export function verifyRegistrationToken(token: string): string {
-  const payload = jwt.verify(token, SECRET) as { purpose?: string; phone?: string };
-  if (payload.purpose !== "register" || !payload.phone) throw new Error("Token de registro inválido");
-  return payload.phone;
+  const payload = jwt.verify(token, SECRET) as { purpose?: string; email?: string };
+  if (payload.purpose !== "register" || !payload.email) throw new Error("Token de registro inválido");
+  return payload.email;
 }

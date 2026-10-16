@@ -18,11 +18,13 @@ datasource db {
 
 model User {
   id           String   @id @default(cuid())
-  phone        String   @unique
+  // El correo es la identidad para entrar (código por correo).
+  // El celular es el contacto para entregas y para Wompi; no se verifica.
+  email        String?  @unique
+  phone        String
   name         String
   role         String   @default("BUYER") // "BUYER" | "PRODUCER" | "COURIER"
   avatarUrl    String?
-  email        String?
   rating       Float    @default(0)
   ratingCount  Int      @default(0)
   isActive     Boolean  @default(true)
@@ -37,7 +39,6 @@ model User {
   reviewsReceived Review[] @relation("ReviewsReceived")
   routes       DeliveryRoute[]
   cartItems    CartItem[]
-  otpCodes     OtpCode[]
   pushTokens   PushToken[]
 
   @@index([role])
@@ -75,17 +76,17 @@ model Address {
   @@index([municipio])
 }
 
+// Códigos de acceso enviados por correo. Solo se guarda el hash del código.
 model OtpCode {
-  id         String   @id @default(cuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  phone      String
-  code       String
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  attempts   Int       @default(0)
   expiresAt  DateTime
   consumedAt DateTime?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime  @default(now())
 
-  @@index([phone, consumedAt])
+  @@index([email, consumedAt])
 }
 
 // ═══════════════════════════════════════════
