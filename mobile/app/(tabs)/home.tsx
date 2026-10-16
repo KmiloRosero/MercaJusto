@@ -101,9 +101,9 @@ export default function Home() {
             accessibilityRole="button"
             accessibilityLabel="Mi perfil"
             style={({ pressed }) => ({
-              width: 44,
-              height: 44,
-              borderRadius: 22,
+              width: 48,
+              height: 48,
+              borderRadius: 24,
               backgroundColor: t.primary,
               alignItems: "center",
               justifyContent: "center",

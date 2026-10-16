@@ -12,7 +12,7 @@ import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
-import { SavingsNote } from "../../src/components/SavingsNote";
+import { FeeExplainer, SavingsNote } from "../../src/components/SavingsNote";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
@@ -191,8 +191,9 @@ export default function Cart() {
             <Row label="Subtotal" value={formatCOP(subtotal)} color={t.textPrimary} />
             <Row label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
             <Row label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
+            <FeeExplainer />
             <View style={{ height: 1, backgroundColor: t.border, marginVertical: spacing[2] }} />
-            <Row label="Total a pagar" value={formatCOP(total)} color={t.primary} bold />
+            <Row label="Total a pagar" value={formatCOP(total)} color={t.textPrimary} bold />
             <SavingsNote amount={savings} />
             <Button title="Proceder al pago" onPress={() => router.push("/checkout")} full size="lg" />
           </View>

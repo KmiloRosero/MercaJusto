@@ -94,7 +94,7 @@ export default function ProductDetail() {
         <View
           style={{
             aspectRatio: 1.3,
-            backgroundColor: t.gray100,
+            backgroundColor: t.bgSecondary,
             alignItems: "center",
             justifyContent: "center",
             position: "relative" }}
@@ -133,7 +133,7 @@ export default function ProductDetail() {
             </View>
 
             <View style={{ alignItems: "flex-end" }}>
-              <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.primary }}>
+              <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
                 {formatCOP(finalPrice)}
               </Text>
               <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>por {product.unit}</Text>
