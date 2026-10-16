@@ -9,18 +9,19 @@
     "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:categories": "tsx prisma/categories.ts",
+    "db:seed:demo": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
     "db:backfill-prices": "tsx scripts/backfill-traditional-price.ts",
     "test:routing": "tsx scripts/test-routing.ts",
     "test:routes": "tsx scripts/test-routes-endpoint.ts",
-    "setup": "prisma migrate deploy && prisma generate && tsx prisma/seed.ts",
-    "start:prod": "prisma migrate deploy && tsx prisma/seed-if-empty.ts && node dist/index.js"
+    "setup": "prisma migrate deploy && prisma generate && tsx prisma/categories.ts",
+    "start:prod": "prisma migrate deploy && tsx prisma/categories.ts && node dist/index.js"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/categories.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

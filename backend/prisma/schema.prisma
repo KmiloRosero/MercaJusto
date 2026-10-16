@@ -1,34 +1,31 @@
 // MercaJusto — Esquema de base de datos
 //
-// NOTA SOBRE MIGRACIÓN A POSTGRES+POSTGIS:
-// Actualmente usamos SQLite para desarrollo rápido. Cuando toque implementar
-// optimización de rutas reales (fase 3), cambiar:
-//   provider = "postgresql"
-// y convertir los campos `latitude`/`longitude` a tipo `Unsupported("geometry(Point,4326)")`
-// para habilitar consultas espaciales (ST_DWithin, ST_Distance).
+// Base de datos: PostgreSQL (Neon en producción, Docker en local).
+// Los "enums" se guardan como String con los valores documentados en cada campo.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // ═══════════════════════════════════════════
 // USUARIOS
 // ═══════════════════════════════════════════
-// Nota: SQLite no soporta enums nativos en Prisma; usamos String con
-// valores canónicos documentados arriba de cada campo.
 
 model User {
   id           String   @id @default(cuid())
+  // Se entra con el celular y una contraseña (solo se guarda su hash).
   phone        String   @unique
+  passwordHash String
+  email        String?
   name         String
   role         String   @default("BUYER") // "BUYER" | "PRODUCER" | "COURIER"
   avatarUrl    String?
-  email        String?
   rating       Float    @default(0)
   ratingCount  Int      @default(0)
   isActive     Boolean  @default(true)
@@ -43,7 +40,6 @@ model User {
   reviewsReceived Review[] @relation("ReviewsReceived")
   routes       DeliveryRoute[]
   cartItems    CartItem[]
-  otpCodes     OtpCode[]
   pushTokens   PushToken[]
 
   @@index([role])
@@ -79,19 +75,6 @@ model Address {
 
   @@index([userId])
   @@index([municipio])
-}
-
-model OtpCode {
-  id         String   @id @default(cuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  phone      String
-  code       String
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime @default(now())
-
-  @@index([phone, consumedAt])
 }
 
 // ═══════════════════════════════════════════
@@ -184,8 +167,12 @@ model Order {
   platformFee     Int      @default(0) // comisión MercaJusto
   total           Int
 
-  paymentMethod   String   @default("NEQUI") // NEQUI | DAVIPLATA | CASH
+  paymentMethod   String   @default("CASH") // WOMPI (Nequi, PSE, tarjeta) | CASH
   paymentStatus   String   @default("PENDING") // PENDING | PAID | FAILED
+  // Wompi: referencia del último intento de pago y transacción que lo resolvió
+  paymentReference     String?   @unique
+  paymentTransactionId String?
+  paidAt               DateTime?
 
   deliveryAddressId String
   deliveryAddress   Address @relation(fields: [deliveryAddressId], references: [id])

@@ -91,6 +91,12 @@ export default function Profile() {
 
           <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary }}>{user.name}</Text>
 
+          {user.email ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Icon name="mail-outline" size={14} color={t.textSecondary} />
+              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{user.email}</Text>
+            </View>
+          ) : null}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <Icon name="call" size={14} color={t.textSecondary} />
             <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{user.phone}</Text>
@@ -263,7 +269,7 @@ export default function Profile() {
             onPress={() =>
               showAlert(
                 "Métodos de pago",
-                "Nequi y Daviplata: pago inmediato desde tu billetera.\nEfectivo: pagas al recibir el pedido."
+                "En línea: pagas con Nequi, PSE o tarjeta a través de Wompi, al confirmar el pedido.\nEfectivo: pagas al recibir el pedido."
               )
             }
           />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,78 +14,86 @@ import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
-import { requestOtp, verifyOtp, apiErrorMessage } from "../../src/api/client";
+import { apiErrorMessage, login, register } from "../../src/api/client";
+import type { Role } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { showAlert } from "../../src/lib/dialog";
 
-type Step = "phone" | "code" | "register";
+type Mode = "login" | "register";
+
+const ROLES: { key: Role; label: string; icon: string }[] = [
+  { key: "BUYER", label: "Comprador", icon: "bag-handle-outline" },
+  { key: "PRODUCER", label: "Productor", icon: "preparing" },
+  { key: "COURIER", label: "Repartidor", icon: "in_transit" },
+];
+
+const MIN_PASSWORD = 8;
 
 export default function Login() {
   const router = useRouter();
   const t = useTheme();
-  const params = useLocalSearchParams<{ role?: string }>();
+  const params = useLocalSearchParams<{ role?: string; mode?: string }>();
   const setSession = useAuth((s) => s.setSession);
 
-  const [step, setStep] = useState<Step>("phone");
-  const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
+  const [mode, setMode] = useState<Mode>(params.mode === "login" ? "login" : "register");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<"BUYER" | "PRODUCER">(
-    (params.role as "BUYER" | "PRODUCER") || "BUYER"
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState<Role>(
+    ROLES.some((r) => r.key === params.role) ? (params.role as Role) : "BUYER"
   );
   const [loading, setLoading] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  // En modo desarrollo el backend devuelve el código: lo mostramos en pantalla
-  const [devCode, setDevCode] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const id = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
-    return () => clearInterval(id);
-  }, [countdown]);
+  const isRegister = mode === "register";
 
-  const sendOtp = async () => {
-    if (phone.replace(/\D/g, "").length < 10) {
-      showAlert("Teléfono inválido", "Ingresa un número de 10 dígitos");
-      return;
-    }
-    setLoading(true);
-    try {
-      const fullPhone = phone.startsWith("+") ? phone : `+57${phone}`;
-      const res = await requestOtp(fullPhone);
-      setCountdown(60);
-      setCode("");
-      setStep("code");
-      setDevCode(res.devCode ?? null);
-    } catch (err) {
-      showAlert("No se pudo enviar el código", apiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+  const inputStyle = {
+    height: 48,
+    paddingHorizontal: spacing[4],
+    borderRadius: radius.md,
+    backgroundColor: t.bgInput,
+    borderWidth: 1.5,
+    borderColor: t.border,
+    fontSize: fontSize.base,
+    color: t.textPrimary,
+  } as const;
+  const labelStyle = { fontSize: fontSize.sm, color: t.textSecondary, marginBottom: 6, fontWeight: "500" } as const;
+
+  const switchMode = (next: Mode) => {
+    setMode(next);
+    setPassword("");
   };
 
-  const confirmOtp = async (withRegistration = false) => {
-    if (code.length !== 6) {
-      showAlert("Código inválido", "El código tiene 6 dígitos");
+  const submit = async () => {
+    if (isRegister && name.trim().length < 2) {
+      showAlert("Falta tu nombre", "Escribe tu nombre para crear la cuenta.");
       return;
     }
+    if (!/^3\d{9}$/.test(phone)) {
+      showAlert("Revisa tu celular", "Escribe tu celular de 10 dígitos; empieza por 3.");
+      return;
+    }
+    if (isRegister && password.length < MIN_PASSWORD) {
+      showAlert("Contraseña muy corta", `Usa al menos ${MIN_PASSWORD} caracteres.`);
+      return;
+    }
+    if (!password) {
+      showAlert("Falta la contraseña", "Escribe tu contraseña.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const fullPhone = phone.startsWith("+") ? phone : `+57${phone}`;
-      const res = await verifyOtp(
-        fullPhone,
-        code,
-        withRegistration ? { name, role } : undefined
-      );
+      const res = isRegister
+        ? await register({ name: name.trim(), phone: `+57${phone}`, password, role })
+        : await login(`+57${phone}`, password);
       await setSession(res.user, res.token);
       router.replace("/(tabs)/home");
     } catch (err) {
-      const msg = apiErrorMessage(err);
-      if (msg === "USUARIO_NUEVO") {
-        setStep("register");
-      } else {
-        showAlert(withRegistration ? "No se pudo crear la cuenta" : "No se pudo verificar el código", msg);
-      }
+      const message = apiErrorMessage(err);
+      await showAlert(isRegister ? "No se pudo crear la cuenta" : "No se pudo entrar", message);
+      // El celular ya tiene cuenta: se pasa a iniciar sesión con ese número.
+      if (isRegister && message.includes("Inicia sesión")) switchMode("login");
     } finally {
       setLoading(false);
     }
@@ -93,7 +101,7 @@ export default function Login() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
-      <TopBar showBack onBack={() => router.back()} title="Iniciar sesión" />
+      <TopBar showBack onBack={() => router.back()} title={isRegister ? "Crear cuenta" : "Iniciar sesión"} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -114,41 +122,38 @@ export default function Login() {
                 marginBottom: spacing[2],
               }}
             >
-              <Icon name={step === "phone" ? "call" : "shield-checkmark-outline"} size={36} color={t.primary} />
+              <Icon name={isRegister ? "person-outline" : "shield-checkmark-outline"} size={36} color={t.primary} />
             </View>
             <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
-              {step === "phone"
-                ? "Ingresa tu celular"
-                : step === "code"
-                ? "Verifica tu código"
-                : "Crea tu cuenta"}
+              {isRegister ? "Crea tu cuenta" : "Entra a tu cuenta"}
             </Text>
             <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, textAlign: "center" }}>
-              {step === "phone"
-                ? "Te enviaremos un código de 6 dígitos por SMS."
-                : step === "code"
-                ? `Enviamos un código al ${phone}. Revisa tus mensajes.`
-                : "Primera vez en MercaJusto. Cuéntanos quién eres."}
+              {isRegister
+                ? "Con tu celular y una contraseña. Sin códigos ni correos."
+                : "Con el celular y la contraseña con que te registraste."}
             </Text>
           </View>
 
-          {step === "phone" ? (
-            <View style={{ gap: spacing[3] }}>
-              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, fontWeight: "500" }}>
-                Número de celular
-              </Text>
+          <View style={{ gap: spacing[3] }}>
+            {isRegister ? (
+              <View>
+                <Text style={labelStyle}>Nombre completo</Text>
+                <TextInput
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Ej. María Rodríguez"
+                  placeholderTextColor={t.textTertiary}
+                  autoComplete="name"
+                  textContentType="name"
+                  style={inputStyle}
+                />
+              </View>
+            ) : null}
+
+            <View>
+              <Text style={labelStyle}>Celular</Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-                <View
-                  style={{
-                    height: 48,
-                    paddingHorizontal: spacing[4],
-                    borderRadius: radius.md,
-                    backgroundColor: t.bgInput,
-                    borderWidth: 1.5,
-                    borderColor: t.border,
-                    justifyContent: "center",
-                  }}
-                >
+                <View style={{ ...inputStyle, justifyContent: "center" }}>
                   <Text style={{ color: t.textPrimary, fontSize: fontSize.base }}>+57</Text>
                 </View>
                 <TextInput
@@ -159,167 +164,100 @@ export default function Login() {
                   keyboardType="phone-pad"
                   autoComplete="tel"
                   textContentType="telephoneNumber"
-                  style={{
-                    flex: 1,
-                    height: 48,
-                    paddingHorizontal: spacing[4],
-                    borderRadius: radius.md,
-                    backgroundColor: t.bgInput,
-                    borderWidth: 1.5,
-                    borderColor: t.border,
-                    fontSize: fontSize.base,
-                    color: t.textPrimary,
-                  }}
+                  style={{ ...inputStyle, flex: 1 }}
                 />
               </View>
-              <Button title="Enviar código" onPress={sendOtp} loading={loading} full size="lg" />
             </View>
-          ) : null}
 
-          {step === "code" ? (
-            <View style={{ gap: spacing[3] }}>
-              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, fontWeight: "500" }}>
-                Código de 6 dígitos
-              </Text>
-              <TextInput
-                value={code}
-                onChangeText={(v) => setCode(v.replace(/\D/g, "").slice(0, 6))}
-                placeholder="______"
-                placeholderTextColor={t.textTertiary}
-                keyboardType="number-pad"
-                maxLength={6}
-                // Android/iOS ofrecen el código del SMS para llenarlo con un toque
-                autoComplete="sms-otp"
-                textContentType="oneTimeCode"
-                style={{
-                  height: 64,
-                  borderRadius: radius.md,
-                  backgroundColor: t.bgInput,
-                  borderWidth: 1.5,
-                  borderColor: t.border,
-                  fontSize: 28,
-                  fontWeight: "700",
-                  letterSpacing: 12,
-                  textAlign: "center",
-                  color: t.textPrimary,
-                }}
-              />
-              {devCode ? (
-                <Pressable
-                  onPress={() => setCode(devCode)}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: spacing[2],
-                    padding: spacing[3],
-                    borderRadius: radius.md,
-                    backgroundColor: t.primaryLight,
-                  }}
-                >
-                  <Icon name="key-outline" size={18} color={t.primary} />
-                  <Text style={{ flex: 1, color: t.primary, fontSize: fontSize.sm }}>
-                    Modo demo: tu código es <Text style={{ fontWeight: "800" }}>{devCode}</Text>. Toca para
-                    completarlo.
-                  </Text>
-                </Pressable>
-              ) : null}
-              <Button
-                title="Verificar"
-                onPress={() => confirmOtp(false)}
-                loading={loading}
-                full
-                size="lg"
-              />
-              <Pressable onPress={countdown === 0 ? sendOtp : undefined} style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: spacing[2] }}>
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: countdown === 0 ? t.primary : t.textTertiary,
-                    fontSize: fontSize.sm,
-                    fontWeight: "500",
-                  }}
-                >
-                  {countdown === 0
-                    ? "Reenviar código"
-                    : `Reenviar en ${String(Math.floor(countdown / 60)).padStart(1, "0")}:${String(countdown % 60).padStart(2, "0")}`}
-                </Text>
-              </Pressable>
-            </View>
-          ) : null}
-
-          {step === "register" ? (
-            <View style={{ gap: spacing[3] }}>
-              <View>
-                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginBottom: 6, fontWeight: "500" }}>
-                  Nombre completo
-                </Text>
+            <View>
+              <Text style={labelStyle}>Contraseña</Text>
+              <View style={{ justifyContent: "center" }}>
                 <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Ej. María Rodríguez"
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder={isRegister ? `Mínimo ${MIN_PASSWORD} caracteres` : "Tu contraseña"}
                   placeholderTextColor={t.textTertiary}
-                  style={{
-                    height: 48,
-                    paddingHorizontal: spacing[4],
-                    borderRadius: radius.md,
-                    backgroundColor: t.bgInput,
-                    borderWidth: 1.5,
-                    borderColor: t.border,
-                    fontSize: fontSize.base,
-                    color: t.textPrimary,
-                  }}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete={isRegister ? "new-password" : "current-password"}
+                  textContentType={isRegister ? "newPassword" : "password"}
+                  onSubmitEditing={isRegister ? undefined : submit}
+                  returnKeyType={isRegister ? "next" : "go"}
+                  style={{ ...inputStyle, paddingRight: 52 }}
                 />
+                <Pressable
+                  onPress={() => setShowPassword((v) => !v)}
+                  accessibilityRole="button"
+                  accessibilityLabel={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  hitSlop={8}
+                  style={{ position: "absolute", right: 0, width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
+                >
+                  <Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={t.textSecondary} />
+                </Pressable>
               </View>
+            </View>
+
+            {isRegister ? (
               <View>
-                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginBottom: 6, fontWeight: "500" }}>
-                  Soy...
-                </Text>
+                <Text style={labelStyle}>Soy...</Text>
                 <View style={{ flexDirection: "row", gap: spacing[2] }}>
-                  {(["BUYER", "PRODUCER"] as const).map((r) => (
+                  {ROLES.map((r) => (
                     <Pressable
-                      key={r}
-                      onPress={() => setRole(r)}
+                      key={r.key}
+                      onPress={() => setRole(r.key)}
                       accessibilityRole="radio"
-                      accessibilityState={{ checked: role === r }}
+                      accessibilityState={{ checked: role === r.key }}
                       style={{
                         flex: 1,
+                        minHeight: 72,
                         padding: spacing[3],
                         borderRadius: radius.md,
                         borderWidth: 1.5,
-                        borderColor: role === r ? t.primary : t.border,
-                        backgroundColor: role === r ? t.primaryLight : t.bgPrimary,
+                        borderColor: role === r.key ? t.primary : t.border,
+                        backgroundColor: role === r.key ? t.primaryLight : t.bgPrimary,
                         alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <Icon
-                        name={r === "BUYER" ? "bag-handle-outline" : "preparing"}
-                        size={24}
-                        color={role === r ? t.primary : t.textSecondary}
-                      />
+                      <Icon name={r.icon} size={24} color={role === r.key ? t.primary : t.textSecondary} />
                       <Text
                         style={{
                           fontSize: fontSize.sm,
                           fontWeight: "600",
-                          color: role === r ? t.primary : t.textSecondary,
+                          color: role === r.key ? t.primary : t.textSecondary,
                           marginTop: 4,
                         }}
                       >
-                        {r === "BUYER" ? "Comprador" : "Productor"}
+                        {r.label}
                       </Text>
                     </Pressable>
                   ))}
                 </View>
               </View>
-              <Button
-                title="Crear cuenta y entrar"
-                onPress={() => confirmOtp(true)}
-                loading={loading}
-                full
-                size="lg"
-                disabled={name.length < 2}
-              />
-            </View>
-          ) : null}
+            ) : null}
+
+            <Button
+              title={isRegister ? "Crear cuenta y entrar" : "Entrar"}
+              onPress={submit}
+              loading={loading}
+              full
+              size="lg"
+            />
+
+            <Pressable
+              onPress={() => switchMode(isRegister ? "login" : "register")}
+              accessibilityRole="button"
+              style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: spacing[2] }}
+            >
+              <Text style={{ textAlign: "center", color: t.textSecondary, fontSize: fontSize.sm }}>
+                {isRegister ? "¿Ya tienes cuenta? " : "¿No tienes cuenta? "}
+                <Text style={{ color: t.primary, fontWeight: "700" }}>
+                  {isRegister ? "Inicia sesión" : "Crea una"}
+                </Text>
+              </Text>
+            </Pressable>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

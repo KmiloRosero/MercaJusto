@@ -1,6 +1,7 @@
-# Blueprint de Render: despliega el backend de MercaJusto en el plan gratuito.
-# El disco del plan gratuito no es persistente: en cada reinicio la base SQLite
-# se recrea y se cargan los datos demo (prisma/seed-if-empty.ts).
+# Blueprint de Render: despliega el backend de MercaJusto.
+# Los datos viven en Neon (Postgres) y las fotos en Cloudinary, así que un
+# reinicio del servidor no borra nada. Las variables con `sync: false` se
+# llenan a mano en Render → Environment (nunca se suben al repositorio).
 services:
   - type: web
     name: mercajusto-backend
@@ -14,15 +15,34 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      - key: DATABASE_URL
-        value: file:./prod.db
+      - key: NODE_ENV
+        value: production
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
-        value: 7d
-      - key: OTP_DEV_MODE
-        value: "true"
-      - key: OTP_DEV_CODE
-        value: "123456"
+        value: 30d
       - key: CORS_ORIGIN
         value: "*"
+      - key: PUBLIC_URL
+        value: https://mercajusto-backend.onrender.com
+      - key: APP_WEB_ORIGINS
+        value: https://mercajusto.vercel.app
+      # Neon → Connection string (con ?sslmode=require)
+      - key: DATABASE_URL
+        sync: false
+      # Cloudinary → Dashboard
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Wompi → Desarrolladores → Llaves del API y Secretos (ambiente de pruebas)
+      - key: WOMPI_PUBLIC_KEY
+        sync: false
+      - key: WOMPI_PRIVATE_KEY
+        sync: false
+      - key: WOMPI_INTEGRITY_SECRET
+        sync: false
+      - key: WOMPI_EVENTS_SECRET
+        sync: false

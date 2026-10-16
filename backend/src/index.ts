@@ -14,12 +14,17 @@ import { cartRouter } from "./routes/cart";
 import { uploadsRouter } from "./routes/uploads";
 import { routesRouter } from "./routes/routes";
 import { metricsRouter } from "./routes/metrics";
+import { paymentsRouter } from "./routes/payments";
+import { cloudinaryEnabled } from "./lib/cloudinary";
+import { wompiEnabled, wompiSandbox } from "./lib/wompi";
+import { expireUnpaidOrders } from "./lib/payments";
 import { errorHandler, NotFoundError } from "./middleware/errorHandler";
 import { UPLOAD_DIR } from "./routes/uploads";
 
 const app = express();
-// Railway/Vercel terminan TLS en un proxy: así req.protocol refleja https
-app.set("trust proxy", true);
+// Render termina TLS en un proxy: así req.protocol refleja https y req.ip es
+// la IP real. Solo se confía en ese salto, para que nadie falsifique su IP.
+app.set("trust proxy", 1);
 
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 app.use(express.json({ limit: "2mb" }));
@@ -46,6 +51,7 @@ app.use("/api/cart", cartRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/routes", routesRouter);
 app.use("/api/metrics", metricsRouter);
+app.use("/api/payments", paymentsRouter);
 
 app.use((_req, _res, next) => next(new NotFoundError()));
 app.use(errorHandler);
@@ -57,6 +63,8 @@ app.listen(PORT, () => {
   console.log("🛒 MercaJusto API");
   console.log(`   http://localhost:${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/health`);
+  console.log(`   Fotos: ${cloudinaryEnabled ? "Cloudinary" : "disco local"}`);
+  console.log(`   Pagos en línea: ${wompiEnabled ? `Wompi (${wompiSandbox ? "pruebas" : "producción"})` : "SIN CONFIGURAR"}`);
   // IPs de la red local: úsalas en EXPO_PUBLIC_API_URL para un celular físico
   for (const iface of Object.values(os.networkInterfaces()).flat()) {
     if (iface && iface.family === "IPv4" && !iface.internal) {
@@ -65,3 +73,6 @@ app.listen(PORT, () => {
   }
   console.log("");
 });
+
+// Pedidos en línea sin pagar: se cancelan y liberan el stock (cada 5 minutos).
+setInterval(() => void expireUnpaidOrders(), 5 * 60_000).unref();

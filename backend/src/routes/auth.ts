@@ -1,77 +1,86 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { issueOtp, verifyOtp } from "../lib/otp";
 import { signToken } from "../lib/jwt";
-import { BadRequestError } from "../middleware/errorHandler";
+import { checkPassword, dummyPasswordHash, hashPassword } from "../lib/password";
+import { createRateLimiter } from "../lib/rateLimit";
+import { HttpError, UnauthorizedError } from "../middleware/errorHandler";
 export const authRouter = Router();
 
-const phoneSchema = z.object({
-  phone: z.string().min(10).max(20),
-  role: z.enum(["BUYER", "PRODUCER"]).optional(),
+// Celular colombiano en formato E.164: +57 y 10 dígitos que empiezan por 3.
+const phoneField = z.string().regex(/^\+573\d{9}$/, "Escribe un celular colombiano de 10 dígitos");
+const roleField = z.enum(["BUYER", "PRODUCER", "COURIER"]);
+const passwordField = z
+  .string()
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .max(128, "La contraseña es demasiado larga");
+
+// Contra quien prueba contraseñas: 10 intentos cada 15 minutos por celular y 50 por hora por IP.
+const limitPhone = createRateLimiter([
+  { max: 10, windowMs: 15 * 60_000, message: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." },
+]);
+const limitIp = createRateLimiter([
+  { max: 50, windowMs: 60 * 60_000, message: "Demasiadas solicitudes desde esta red. Intenta más tarde." },
+]);
+
+const userInclude = (role: string) => ({
+  addresses: true,
+  ...(role === "PRODUCER" ? { products: { where: { isActive: true }, include: { category: true } } } : {}),
 });
 
-const verifySchema = z.object({
-  phone: z.string().min(10).max(20),
-  code: z.string().length(6),
-  name: z.string().min(2).optional(),
-  role: z.enum(["BUYER", "PRODUCER"]).optional(),
+async function session(userId: string, role: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, include: userInclude(role) });
+  return { token: signToken({ userId, role }), user };
+}
+
+const registerSchema = z.object({
+  name: z.string().trim().min(2, "Escribe tu nombre").max(80),
+  phone: phoneField,
+  password: passwordField,
+  role: roleField,
 });
 
-// POST /api/auth/otp — envía código al teléfono
-authRouter.post("/otp", async (req, res, next) => {
+// POST /api/auth/register — crea la cuenta y devuelve JWT + perfil
+authRouter.post("/register", async (req, res, next) => {
   try {
-    const { phone } = phoneSchema.parse(req.body);
-    const { code, dev } = await issueOtp(phone);
-    res.json({
-      ok: true,
-      message: dev ? `Modo desarrollo: el código es ${code}` : "Código enviado por SMS",
-      ...(dev ? { devCode: code } : {}),
+    const body = registerSchema.parse(req.body);
+    limitIp(req.ip ?? "unknown");
+
+    const exists = await prisma.user.findUnique({ where: { phone: body.phone }, select: { id: true } });
+    if (exists) throw new HttpError(409, "Ya hay una cuenta con ese celular. Inicia sesión.");
+
+    const user = await prisma.user.create({
+      data: {
+        name: body.name,
+        phone: body.phone,
+        role: body.role,
+        passwordHash: await hashPassword(body.password),
+      },
     });
+    res.status(201).json(await session(user.id, user.role));
   } catch (err) {
     next(err);
   }
 });
 
-// POST /api/auth/verify — valida código y devuelve JWT + perfil completo
-authRouter.post("/verify", async (req, res, next) => {
+const loginSchema = z.object({
+  phone: phoneField,
+  password: z.string().min(1, "Escribe tu contraseña").max(128),
+});
+
+// POST /api/auth/login — valida celular + contraseña y devuelve JWT + perfil
+authRouter.post("/login", async (req, res, next) => {
   try {
-    const { phone, code, name, role } = verifySchema.parse(req.body);
+    const { phone, password } = loginSchema.parse(req.body);
+    limitIp(req.ip ?? "unknown");
+    limitPhone(phone);
 
-    let user = await prisma.user.findUnique({ where: { phone } });
+    const user = await prisma.user.findUnique({ where: { phone }, omit: { passwordHash: false } });
+    const valid = await checkPassword(password, user?.passwordHash ?? (await dummyPasswordHash()));
+    if (!user || !valid) throw new UnauthorizedError("Celular o contraseña incorrectos");
+    if (!user.isActive) throw new UnauthorizedError("Esta cuenta está desactivada");
 
-    // Usuario nuevo sin nombre: validamos el código SIN consumirlo para que
-    // pueda completar el registro con el mismo código.
-    const needsRegistration = !user && !name;
-    const valid = await verifyOtp(phone, code, { consume: !needsRegistration });
-    if (!valid) throw new BadRequestError("Código inválido o expirado");
-
-    if (!user) {
-      if (!name) {
-        throw new BadRequestError("USUARIO_NUEVO", {
-          phone,
-          message: "Usuario no registrado. Envía `name` y `role` para crearlo.",
-        });
-      }
-      user = await prisma.user.create({
-        data: { phone, name, role: role || "BUYER" },
-      });
-    }
-
-    // Recargar con relaciones para devolver el perfil completo
-    const fullUser = await prisma.user.findUniqueOrThrow({
-      where: { id: user.id },
-      include: {
-        addresses: true,
-        ...(user.role === "PRODUCER"
-          ? { products: { where: { isActive: true }, include: { category: true } } }
-          : {}),
-      },
-    });
-
-    const token = signToken({ userId: user.id, phone: user.phone, role: user.role });
-
-    res.json({ token, user: fullUser });
+    res.json(await session(user.id, user.role));
   } catch (err) {
     next(err);
   }

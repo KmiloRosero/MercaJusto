@@ -10,7 +10,9 @@ import {
   Category,
   Order,
   PaymentMethod,
+  PaymentStatus,
   Product,
+  Role,
   User,
 } from "./types";
 
@@ -99,17 +101,19 @@ api.interceptors.response.use(
 // AUTH
 // ═══════════════════════════════════════════
 
-export async function requestOtp(phone: string): Promise<{ message: string; devCode?: string }> {
-  const { data } = await api.post("/auth/otp", { phone });
+export async function login(phone: string, password: string): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/login", { phone, password });
+  await tokenStorage.set(data.token);
   return data;
 }
 
-export async function verifyOtp(
-  phone: string,
-  code: string,
-  extra?: { name?: string; role?: "BUYER" | "PRODUCER" }
-): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/verify", { phone, code, ...extra });
+export async function register(input: {
+  name: string;
+  phone: string;
+  password: string;
+  role: Role;
+}): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/register", input);
   await tokenStorage.set(data.token);
   return data;
 }
@@ -342,6 +346,24 @@ export async function updateOrderStatus(
 }
 
 // ═══════════════════════════════════════════
+// PAGOS EN LÍNEA (Wompi)
+// ═══════════════════════════════════════════
+
+/** URL del checkout de Wompi para pagar (o reintentar) un pedido. */
+export async function startPayment(orderId: string, returnUrl: string): Promise<string> {
+  const { data } = await api.post(`/payments/wompi/${orderId}/checkout`, { returnUrl });
+  return data.checkoutUrl;
+}
+
+/** Pregunta a Wompi cómo quedó el pago y devuelve el estado actualizado. */
+export async function syncPayment(
+  orderId: string
+): Promise<{ id: string; status: Order["status"]; paymentStatus: PaymentStatus }> {
+  const { data } = await api.post(`/payments/wompi/${orderId}/sync`);
+  return data;
+}
+
+// ═══════════════════════════════════════════
 // MÉTRICAS — precio justo (ahorro del comprador / ingresos del productor)
 // ═══════════════════════════════════════════
 
@@ -412,6 +434,7 @@ export function isRetryableError(err: unknown): boolean {
   return kind === "offline" || kind === "timeout" || kind === "server";
 }
 
+/** Datos extra que el backend manda junto al error (p. ej. el token de registro). */
 export function apiErrorMessage(err: unknown): string {
   const info = describeError(err);
   // Los rechazos del backend (validación, permisos) ya traen su propio mensaje.

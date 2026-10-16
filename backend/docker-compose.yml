@@ -1,10 +1,10 @@
-# Opcional: Postgres + PostGIS para cuando migres de SQLite.
+# Postgres local para desarrollo (en producción se usa Neon).
 # Uso: docker compose up -d
-# Luego cambia DATABASE_URL en .env a la que está comentada abajo.
+# DATABASE_URL="postgresql://mercajusto:mercajusto@localhost:5432/mercajusto?schema=public"
 
 services:
   postgres:
-    image: postgis/postgis:16-3.4
+    image: postgres:16-alpine
     container_name: mercajusto-db
     restart: unless-stopped
     environment:

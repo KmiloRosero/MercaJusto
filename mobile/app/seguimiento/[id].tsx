@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Linking,
   Pressable,
@@ -13,7 +13,8 @@ import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
 import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../../src/theme";
-import { apiErrorMessage, getOrder, updateOrderStatus } from "../../src/api/client";
+import { apiErrorMessage, getOrder, syncPayment, updateOrderStatus } from "../../src/api/client";
+import { payOnline } from "../../src/lib/payOnline";
 import { OrderStatus, PaymentMethod } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { BUYER_CAN_CANCEL, NEXT_ACTION } from "../../src/lib/orderStatus";
@@ -30,12 +31,12 @@ const STEPS: { key: OrderStatus; label: string; icon: string; desc: string }[] =
 ];
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-  NEQUI: "Nequi",
-  DAVIPLATA: "Daviplata",
+  WOMPI: "En línea",
   CASH: "Efectivo" };
 
 const STATUS_INDEX: Record<OrderStatus, number> = {
-  PENDING: 0,
+  // Solo los pedidos en línea sin pagar están en PENDING: aún no empieza ningún paso
+  PENDING: -1,
   CONFIRMED: 0,
   PREPARING: 1,
   IN_TRANSIT: 2,
@@ -58,6 +59,35 @@ export default function Seguimiento() {
     enabled: !!id,
     refetchInterval: 15000, // actualiza cada 15s para simular tiempo real
   });
+
+  // Pedido en línea que todavía no se paga (o cuyo pago fue rechazado)
+  const awaitingPayment =
+    !!order && order.paymentMethod === "WOMPI" && order.paymentStatus !== "PAID" && order.status === "PENDING";
+  const paymentFailed = awaitingPayment && order?.paymentStatus === "FAILED";
+  const [paying, setPaying] = useState(false);
+
+  // Al abrir, se confirma con Wompi por si el pago se resolvió mientras no se miraba
+  useEffect(() => {
+    if (!awaitingPayment || !id) return;
+    syncPayment(id)
+      .then(() => refetch())
+      .catch(() => {});
+  }, [awaitingPayment, id, refetch]);
+
+  const onPay = async () => {
+    if (!order) return;
+    setPaying(true);
+    try {
+      const result = await payOnline(order.id);
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      if (result === "FAILED") showAlert("Pago rechazado", "Wompi no aprobó el pago. Puedes intentarlo con otro medio.");
+    } catch (err) {
+      showAlert("No se pudo abrir el pago", apiErrorMessage(err));
+    } finally {
+      setPaying(false);
+    }
+  };
 
   // Coordenadas: finca del primer productor (origen) y dirección de entrega (destino)
   const { origin, destination } = useMemo(() => {
@@ -137,6 +167,8 @@ export default function Seguimiento() {
 
   const currentLabel =
     isCancelled ? "Pedido cancelado" :
+    paymentFailed ? "Pago rechazado" :
+    awaitingPayment ? "Esperando tu pago" :
     isDelivered ? "¡Entregado!" :
     STEPS[currentStep]?.label || "Procesando";
 
@@ -146,6 +178,8 @@ export default function Seguimiento() {
 
   const currentDesc =
     isCancelled ? "Este pedido fue cancelado." :
+    paymentFailed ? "Wompi no aprobó el pago. Puedes intentarlo de nuevo." :
+    awaitingPayment ? "Paga en Wompi para que el productor reciba tu pedido. Tus productos están apartados." :
     STEPS[currentStep]?.desc || "Estamos procesando tu pedido.";
 
   return (
@@ -153,7 +187,7 @@ export default function Seguimiento() {
       <TopBar showBack onBack={() => router.back()} title="Seguimiento" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[10] }}>
-        {justPlaced && order.buyerId === me?.id ? (
+        {justPlaced && isBuyerView && !awaitingPayment ? (
           <View
             accessibilityRole="alert"
             style={{
@@ -173,7 +207,7 @@ export default function Seguimiento() {
             <Text style={{ fontSize: fontSize.sm, color: t.textPrimary, lineHeight: 20 }}>
               {order.paymentMethod === "CASH"
                 ? `Pagas ${formatCOP(order.total)} en efectivo cuando recibas tu cosecha.`
-                : `Registramos tu pago con ${PAYMENT_LABEL[order.paymentMethod]} por ${formatCOP(order.total)}.`}{" "}
+                : `Pagaste ${formatCOP(order.total)} en línea.`}{" "}
               Te avisaremos cuando el productor empiece a prepararlo.
             </Text>
             <Pressable
@@ -445,9 +479,15 @@ export default function Seguimiento() {
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
               <Text style={[type.footnote, { fontWeight: "400", color: t.textTertiary }]}>Pago</Text>
-              <Pill variant={order.paymentStatus === "PAID" ? "success" : "warning"}>
+              <Pill variant={order.paymentStatus === "PAID" ? "success" : order.paymentStatus === "FAILED" ? "danger" : "warning"}>
                 {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod} ·{" "}
-                {order.paymentStatus === "PAID" ? "Pagado" : order.paymentMethod === "CASH" ? "Contraentrega" : "Pendiente"}
+                {order.paymentStatus === "PAID"
+                  ? "Pagado"
+                  : order.paymentMethod === "CASH"
+                    ? "Contraentrega"
+                    : order.paymentStatus === "FAILED"
+                      ? "Rechazado"
+                      : "Pendiente"}
               </Pill>
             </View>
           </View>
@@ -488,6 +528,16 @@ export default function Seguimiento() {
 
         {/* ═══ CTA calificar ═══ */}
         <View style={{ marginHorizontal: spacing[4], marginTop: spacing[5], gap: spacing[2] }}>
+          {isBuyerView && awaitingPayment ? (
+            <Button
+              title={paymentFailed ? "Intentar pagar de nuevo" : `Pagar ahora · ${formatCOP(order.total)}`}
+              icon={<Icon name="card-outline" size={20} color={t.onPrimary} />}
+              full
+              size="lg"
+              loading={paying}
+              onPress={onPay}
+            />
+          ) : null}
           {nextAction ? (
             <Button
               title={nextAction.label}

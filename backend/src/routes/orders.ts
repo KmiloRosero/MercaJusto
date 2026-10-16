@@ -10,6 +10,8 @@ import {
   NotFoundError,
 } from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { notifyProducersOfNewOrder } from "../lib/payments";
+import { wompiEnabled } from "../lib/wompi";
 
 export const ordersRouter = Router();
 ordersRouter.use(requireAuth);
@@ -43,7 +45,8 @@ ordersRouter.get("/mine", async (req, res, next) => {
       { items: { some: { product: { producerId: req.user!.userId } } } };
 
     const orders = await prisma.order.findMany({
-      where,
+      // Productor y repartidor no ven pedidos en línea hasta que se pagan
+      where: role === "BUYER" ? where : { ...where, NOT: { paymentMethod: "WOMPI", paymentStatus: { not: "PAID" } } },
       include: {
         items: { include: { product: { include: { category: true } } } },
         buyer: { select: { id: true, name: true, avatarUrl: true, phone: true } },
@@ -100,7 +103,7 @@ ordersRouter.get("/:id", async (req, res, next) => {
 // ═══════════════════════════════════════════
 const createOrderSchema = z.object({
   deliveryAddressId: z.string(),
-  paymentMethod: z.enum(["NEQUI", "DAVIPLATA", "CASH"]),
+  paymentMethod: z.enum(["WOMPI", "CASH"]),
   notes: z.string().max(300).optional(),
 });
 
@@ -108,6 +111,10 @@ ordersRouter.post("/", requireRole("BUYER"), async (req, res, next) => {
   try {
     const { deliveryAddressId, paymentMethod, notes } = createOrderSchema.parse(req.body);
     const userId = req.user!.userId;
+    if (paymentMethod === "WOMPI" && !wompiEnabled) {
+      throw new BadRequestError("El pago en línea no está disponible. Elige efectivo contraentrega.");
+    }
+    const online = paymentMethod === "WOMPI";
 
     const address = await prisma.address.findFirst({
       where: { id: deliveryAddressId, userId },
@@ -154,10 +161,11 @@ ordersRouter.post("/", requireRole("BUYER"), async (req, res, next) => {
           buyerId: userId,
           deliveryAddressId,
           paymentMethod,
-          paymentStatus: paymentMethod === "CASH" ? "PENDING" : "PAID",
+          paymentStatus: "PENDING",
           notes,
           ...totals,
-          status: "CONFIRMED",
+          // En línea: el pedido espera el pago (con el stock reservado). Efectivo: va directo al productor.
+          status: online ? "PENDING" : "CONFIRMED",
           items: { create: lines },
         },
         include: { items: { include: { product: true } } },
@@ -167,15 +175,8 @@ ordersRouter.post("/", requireRole("BUYER"), async (req, res, next) => {
       return created;
     });
 
-    // Avisar a cada productor involucrado (fire and forget)
-    const producerIds = [...new Set(order.items.map((it) => it.product.producerId))];
-    for (const producerId of producerIds) {
-      void sendPushToUser(producerId, {
-        title: "🧺 ¡Nuevo pedido!",
-        body: "Tienes un pedido nuevo para alistar. Revísalo en la pestaña Pedidos.",
-        data: { orderId: order.id },
-      });
-    }
+    // Efectivo: el productor se entera ya. En línea: cuando Wompi apruebe el pago.
+    if (!online) void notifyProducersOfNewOrder(order.id);
 
     res.status(201).json(order);
   } catch (err) {
@@ -227,6 +228,11 @@ ordersRouter.patch("/:id/status", async (req, res, next) => {
       throw new BadRequestError(`No se puede pasar de ${current} a ${status}`);
     }
 
+    // Un pedido en línea sin pagar todavía no es del productor ni del repartidor
+    if ((isProducer || isCourier) && !isBuyer && current === "PENDING") {
+      throw new BadRequestError("El pedido todavía no está pagado");
+    }
+
     // El comprador solo cancela, y solo antes de que se prepare
     if (!isProducer && !isCourier) {
       if (status !== "CANCELLED" || !["PENDING", "CONFIRMED"].includes(current)) {
@@ -267,6 +273,11 @@ ordersRouter.patch("/:id/status", async (req, res, next) => {
         },
       });
     });
+
+    if (status === "CANCELLED" && order.paymentMethod === "WOMPI" && order.paymentStatus === "PAID") {
+      // Wompi no reembolsa solo: se hace desde su panel con este número de transacción.
+      console.error(`⚠️ Pedido pagado cancelado ${order.id} (transacción ${order.paymentTransactionId}): reembolsar`);
+    }
 
     // Notificar (fire and forget, no bloquea la respuesta)
     if (isBuyer && !isProducer && !isCourier) {
