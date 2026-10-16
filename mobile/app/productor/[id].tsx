@@ -13,6 +13,7 @@ import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
 
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
+import { Avatar } from "../../src/components/Avatar";
 export default function ProducerProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -42,12 +43,6 @@ export default function ProducerProfile() {
 
   const products = producer.products ?? [];
   const reviews = producer.reviewsReceived ?? [];
-  const initials = producer.name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
@@ -73,17 +68,7 @@ export default function ProducerProfile() {
                 borderColor: t.border,
                 ...shadow.sm }}
             >
-              <View
-                style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: radius.full,
-                  backgroundColor: t.primary,
-                  alignItems: "center",
-                  justifyContent: "center" }}
-              >
-                <Text style={{ color: t.onPrimary, fontSize: 28, fontWeight: "800" }}>{initials}</Text>
-              </View>
+              <Avatar name={producer.name} size={88} />
               <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary, textAlign: "center" }}>
                 {producer.name}
               </Text>

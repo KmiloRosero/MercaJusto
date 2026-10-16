@@ -17,6 +17,7 @@ import { effectivePrice } from "../../src/lib/pricing";
 
 import { FieldTile } from "../../src/components/FieldTile";
 import { PressableScale } from "../../src/components/PressableScale";
+import { Avatar } from "../../src/components/Avatar";
 export default function Profile() {
   const router = useRouter();
   const t = useTheme();
@@ -72,22 +73,8 @@ export default function Profile() {
             borderColor: t.border,
           }}
         >
-          <View
-            style={{
-              width: 88,
-              height: 88,
-              borderRadius: radius.full,
-              backgroundColor: t.primaryLight,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: spacing[2],
-              borderWidth: 2,
-              borderColor: t.primary,
-            }}
-          >
-            <Text style={{ fontSize: 36, fontWeight: "800", color: t.primary }}>
-              {user.name.charAt(0).toUpperCase()}
-            </Text>
+          <View style={{ marginBottom: spacing[2] }}>
+            <Avatar name={user.name} size={88} />
           </View>
 
           <Text style={{ fontSize: fontSize.xl, fontWeight: "800", color: t.textPrimary }}>{user.name}</Text>
