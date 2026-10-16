@@ -14,7 +14,8 @@ import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { Icon } from "../../src/components/Icon";
 import { PasswordInput } from "../../src/components/PasswordInput";
-import { fontSize, radius, spacing, useTheme } from "../../src/theme";
+import { BRAND, LogoMark } from "../../src/components/Logo";
+import { fontSize, radius, spacing, type, useTheme } from "../../src/theme";
 import { apiErrorMessage, login, register } from "../../src/api/client";
 import type { Role } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
@@ -117,26 +118,26 @@ export default function Login() {
           contentContainerStyle={{ padding: spacing[4], gap: spacing[5] }}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={{ alignItems: "center", gap: spacing[2], marginTop: spacing[4] }}>
+          <View style={{ gap: spacing[2], marginTop: spacing[2] }}>
             <View
               style={{
-                width: 72,
-                height: 72,
-                borderRadius: radius.full,
-                backgroundColor: t.primaryLight,
+                width: 56,
+                height: 56,
+                borderRadius: 16,
+                backgroundColor: BRAND.field,
                 alignItems: "center",
                 justifyContent: "center",
-                marginBottom: spacing[2],
+                marginBottom: spacing[3],
               }}
             >
-              <Icon name={isRegister ? "person-outline" : "shield-checkmark-outline"} size={36} color={t.primary} />
+              <LogoMark size={38} />
             </View>
-            <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
+            <Text style={[type.display, { color: t.textPrimary }]}>
               {isRegister ? "Crea tu cuenta" : "Entra a tu cuenta"}
             </Text>
-            <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, textAlign: "center" }}>
+            <Text style={[type.body, { color: t.textSecondary }]}>
               {isRegister
-                ? "Con tu correo y una contraseña."
+                ? "Compra directo al campo o vende tu cosecha, con tu correo y una contraseña."
                 : "Con el correo y la contraseña con que te registraste."}
             </Text>
           </View>

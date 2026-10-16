@@ -567,7 +567,7 @@ async function main() {
         deliveryFee: 3500,
         platformFee: 500,
         total: 14000,
-        paymentMethod: "NEQUI",
+        paymentMethod: "WOMPI",
         paymentStatus: "PAID",
         deliveryAddressId: buyerAddr.id,
         deliveredAt: new Date(Date.now() - 3 * 24 * 3600 * 1000),
@@ -630,10 +630,10 @@ async function main() {
 
   console.log("✅ Seed completado");
   console.log("");
-  console.log("👤 Credenciales demo:");
-  console.log(`   Comprador:  ${buyer.phone}  (OTP dev: 123456)`);
-  console.log(`   Productor:  ${producer1.phone}  (Don José - Túquerres)`);
-  console.log(`   Repartidor: ${courier.phone}`);
+  console.log('👤 Cuentas demo (contraseña "mercajusto"):');
+  console.log(`   Comprador:  ${buyer.email}`);
+  console.log(`   Productor:  ${producer1.email}  (Don José - Túquerres)`);
+  console.log(`   Repartidor: ${courier.email}`);
   console.log("");
   console.log(`📊 Total: ${await prisma.user.count()} usuarios, ${await prisma.product.count()} productos, ${await prisma.order.count()} pedidos`);
 }

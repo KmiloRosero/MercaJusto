@@ -44,56 +44,105 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
   const soldOut = product.stock <= 0;
 
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={() => cardScale.set(withTiming(0.98, pressIn))}
-      onPressOut={() => cardScale.set(withSpring(1, release))}
-      accessibilityRole="button"
-      accessibilityLabel={`${product.name}, ${formatCOP(finalPrice)} por ${product.unit}${plaza ? `, en plaza ${formatCOP(plaza.plaza)}` : ""}`}
-      style={[cardStyle, { gap: spacing[2] }]}
-    >
-      {/* Foto o placeholder de categoría */}
-      <View
-        style={{
-          aspectRatio: 1,
-          borderRadius: radius.lg,
-          overflow: "hidden",
-          backgroundColor: t.bgSecondary,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+    <View>
+      <AnimatedPressable
+        onPress={onPress}
+        onPressIn={() => cardScale.set(withTiming(0.98, pressIn))}
+        onPressOut={() => cardScale.set(withSpring(1, release))}
+        accessibilityRole="button"
+        accessibilityLabel={`${product.name}, ${formatCOP(finalPrice)} por ${product.unit}${plaza ? `, en plaza ${formatCOP(plaza.plaza)}` : ""}`}
+        style={[cardStyle, { gap: spacing[2] }]}
       >
-        {product.photoUrl ? (
-          <Image
-            source={{ uri: sizedImage(product.photoUrl, CARD_IMAGE_DP, 1) }}
-            style={{ width: "100%", height: "100%" }}
-            resizeMode="cover"
-            accessibilityIgnoresInvertColors
-          />
-        ) : (
-          <FieldTile category={product.category} iconSize={44} radius={0} />
-        )}
+        {/* Foto o placeholder de categoría */}
+        <View
+          style={{
+            aspectRatio: 1,
+            borderRadius: radius.lg,
+            overflow: "hidden",
+            backgroundColor: t.bgSecondary,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {product.photoUrl ? (
+            <Image
+              source={{ uri: sizedImage(product.photoUrl, CARD_IMAGE_DP, 1) }}
+              style={{ width: "100%", height: "100%" }}
+              resizeMode="cover"
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <FieldTile category={product.category} iconSize={44} radius={0} />
+          )}
 
-        {product.isSurplus && product.discountPct > 0 ? (
-          <View
-            style={{
-              position: "absolute",
-              top: spacing[2],
-              left: spacing[2],
-              height: 24,
-              paddingHorizontal: 8,
-              borderRadius: radius.full,
-              backgroundColor: t.accent,
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 3,
-            }}
-          >
-            <Icon name="leaf" size={11} color={t.onAccent} />
-            <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "700" }}>-{product.discountPct} %</Text>
+          {product.isSurplus && product.discountPct > 0 ? (
+            <View
+              style={{
+                position: "absolute",
+                top: spacing[2],
+                left: spacing[2],
+                height: 24,
+                paddingHorizontal: 8,
+                borderRadius: radius.full,
+                backgroundColor: t.accent,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 3,
+              }}
+            >
+              <Icon name="leaf" size={11} color={t.onAccent} />
+              <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "700" }}>-{product.discountPct} %</Text>
+            </View>
+          ) : null}
+
+
+          {soldOut ? (
+            <View
+              style={{
+                position: "absolute",
+                bottom: spacing[2],
+                left: spacing[2],
+                paddingHorizontal: 8,
+                height: 24,
+                justifyContent: "center",
+                borderRadius: radius.full,
+                backgroundColor: t.inverseSurface,
+              }}
+            >
+              <Text style={{ color: t.onInverseSurface, fontSize: 12, fontWeight: "600" }}>Agotado</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Información */}
+        <View style={{ gap: 2, paddingHorizontal: 2 }}>
+          <Text numberOfLines={1} style={[type.callout, { color: t.textPrimary }]}>
+            {product.name}
+          </Text>
+          <Text numberOfLines={1} style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>
+            {product.municipio}
+            {product.producer?.name ? ` · ${product.producer.name.split(" ")[0]}` : ""}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+            <Text style={{ fontSize: 16, lineHeight: 20, fontWeight: "700", color: t.textPrimary, letterSpacing: -0.2 }}>
+              {formatCOP(finalPrice)}
+            </Text>
+            <Text style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>/{product.unit}</Text>
           </View>
-        ) : null}
+          {plaza ? (
+            <Text numberOfLines={1} style={[type.footnote, { color: t.success, fontWeight: "600" }]}>
+              En plaza {formatCOP(plaza.plaza)}
+            </Text>
+          ) : null}
+        </View>
+      </AnimatedPressable>
 
+      {/* El botón de agregar va encima de la foto pero fuera de la tarjeta:
+          un botón dentro de otro no es válido en la web. */}
+      <View
+        pointerEvents="box-none"
+        style={{ position: "absolute", top: 0, left: 0, right: 0, aspectRatio: 1 }}
+      >
         {onAdd && !soldOut ? (
           <AnimatedPressable
             onPress={onAdd}
@@ -125,46 +174,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
             <Icon name="add" size={22} color={t.primary} />
           </AnimatedPressable>
         ) : null}
-
-        {soldOut ? (
-          <View
-            style={{
-              position: "absolute",
-              bottom: spacing[2],
-              left: spacing[2],
-              paddingHorizontal: 8,
-              height: 24,
-              justifyContent: "center",
-              borderRadius: radius.full,
-              backgroundColor: t.inverseSurface,
-            }}
-          >
-            <Text style={{ color: t.onInverseSurface, fontSize: 12, fontWeight: "600" }}>Agotado</Text>
-          </View>
-        ) : null}
       </View>
-
-      {/* Información */}
-      <View style={{ gap: 2, paddingHorizontal: 2 }}>
-        <Text numberOfLines={1} style={[type.callout, { color: t.textPrimary }]}>
-          {product.name}
-        </Text>
-        <Text numberOfLines={1} style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>
-          {product.municipio}
-          {product.producer?.name ? ` · ${product.producer.name.split(" ")[0]}` : ""}
-        </Text>
-        <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
-          <Text style={{ fontSize: 16, lineHeight: 20, fontWeight: "700", color: t.textPrimary, letterSpacing: -0.2 }}>
-            {formatCOP(finalPrice)}
-          </Text>
-          <Text style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>/{product.unit}</Text>
-        </View>
-        {plaza ? (
-          <Text numberOfLines={1} style={[type.footnote, { color: t.success, fontWeight: "600" }]}>
-            En plaza {formatCOP(plaza.plaza)}
-          </Text>
-        ) : null}
-      </View>
-    </AnimatedPressable>
+    </View>
   );
 }

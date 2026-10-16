@@ -409,6 +409,7 @@ Filtros de categoría que responden con color, no con movimiento.
 - **Agotado:** píldora de 24px en `inverseSurface` abajo a la izquierda.
 - **Botón de agregar:** círculo de 36px en `bgCard` abajo a la derecha, "+" de 22px en `primary`, con la sombra flotante; escala a 0.9 al presionar.
 - **Paneles de resumen:** fondo de superficie, `rounded.lg`, padding 16px, borde 1px `border`, sombra sm.
+- **Resumen fijo de la canasta:** subtotal, envío y comisión en Footnote; la comisión lleva un ⓘ que explica para qué es al tocarla, en vez de un párrafo fijo. El checkout sí muestra el texto completo.
 - **Tarjetas y filas presionables** (pedidos, filas del perfil, banner, dirección del checkout): `PressableScale`, que se hunde a 0.98 y vuelve con el resorte de `motion.release`. Los controles pequeños sueltos (avatar, botón de llamar) bajan a 0.95. Los enlaces de texto responden con opacidad.
 
 ### Inputs / Fields
@@ -422,6 +423,15 @@ Filtros de categoría que responden con color, no con movimiento.
 - **Barra superior:** 56px en `bgPrimary` con borde inferior 1px `border`. A la izquierda, el sello de marca (cuadrado `brand-field` de 34px con el LogoMark) o un botón atrás circular de 36px en `bgSecondary`; título en Headline.
 - **Barra de pestañas:** `bgPrimary` con borde superior `border`, íconos de 22px (contorno en reposo, relleno cuando activa), etiquetas Label. Activa en `primary`, inactiva en `textTertiary`. La insignia de la canasta va en `primary` con `onPrimary`.
 - **Encabezado de sección:** título Headline y acción en Footnote 600 `primary` con chevron.
+
+### Avatar
+Iniciales (hasta dos) en `onPrimary` 800 sobre `primary`, círculo completo, texto al 36% del tamaño. Es el mismo componente en el inicio (48px), el perfil y la página del productor (88px).
+
+### Tarjeta de pedido
+Primero lo que se compró (Callout 700, hasta dos líneas) con la píldora de estado a la derecha; debajo, una línea Footnote `textTertiary` con municipio, fecha y el código `#XXXXXXXX` al final. El código nunca va primero: nadie busca su pedido por él.
+
+### Pantallas de acceso
+Arriba a la izquierda, el sello de marca de 56px (`brand-field`, radio 16px, LogoMark de 38px); título en Display y apoyo en Body `textSecondary`, alineados a la izquierda. Sin ícono genérico dentro de un círculo.
 
 ### Hoja inferior (BottomSheet)
 El fondo `scrim` aparece con fundido y la hoja sube con la curva `motion.drawer` en 320ms; al cerrar baja en 200ms con easeOut, más rápido de lo que entró. Se cierra arrastrando la manija o el título hacia abajo: basta pasar el 30% de su altura o un gesto rápido (más de 600 px/s). Hacia arriba tiene fricción en vez de un tope. Una sola variable mueve la hoja y el fondo, así abrir, cerrar y arrastrar se interrumpen sin saltos. Con movimiento reducido, aparece y se va sin desplazarse.

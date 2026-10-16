@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView , useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
@@ -12,7 +12,8 @@ import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
 
-import { FeeExplainer, SavingsNote } from "../../src/components/SavingsNote";
+import { SavingsNote } from "../../src/components/SavingsNote";
+import { showAlert } from "../../src/lib/dialog";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
@@ -190,9 +191,25 @@ export default function Cart() {
           >
             <Row label="Subtotal" value={formatCOP(subtotal)} color={t.textPrimary} />
             <Row label="Envío agrupado" value={formatCOP(deliveryFee)} color={t.textSecondary} />
-            <Row label="Comisión MercaJusto (5 %)" value={formatCOP(platformFee)} color={t.textSecondary} />
-            <FeeExplainer />
-            <View style={{ height: 1, backgroundColor: t.border, marginVertical: spacing[2] }} />
+            <Pressable
+              onPress={() =>
+                showAlert(
+                  "Comisión MercaJusto",
+                  "El productor recibe completo el precio de su cosecha. El 5 % se suma aparte y sostiene la plataforma."
+                )
+              }
+              accessibilityRole="button"
+              accessibilityLabel={`Comisión MercaJusto, 5 %, ${formatCOP(platformFee)}. Toca para saber para qué es`}
+              hitSlop={8}
+              style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>Comisión MercaJusto (5 %)</Text>
+              <Icon name="information-circle-outline" size={16} color={t.textTertiary} />
+              <Text style={{ flex: 1, textAlign: "right", fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>
+                {formatCOP(platformFee)}
+              </Text>
+            </Pressable>
+            <View style={{ height: 1, backgroundColor: t.border, marginVertical: spacing[1] }} />
             <Row label="Total a pagar" value={formatCOP(total)} color={t.textPrimary} bold />
             <SavingsNote amount={savings} />
             <Button title="Proceder al pago" onPress={() => router.push("/checkout")} full size="lg" />

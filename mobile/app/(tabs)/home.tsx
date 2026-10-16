@@ -28,6 +28,7 @@ import { ErrorState, LoadingState, ProductGridSkeleton } from "../../src/compone
 import { PressableScale } from "../../src/components/PressableScale";
 import Animated from "react-native-reanimated";
 import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
+import { Avatar } from "../../src/components/Avatar";
 const GUTTER = spacing[5];
 const CAROUSEL_CARD = 152;
 /** Pedidos del inicio del productor; el resto queda en la pestaña Ventas. */
@@ -83,18 +84,9 @@ function GreetingRow({ placeLabel, place }: { placeLabel: string; place: string 
         onPress={() => router.push("/(tabs)/profile")}
         accessibilityRole="button"
         accessibilityLabel="Mi perfil"
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 24,
-          backgroundColor: t.primary,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
+        style={{ borderRadius: radius.full }}
       >
-        <Text style={{ color: t.onPrimary, fontSize: 17, fontWeight: "700" }}>
-          {user?.name?.charAt(0).toUpperCase() || "M"}
-        </Text>
+        <Avatar name={user?.name} size={48} />
       </PressableScale>
     </View>
   );

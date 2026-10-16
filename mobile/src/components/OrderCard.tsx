@@ -36,21 +36,20 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
         borderColor: t.border,
       }}
     >
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-        <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, fontWeight: "700" }}>
-          #{order.id.slice(-8).toUpperCase()}
+      <View style={{ flexDirection: "row", alignItems: "flex-start", gap: spacing[3] }}>
+        <Text
+          style={{ flex: 1, fontSize: fontSize.base, lineHeight: 22, fontWeight: "700", color: t.textPrimary }}
+          numberOfLines={2}
+        >
+          {lines.map((it) => `${it.quantity} × ${it.product?.name ?? "Producto"}`).join(", ") ||
+            `${order.items.length} producto${order.items.length !== 1 ? "s" : ""}`}
         </Text>
         <Pill variant={status.variant} icon={status.icon}>
           {status.label}
         </Pill>
       </View>
 
-      <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }} numberOfLines={2}>
-        {lines.map((it) => `${it.quantity} × ${it.product?.name ?? "Producto"}`).join(", ") ||
-          `${order.items.length} producto${order.items.length !== 1 ? "s" : ""}`}
-      </Text>
-
-      <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+      <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }} numberOfLines={1}>
         {!isBuyer && order.buyer ? `${order.buyer.name} · ` : ""}
         {order.deliveryAddress ? `${order.deliveryAddress.municipio} · ` : ""}
         {new Date(order.createdAt).toLocaleDateString("es-CO", {
@@ -59,6 +58,7 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
           hour: "2-digit",
           minute: "2-digit",
         })}
+        {` · #${order.id.slice(-8).toUpperCase()}`}
       </Text>
 
       <View
