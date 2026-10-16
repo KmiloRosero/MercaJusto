@@ -14,15 +14,21 @@ import { SectionHeader } from "../../src/components/TopBar";
 import { Banner } from "../../src/components/Banner";
 import { Chip } from "../../src/components/Chip";
 import { ProductCard } from "../../src/components/ProductCard";
+import { OrderCard } from "../../src/components/OrderCard";
 import { Icon } from "../../src/components/Icon";
 import { Button } from "../../src/components/Button";
 import { radius, spacing, type, useTheme } from "../../src/theme";
-import { getCategories, getProducts } from "../../src/api/client";
+import { getCategories, getMyOrders, getProducts } from "../../src/api/client";
+import type { Address } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { useAddToCart } from "../../src/lib/useAddToCart";
+import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
 
-import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
+import { ErrorState, LoadingState, ProductGridSkeleton } from "../../src/components/QueryState";
 const GUTTER = spacing[5];
+const CAROUSEL_CARD = 152;
+/** Pedidos del inicio del productor; el resto queda en la pestaña Ventas. */
+const HOME_ORDERS = 3;
 
 function greeting(date = new Date()) {
   const h = date.getHours();
@@ -31,15 +37,73 @@ function greeting(date = new Date()) {
   return "Buenas noches";
 }
 
+function placeOf(address?: Address) {
+  return address ? `${address.vereda ? `${address.vereda}, ` : ""}${address.municipio}` : "Nariño";
+}
+
+/** El productor trabaja desde su propio inicio; comprador y repartidor ven el catálogo. */
 export default function Home() {
+  const isProducer = useAuth((s) => s.user?.role === "PRODUCER");
+  return isProducer ? <ProducerHome /> : <BuyerHome />;
+}
+
+/** Saludo, lugar y acceso al perfil: la primera línea de ambos inicios. */
+function GreetingRow({ placeLabel, place }: { placeLabel: string; place: string }) {
+  const router = useRouter();
+  const t = useTheme();
+  const user = useAuth((s) => s.user);
+  const firstName = user?.name?.split(" ")[0] ?? "";
+
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={[type.footnote, { color: t.textSecondary }]}>
+          {greeting()}
+          {firstName ? `, ${firstName}` : ""}
+        </Text>
+        <Pressable
+          onPress={() => router.push("/(tabs)/profile")}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={`${placeLabel} ${place}. Cambiar`}
+          style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Icon name="location" size={16} color={t.primary} />
+          <Text style={[type.headline, { color: t.textPrimary, flexShrink: 1 }]} numberOfLines={1}>
+            {place}
+          </Text>
+          <Icon name="chevron-down" size={16} color={t.textSecondary} />
+        </Pressable>
+      </View>
+      <Pressable
+        onPress={() => router.push("/(tabs)/profile")}
+        accessibilityRole="button"
+        accessibilityLabel="Mi perfil"
+        style={({ pressed }) => ({
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: t.primary,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: pressed ? 0.8 : 1,
+        })}
+      >
+        <Text style={{ color: t.onPrimary, fontSize: 17, fontWeight: "700" }}>
+          {user?.name?.charAt(0).toUpperCase() || "M"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function BuyerHome() {
   const router = useRouter();
   const t = useTheme();
   const user = useAuth((s) => s.user);
   const addToCart = useAddToCart();
   const isBuyer = user?.role === "BUYER";
-  const isProducer = user?.role === "PRODUCER";
   const defaultAddress = user?.addresses?.find((a) => a.isDefault) ?? user?.addresses?.[0];
-  const firstName = user?.name?.split(" ")[0] ?? "";
 
   const [category, setCategory] = useState<string | null>(null);
 
@@ -68,53 +132,12 @@ export default function Home() {
   const products = productsData?.products || [];
   const surplus = surplusData?.products || [];
   const categoryName = categories.find((c) => c.slug === category)?.name;
-  const place = defaultAddress
-    ? `${defaultAddress.vereda ? `${defaultAddress.vereda}, ` : ""}${defaultAddress.municipio}`
-    : "Nariño";
 
   const header = (
     <View style={{ gap: spacing[6], paddingBottom: spacing[4] }}>
       {/* Saludo + ubicación + avatar */}
       <View style={{ paddingHorizontal: GUTTER, paddingTop: spacing[2], gap: spacing[4] }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
-          <View style={{ flex: 1, gap: 2 }}>
-            <Text style={[type.footnote, { color: t.textSecondary }]}>
-              {greeting()}
-              {firstName ? `, ${firstName}` : ""}
-            </Text>
-            <Pressable
-              onPress={() => router.push("/(tabs)/profile")}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={`${isProducer ? "Vendiendo desde" : "Entregar en"} ${place}. Cambiar`}
-              style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, opacity: pressed ? 0.6 : 1 })}
-            >
-              <Icon name="location" size={16} color={t.primary} />
-              <Text style={[type.headline, { color: t.textPrimary, flexShrink: 1 }]} numberOfLines={1}>
-                {place}
-              </Text>
-              <Icon name="chevron-down" size={16} color={t.textSecondary} />
-            </Pressable>
-          </View>
-          <Pressable
-            onPress={() => router.push("/(tabs)/profile")}
-            accessibilityRole="button"
-            accessibilityLabel="Mi perfil"
-            style={({ pressed }) => ({
-              width: 48,
-              height: 48,
-              borderRadius: 24,
-              backgroundColor: t.primary,
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.8 : 1,
-            })}
-          >
-            <Text style={{ color: t.onPrimary, fontSize: 17, fontWeight: "700" }}>
-              {user?.name?.charAt(0).toUpperCase() || "M"}
-            </Text>
-          </Pressable>
-        </View>
+        <GreetingRow placeLabel="Entregar en" place={placeOf(defaultAddress)} />
 
         {/* Acceso a búsqueda */}
         <Pressable
@@ -138,35 +161,6 @@ export default function Home() {
         </Pressable>
       </View>
 
-      {/* Productor: atajo a publicar y a sus ventas */}
-      {isProducer ? (
-        <View
-          style={{
-            marginHorizontal: GUTTER,
-            padding: spacing[5],
-            borderRadius: radius.xl + 4,
-            backgroundColor: t.primaryLight,
-            gap: spacing[3],
-          }}
-        >
-          <View style={{ gap: spacing[1] }}>
-            <Text style={[type.headline, { color: t.textPrimary }]}>¿Tienes cosecha lista?</Text>
-            <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
-              Publícala en minutos y véndela directo, sin intermediarios.
-            </Text>
-          </View>
-          <View style={{ flexDirection: "row", gap: spacing[2] }}>
-            <Button
-              title="Publicar cosecha"
-              size="sm"
-              icon={<Icon name="add" size={16} color={t.onPrimary} />}
-              onPress={() => router.push("/publicar-cosecha")}
-            />
-            <Button title="Mis ventas" size="sm" variant="outline" onPress={() => router.push("/(tabs)/orders")} />
-          </View>
-        </View>
-      ) : null}
-
       <Banner
         title="Cosecha que no se pierde"
         subtitle="Descuentos directos cuando al productor le sobra. Apoyas el campo y ahorras."
@@ -186,11 +180,11 @@ export default function Home() {
             horizontal
             showsHorizontalScrollIndicator={false}
             decelerationRate="fast"
-            snapToInterval={152 + spacing[3]}
+            snapToInterval={CAROUSEL_CARD + spacing[3]}
             contentContainerStyle={{ paddingHorizontal: GUTTER, gap: spacing[3] }}
           >
             {surplus.map((p) => (
-              <View key={p.id} style={{ width: 152 }}>
+              <View key={p.id} style={{ width: CAROUSEL_CARD }}>
                 <ProductCard
                   product={p}
                   onPress={() => router.push(`/producto/${p.id}`)}
@@ -267,5 +261,179 @@ export default function Home() {
         )}
       />
     </SafeAreaView>
+  );
+}
+
+/**
+ * Inicio del productor: publicar es lo primero, luego lo que hay que despachar
+ * y lo que ya está a la venta. Una decisión por bloque, para usarlo desde el campo.
+ */
+function ProducerHome() {
+  const router = useRouter();
+  const t = useTheme();
+  const user = useAuth((s) => s.user);
+  const { advance, advancingId } = useAdvanceOrder();
+  const farm =
+    user?.addresses?.find((a) => a.label === "Finca") ??
+    user?.addresses?.find((a) => a.isDefault) ??
+    user?.addresses?.[0];
+
+  const orders = useQuery({
+    queryKey: ["orders"],
+    queryFn: getMyOrders,
+    // El comprador crea pedidos desde el otro lado
+    refetchInterval: 15_000,
+  });
+
+  const products = useQuery({
+    queryKey: ["products", "producer", user?.id],
+    queryFn: () => getProducts({ producerId: user!.id, limit: 20 }),
+    enabled: !!user?.id,
+  });
+
+  const pending = (orders.data ?? []).filter((o) => o.status !== "DELIVERED" && o.status !== "CANCELLED");
+  const listed = products.data?.products ?? [];
+  const refreshing = orders.isRefetching || products.isRefetching;
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
+      <ScrollView
+        contentContainerStyle={{ gap: spacing[8], paddingTop: spacing[2], paddingBottom: spacing[12] }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              orders.refetch();
+              products.refetch();
+            }}
+            tintColor={t.primary}
+          />
+        }
+      >
+        <View style={{ paddingHorizontal: GUTTER, gap: spacing[6] }}>
+          <GreetingRow placeLabel="Vendiendo desde" place={placeOf(farm)} />
+
+          {/* Acción principal: publicar */}
+          <View style={{ gap: spacing[3] }}>
+            <View style={{ gap: spacing[1] }}>
+              <Text style={[type.title, { color: t.textPrimary }]} accessibilityRole="header">
+                ¿Tienes cosecha lista?
+              </Text>
+              <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
+                Publícala en minutos y véndela directo, sin intermediarios.
+              </Text>
+            </View>
+            <Button
+              title="Publicar cosecha"
+              size="lg"
+              full
+              icon={<Icon name="add" size={20} color={t.onPrimary} />}
+              onPress={() => router.push("/publicar-cosecha")}
+            />
+          </View>
+        </View>
+
+        {/* Pedidos por atender */}
+        <View>
+          <SectionHeader
+            title={pending.length > 0 ? `Pedidos por atender (${pending.length})` : "Pedidos por atender"}
+            action={(orders.data?.length ?? 0) > 0 ? "Ver ventas" : undefined}
+            onAction={() => router.push("/(tabs)/orders")}
+          />
+          <View style={{ paddingHorizontal: GUTTER, gap: spacing[3] }}>
+            {orders.isLoading ? (
+              <LoadingState label="Cargando tus ventas…" />
+            ) : orders.isError ? (
+              <ErrorState error={orders.error} onRetry={() => orders.refetch()} retrying={orders.isRefetching} />
+            ) : pending.length === 0 ? (
+              <HomeNote
+                icon="receipt-outline"
+                title="No tienes pedidos por atender"
+                body="Cuando alguien compre tu cosecha, el pedido aparecerá aquí para que lo prepares y lo despaches."
+              />
+            ) : (
+              <>
+                {pending.slice(0, HOME_ORDERS).map((o) => (
+                  <OrderCard
+                    key={o.id}
+                    order={o}
+                    isBuyer={false}
+                    userId={user?.id}
+                    onPress={() => router.push(`/seguimiento/${o.id}`)}
+                    onAdvance={advance}
+                    advancing={advancingId === o.id}
+                  />
+                ))}
+                {pending.length > HOME_ORDERS ? (
+                  <Button
+                    title={`Ver los ${pending.length} pedidos`}
+                    variant="outline"
+                    full
+                    onPress={() => router.push("/(tabs)/orders")}
+                  />
+                ) : null}
+              </>
+            )}
+          </View>
+        </View>
+
+        {/* Cosechas publicadas */}
+        <View>
+          <SectionHeader
+            title={listed.length > 0 ? `Tus cosechas a la venta (${listed.length})` : "Tus cosechas a la venta"}
+          />
+          {products.isLoading ? (
+            <LoadingState label="Cargando tus cosechas…" />
+          ) : products.isError ? (
+            <ErrorState error={products.error} onRetry={() => products.refetch()} retrying={products.isRefetching} />
+          ) : listed.length === 0 ? (
+            <View style={{ paddingHorizontal: GUTTER }}>
+              <HomeNote
+                icon="leaf-outline"
+                title="Aún no tienes cosechas publicadas"
+                body="Publica la primera y aparecerá en el catálogo para los compradores."
+              />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              decelerationRate="fast"
+              snapToInterval={CAROUSEL_CARD + spacing[3]}
+              contentContainerStyle={{ paddingHorizontal: GUTTER, gap: spacing[3] }}
+            >
+              {listed.map((p) => (
+                <View key={p.id} style={{ width: CAROUSEL_CARD }}>
+                  <ProductCard product={p} onPress={() => router.push(`/producto/${p.id}`)} />
+                </View>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/** Estado vacío corto dentro de una sección del inicio. */
+function HomeNote({ icon, title, body }: { icon: "receipt-outline" | "leaf-outline"; title: string; body: string }) {
+  const t = useTheme();
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        gap: spacing[3],
+        padding: spacing[4],
+        borderRadius: radius.lg,
+        backgroundColor: t.bgSecondary,
+      }}
+    >
+      <Icon name={icon} size={22} color={t.textSecondary} />
+      <View style={{ flex: 1, gap: 2 }}>
+        <Text style={[type.callout, { color: t.textPrimary }]}>{title}</Text>
+        <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>{body}</Text>
+      </View>
+    </View>
   );
 }
