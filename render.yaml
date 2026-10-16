@@ -30,13 +30,6 @@ services:
       # Neon → Connection string (con ?sslmode=require)
       - key: DATABASE_URL
         sync: false
-      # Brevo → SMTP & API → API Keys; el remitente verificado en Senders
-      - key: BREVO_API_KEY
-        sync: false
-      - key: MAIL_FROM_EMAIL
-        sync: false
-      - key: MAIL_FROM_NAME
-        value: MercaJusto
       # Cloudinary → Dashboard
       - key: CLOUDINARY_CLOUD_NAME
         sync: false

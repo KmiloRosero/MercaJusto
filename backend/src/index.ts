@@ -15,7 +15,6 @@ import { uploadsRouter } from "./routes/uploads";
 import { routesRouter } from "./routes/routes";
 import { metricsRouter } from "./routes/metrics";
 import { paymentsRouter } from "./routes/payments";
-import { otpMode } from "./lib/otp";
 import { cloudinaryEnabled } from "./lib/cloudinary";
 import { wompiEnabled, wompiSandbox } from "./lib/wompi";
 import { expireUnpaidOrders } from "./lib/payments";
@@ -64,7 +63,6 @@ app.listen(PORT, () => {
   console.log("🛒 MercaJusto API");
   console.log(`   http://localhost:${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/health`);
-  console.log(`   Códigos de acceso: ${otpMode === "email" ? "correo con Brevo" : otpMode === "dev" ? "modo desarrollo (en pantalla)" : "SIN CONFIGURAR"}`);
   console.log(`   Fotos: ${cloudinaryEnabled ? "Cloudinary" : "disco local"}`);
   console.log(`   Pagos en línea: ${wompiEnabled ? `Wompi (${wompiSandbox ? "pruebas" : "producción"})` : "SIN CONFIGURAR"}`);
   // IPs de la red local: úsalas en EXPO_PUBLIC_API_URL para un celular físico

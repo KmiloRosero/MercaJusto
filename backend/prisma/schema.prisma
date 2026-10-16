@@ -4,7 +4,8 @@
 // Los "enums" se guardan como String con los valores documentados en cada campo.
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
@@ -18,10 +19,10 @@ datasource db {
 
 model User {
   id           String   @id @default(cuid())
-  // El correo es la identidad para entrar (código por correo).
-  // El celular es el contacto para entregas y para Wompi; no se verifica.
-  email        String?  @unique
-  phone        String
+  // Se entra con el celular y una contraseña (solo se guarda su hash).
+  phone        String   @unique
+  passwordHash String
+  email        String?
   name         String
   role         String   @default("BUYER") // "BUYER" | "PRODUCER" | "COURIER"
   avatarUrl    String?
@@ -74,19 +75,6 @@ model Address {
 
   @@index([userId])
   @@index([municipio])
-}
-
-// Códigos de acceso enviados por correo. Solo se guarda el hash del código.
-model OtpCode {
-  id         String    @id @default(cuid())
-  email      String
-  codeHash   String
-  attempts   Int       @default(0)
-  expiresAt  DateTime
-  consumedAt DateTime?
-  createdAt  DateTime  @default(now())
-
-  @@index([email, consumedAt])
 }
 
 // ═══════════════════════════════════════════

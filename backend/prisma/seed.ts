@@ -1,6 +1,7 @@
 // Seed con datos realistas de Nariño.
 // Ejecutar: npm run db:seed
 import { PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/password";
 
 const prisma = new PrismaClient();
 
@@ -15,7 +16,6 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.address.deleteMany();
-  await prisma.otpCode.deleteMany();
   await prisma.user.deleteMany();
 
   console.log("👥 Creando usuarios...");
@@ -24,9 +24,13 @@ async function main() {
   // USUARIOS
   // ═══════════════════════════════════════════
 
+  // Todas las cuentas demo entran con la contraseña "mercajusto".
+  const demoPassword = await hashPassword("mercajusto");
+
   const buyer = await prisma.user.create({
     data: {
       phone: "+573001234567",
+      passwordHash: demoPassword,
       name: "María Rodríguez",
       role: "BUYER",
       email: "maria@example.com",
@@ -39,6 +43,7 @@ async function main() {
   const producer1 = await prisma.user.create({
     data: {
       phone: "+573104567890",
+      passwordHash: demoPassword,
       name: "José Tulio Enríquez",
       role: "PRODUCER",
       email: "donjose@example.com",
@@ -50,6 +55,7 @@ async function main() {
   const producer2 = await prisma.user.create({
     data: {
       phone: "+573156789012",
+      passwordHash: demoPassword,
       name: "Rosa Amelia Chávez",
       role: "PRODUCER",
       rating: 5.0,
@@ -60,6 +66,7 @@ async function main() {
   const producer3 = await prisma.user.create({
     data: {
       phone: "+573207890123",
+      passwordHash: demoPassword,
       name: "Luis Alberto Burbano",
       role: "PRODUCER",
       rating: 4.6,
@@ -70,6 +77,7 @@ async function main() {
   const producer4 = await prisma.user.create({
     data: {
       phone: "+573258901234",
+      passwordHash: demoPassword,
       name: "Carmen Inés Jojoa",
       role: "PRODUCER",
       rating: 4.9,
@@ -80,6 +88,7 @@ async function main() {
   const courier = await prisma.user.create({
     data: {
       phone: "+573011112222",
+      passwordHash: demoPassword,
       name: "Wilson López",
       role: "COURIER",
       rating: 4.7,

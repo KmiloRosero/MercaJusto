@@ -72,12 +72,12 @@ export default function Onboarding() {
     listRef.current?.scrollTo({ x: i * width, animated: true });
   };
 
-  const toLogin = (r?: Role | null) =>
-    router.push({ pathname: "/(auth)/login", params: { role: r ?? "BUYER" } });
+  const toLogin = (mode: "login" | "register", r?: Role | null) =>
+    router.push({ pathname: "/(auth)/login", params: { mode, role: r ?? "BUYER" } });
 
   const onPrimary = () => {
     if (!isLast) return goTo(index + 1);
-    if (role) toLogin(role);
+    if (role) toLogin("register", role);
   };
 
   const primaryLabel = !isLast
@@ -194,7 +194,7 @@ export default function Onboarding() {
           trailingIcon={!isLast || role ? <Icon name="arrow-forward" size={18} color={t.onPrimary} /> : undefined}
         />
         <Pressable
-          onPress={() => toLogin(role)}
+          onPress={() => toLogin("login", role)}
           accessibilityRole="button"
           style={({ pressed }) => ({ alignItems: "center", justifyContent: "center", minHeight: 48, opacity: pressed ? 0.5 : 1 })}
         >

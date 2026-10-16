@@ -2,10 +2,11 @@
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "phone" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "email" TEXT,
     "name" TEXT NOT NULL,
     "role" TEXT NOT NULL DEFAULT 'BUYER',
     "avatarUrl" TEXT,
-    "email" TEXT,
     "rating" DOUBLE PRECISION NOT NULL DEFAULT 0,
     "ratingCount" INTEGER NOT NULL DEFAULT 0,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -40,19 +41,6 @@ CREATE TABLE "Address" (
     "isDefault" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Address_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "OtpCode" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT,
-    "phone" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3) NOT NULL,
-    "consumedAt" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "OtpCode_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -187,9 +175,6 @@ CREATE INDEX "Address_userId_idx" ON "Address"("userId");
 CREATE INDEX "Address_municipio_idx" ON "Address"("municipio");
 
 -- CreateIndex
-CREATE INDEX "OtpCode_phone_consumedAt_idx" ON "OtpCode"("phone", "consumedAt");
-
--- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
@@ -250,9 +235,6 @@ ALTER TABLE "PushToken" ADD CONSTRAINT "PushToken_userId_fkey" FOREIGN KEY ("use
 ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "OtpCode" ADD CONSTRAINT "OtpCode_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Product" ADD CONSTRAINT "Product_producerId_fkey" FOREIGN KEY ("producerId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -296,3 +278,4 @@ ALTER TABLE "Review" ADD CONSTRAINT "Review_fromUserId_fkey" FOREIGN KEY ("fromU
 
 -- AddForeignKey
 ALTER TABLE "Review" ADD CONSTRAINT "Review_toUserId_fkey" FOREIGN KEY ("toUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+

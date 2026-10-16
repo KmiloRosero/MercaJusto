@@ -101,25 +101,19 @@ api.interceptors.response.use(
 // AUTH
 // ═══════════════════════════════════════════
 
-export async function requestOtp(email: string): Promise<{ message: string; devCode?: string }> {
-  const { data } = await api.post("/auth/otp", { email });
-  return data;
-}
-
-export async function verifyOtp(email: string, code: string): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/verify", { email, code });
+export async function login(phone: string, password: string): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/login", { phone, password });
   await tokenStorage.set(data.token);
   return data;
 }
 
-/** Crea la cuenta de un correo recién verificado (el token llega con USUARIO_NUEVO). */
-export async function registerAccount(
-  registrationToken: string,
-  name: string,
-  phone: string,
-  role: Role
-): Promise<AuthVerifyResponse> {
-  const { data } = await api.post("/auth/verify", { registrationToken, name, phone, role });
+export async function register(input: {
+  name: string;
+  phone: string;
+  password: string;
+  role: Role;
+}): Promise<AuthVerifyResponse> {
+  const { data } = await api.post("/auth/register", input);
   await tokenStorage.set(data.token);
   return data;
 }
@@ -441,10 +435,6 @@ export function isRetryableError(err: unknown): boolean {
 }
 
 /** Datos extra que el backend manda junto al error (p. ej. el token de registro). */
-export function apiErrorDetails<T = Record<string, unknown>>(err: unknown): T | undefined {
-  return err instanceof AxiosError ? (err.response?.data as { details?: T } | undefined)?.details : undefined;
-}
-
 export function apiErrorMessage(err: unknown): string {
   const info = describeError(err);
   // Los rechazos del backend (validación, permisos) ya traen su propio mensaje.
