@@ -412,6 +412,9 @@ Filtros de categoría que responden con color, no con movimiento.
 
 ### Inputs / Fields
 - **Búsqueda del Home:** acceso de 50px a 14px de radio, `bgSecondary`, ícono de lupa de 18px en `textSecondary` y placeholder Body en `textTertiary`. Opacidad 0.8 al presionar.
+- **Campo de texto:** 48px de alto a 12px (`rounded.md`), `bgInput`, borde 1.5px `border`, padding lateral 16px y texto 16px en `textPrimary`; placeholder en `textTertiary`. La etiqueta va encima en Footnote 500 `textSecondary`, a 6px, y la ayuda debajo en Footnote `textTertiary`.
+- **Celular:** el prefijo `+57` es un recuadro fijo con el mismo estilo del campo, a la izquierda y separado 8px; el número solo acepta 10 dígitos.
+- **Contraseña (`PasswordInput`):** campo de texto con un ojo de 20px en `textSecondary` a la derecha, dentro de un objetivo táctil de 48px, para mostrarla u ocultarla mientras se escribe.
 - **Foco:** `borderFocus` (= primary).
 
 ### Navigation
@@ -420,7 +423,10 @@ Filtros de categoría que responden con color, no con movimiento.
 - **Encabezado de sección:** título Headline y acción en Footnote 600 `primary` con chevron.
 
 ### Snackbar
-Aviso breve en `inverseSurface` con texto 14px 600 `onInverseSurface`, ícono de 18px (en error, `dangerLight`), radio `rounded.sm`, mínimo 48px, sombra lg. Entra y sale con fundido hacia abajo de 200ms y se cierra solo a los 2,6 segundos o al tocarlo.
+Aviso breve en `inverseSurface` con texto 14px 600 `onInverseSurface`, ícono de 18px (en error, `dangerLight`), radio `rounded.sm`, mínimo 48px, sombra lg. Entra y sale con fundido hacia abajo de 200ms y se cierra solo a los 2,6 segundos o al tocarlo. Con acción (p. ej. "Deshacer" al quitar algo de la canasta), la acción va a la derecha en 14px 800 `inversePrimary`, con objetivo de 48px, y el aviso dura el doble. En pantallas con barra de acciones fija, se ancla encima de ella (`useSnackbarAnchor`).
+
+### Estado del pago (seguimiento)
+Píldora con el método y el estado ("En línea · Pagado"): "Pagado" en `success`, "Rechazado" en `danger`, y "Pendiente" o "Contraentrega" en `warning`. Mientras un pedido en línea espera el pago, el encabezado dice "Esperando tu pago" y la acción principal es "Pagar ahora · $total"; si Wompi lo rechaza, "Pago rechazado" e "Intentar pagar de nuevo".
 
 ### Banner del Home (firma)
 Bloque en verde campo (`primary` con tinta `onPrimary`; en oscuro `primaryLight` con `onPrimaryLight`, para no encender un bloque claro), radio 24px, padding 20px. Título en Title y apoyo en Footnote 400, ambos a 82% de ancho. Una hoja de 168px recortada en la esquina inferior derecha como marca de agua a 16% de opacidad. CTA en píldora de 36px invertida (`onPrimary` sobre `primary` en claro; `primary` sobre `onPrimary` en oscuro) con flecha.
