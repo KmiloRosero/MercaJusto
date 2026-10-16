@@ -1,16 +1,21 @@
 import { randomUUID } from "crypto";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 import path from "path";
 import { NextFunction, Request, Response, Router } from "express";
 import multer from "multer";
 import { requireAuth } from "../middleware/auth";
-import { BadRequestError } from "../middleware/errorHandler";
+import { BadRequestError, HttpError } from "../middleware/errorHandler";
+import { cloudinaryEnabled, uploadToCloudinary } from "../lib/cloudinary";
 
 export const uploadsRouter = Router();
 
-// En producción apunta a un volumen persistente (p. ej. /data/uploads)
+// Sin Cloudinary (desarrollo local) las fotos se guardan en este directorio.
 export const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads"));
 if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
+
+if (!cloudinaryEnabled && process.env.NODE_ENV === "production") {
+  console.warn("⚠️ Cloudinary no está configurado: las fotos se guardan en el disco del servidor y se pierden al reiniciar.");
+}
 
 // Si PUBLIC_URL no está definido se usa el host con el que llegó la petición,
 // así las fotos funcionan aunque cambie la IP de la red local.
@@ -27,16 +32,9 @@ const ALLOWED: Record<string, string> = {
 };
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const ext = ALLOWED[file.mimetype] ?? ".jpg";
-    cb(null, `${Date.now()}-${randomUUID()}${ext}`);
-  },
-});
-
+// En memoria: de ahí va a Cloudinary o, en local, al disco.
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: MAX_SIZE },
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED[file.mimetype]) {
@@ -58,7 +56,24 @@ function uploadSingle(req: Request, res: Response, next: NextFunction) {
 }
 
 // POST /api/uploads — sube una imagen y devuelve su URL pública
-uploadsRouter.post("/", requireAuth, uploadSingle, (req, res) => {
-  if (!req.file) throw new BadRequestError("No se recibió ningún archivo");
-  res.status(201).json({ url: `${publicBaseUrl(req)}/uploads/${req.file.filename}` });
+uploadsRouter.post("/", requireAuth, uploadSingle, async (req, res, next) => {
+  try {
+    if (!req.file) throw new BadRequestError("No se recibió ningún archivo");
+
+    if (cloudinaryEnabled) {
+      try {
+        const url = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
+        return res.status(201).json({ url });
+      } catch (err) {
+        console.error("❌ Subida a Cloudinary:", err);
+        throw new HttpError(502, "No pudimos guardar la foto. Intenta de nuevo.");
+      }
+    }
+
+    const filename = `${Date.now()}-${randomUUID()}${ALLOWED[req.file.mimetype]}`;
+    writeFileSync(path.join(UPLOAD_DIR, filename), req.file.buffer);
+    res.status(201).json({ url: `${publicBaseUrl(req)}/uploads/${filename}` });
+  } catch (err) {
+    next(err);
+  }
 });

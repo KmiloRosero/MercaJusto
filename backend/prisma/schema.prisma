@@ -1,26 +1,20 @@
 // MercaJusto — Esquema de base de datos
 //
-// NOTA SOBRE MIGRACIÓN A POSTGRES+POSTGIS:
-// Actualmente usamos SQLite para desarrollo rápido. Cuando toque implementar
-// optimización de rutas reales (fase 3), cambiar:
-//   provider = "postgresql"
-// y convertir los campos `latitude`/`longitude` a tipo `Unsupported("geometry(Point,4326)")`
-// para habilitar consultas espaciales (ST_DWithin, ST_Distance).
+// Base de datos: PostgreSQL (Neon en producción, Docker en local).
+// Los "enums" se guardan como String con los valores documentados en cada campo.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // ═══════════════════════════════════════════
 // USUARIOS
 // ═══════════════════════════════════════════
-// Nota: SQLite no soporta enums nativos en Prisma; usamos String con
-// valores canónicos documentados arriba de cada campo.
 
 model User {
   id           String   @id @default(cuid())
@@ -184,8 +178,12 @@ model Order {
   platformFee     Int      @default(0) // comisión MercaJusto
   total           Int
 
-  paymentMethod   String   @default("NEQUI") // NEQUI | DAVIPLATA | CASH
+  paymentMethod   String   @default("CASH") // WOMPI (Nequi, PSE, tarjeta) | CASH
   paymentStatus   String   @default("PENDING") // PENDING | PAID | FAILED
+  // Wompi: referencia del último intento de pago y transacción que lo resolvió
+  paymentReference     String?   @unique
+  paymentTransactionId String?
+  paidAt               DateTime?
 
   deliveryAddressId String
   deliveryAddress   Address @relation(fields: [deliveryAddressId], references: [id])

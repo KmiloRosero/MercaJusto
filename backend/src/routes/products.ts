@@ -37,8 +37,8 @@ productsRouter.get("/", async (req, res, next) => {
     }
     if (q.search) {
       where.OR = [
-        { name: { contains: q.search } },
-        { description: { contains: q.search } },
+        { name: { contains: q.search, mode: "insensitive" } },
+        { description: { contains: q.search, mode: "insensitive" } },
       ];
     }
 
