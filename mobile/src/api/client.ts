@@ -119,6 +119,10 @@ export async function register(input: {
   return data;
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  await api.post("/auth/password", { currentPassword, newPassword });
+}
+
 export async function logout(): Promise<void> {
   await tokenStorage.clear();
 }

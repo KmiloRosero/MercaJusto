@@ -264,6 +264,11 @@ export default function Profile() {
             onPress={() => router.push("/(tabs)/orders")}
           />
           <MenuItem
+            icon="lock-closed-outline"
+            label="Cambiar contraseña"
+            onPress={() => router.push("/cambiar-contrasena")}
+          />
+          <MenuItem
             icon="card-outline"
             label="Métodos de pago"
             onPress={() =>

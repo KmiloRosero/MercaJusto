@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../src/components/Button";
 import { TopBar } from "../../src/components/TopBar";
 import { Icon } from "../../src/components/Icon";
+import { PasswordInput } from "../../src/components/PasswordInput";
 import { fontSize, radius, spacing, useTheme } from "../../src/theme";
 import { apiErrorMessage, login, register } from "../../src/api/client";
 import type { Role } from "../../src/api/types";
@@ -41,7 +42,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<Role>(
     ROLES.some((r) => r.key === params.role) ? (params.role as Role) : "BUYER"
   );
@@ -199,31 +199,14 @@ export default function Login() {
 
             <View>
               <Text style={labelStyle}>Contraseña</Text>
-              <View style={{ justifyContent: "center" }}>
-                <TextInput
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder={isRegister ? `Mínimo ${MIN_PASSWORD} caracteres` : "Tu contraseña"}
-                  placeholderTextColor={t.textTertiary}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete={isRegister ? "new-password" : "current-password"}
-                  textContentType={isRegister ? "newPassword" : "password"}
-                  onSubmitEditing={isRegister ? undefined : submit}
-                  returnKeyType={isRegister ? "next" : "go"}
-                  style={{ ...inputStyle, paddingRight: 52 }}
-                />
-                <Pressable
-                  onPress={() => setShowPassword((v) => !v)}
-                  accessibilityRole="button"
-                  accessibilityLabel={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  hitSlop={8}
-                  style={{ position: "absolute", right: 0, width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
-                >
-                  <Icon name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={t.textSecondary} />
-                </Pressable>
-              </View>
+              <PasswordInput
+                kind={isRegister ? "new" : "current"}
+                value={password}
+                onChangeText={setPassword}
+                placeholder={isRegister ? `Mínimo ${MIN_PASSWORD} caracteres` : "Tu contraseña"}
+                onSubmitEditing={isRegister ? undefined : submit}
+                returnKeyType={isRegister ? "next" : "go"}
+              />
             </View>
 
             {isRegister ? (

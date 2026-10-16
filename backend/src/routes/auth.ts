@@ -4,7 +4,8 @@ import { prisma } from "../lib/prisma";
 import { signToken } from "../lib/jwt";
 import { checkPassword, dummyPasswordHash, hashPassword } from "../lib/password";
 import { createRateLimiter } from "../lib/rateLimit";
-import { HttpError, UnauthorizedError } from "../middleware/errorHandler";
+import { BadRequestError, HttpError, UnauthorizedError } from "../middleware/errorHandler";
+import { requireAuth } from "../middleware/auth";
 export const authRouter = Router();
 
 // El correo se guarda en minúsculas para que "Ana@Gmail.com" y "ana@gmail.com" sean la misma cuenta.
@@ -24,6 +25,10 @@ const passwordField = z
 
 // Contra quien prueba contraseñas: 10 intentos cada 15 minutos por correo y 50 por hora por IP.
 const limitEmail = createRateLimiter([
+  { max: 10, windowMs: 15 * 60_000, message: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." },
+]);
+// Cambiar la contraseña pide la actual: mismo límite, contado por cuenta.
+const limitPasswordChange = createRateLimiter([
   { max: 10, windowMs: 15 * 60_000, message: "Demasiados intentos. Espera 15 minutos e intenta de nuevo." },
 ]);
 const limitIp = createRateLimiter([
@@ -90,6 +95,36 @@ authRouter.post("/login", async (req, res, next) => {
     if (!user.isActive) throw new UnauthorizedError("Esta cuenta está desactivada");
 
     res.json(await session(user.id, user.role));
+  } catch (err) {
+    next(err);
+  }
+});
+
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, "Escribe tu contraseña actual").max(128),
+  newPassword: passwordField,
+});
+
+// POST /api/auth/password — cambia la contraseña de la sesión actual
+authRouter.post("/password", requireAuth, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = passwordChangeSchema.parse(req.body);
+    const userId = req.user!.userId;
+    limitPasswordChange(userId);
+
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!(await checkPassword(currentPassword, user.passwordHash))) {
+      throw new BadRequestError("La contraseña actual no es correcta");
+    }
+    if (currentPassword === newPassword) {
+      throw new BadRequestError("La contraseña nueva tiene que ser distinta de la actual");
+    }
+
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(newPassword) } });
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
