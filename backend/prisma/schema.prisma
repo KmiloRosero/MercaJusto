@@ -19,10 +19,12 @@ datasource db {
 
 model User {
   id           String   @id @default(cuid())
-  // Se entra con el celular y una contraseña (solo se guarda su hash).
-  phone        String   @unique
+  // Se entra con el correo y una contraseña (solo se guarda su hash).
+  // Es opcional solo para las cuentas creadas antes de entrar con correo.
+  email        String?  @unique
   passwordHash String
-  email        String?
+  // Contacto para entregas y para Wompi.
+  phone        String
   name         String
   role         String   @default("BUYER") // "BUYER" | "PRODUCER" | "COURIER"
   avatarUrl    String?

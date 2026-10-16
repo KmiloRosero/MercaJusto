@@ -28,6 +28,7 @@ const ROLES: { key: Role; label: string; icon: string }[] = [
 ];
 
 const MIN_PASSWORD = 8;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Login() {
   const router = useRouter();
@@ -37,6 +38,7 @@ export default function Login() {
 
   const [mode, setMode] = useState<Mode>(params.mode === "login" ? "login" : "register");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +48,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const isRegister = mode === "register";
+  const cleanEmail = email.trim().toLowerCase();
 
   const inputStyle = {
     height: 48,
@@ -69,7 +72,11 @@ export default function Login() {
       showAlert("Falta tu nombre", "Escribe tu nombre para crear la cuenta.");
       return;
     }
-    if (!/^3\d{9}$/.test(phone)) {
+    if (!EMAIL_RE.test(cleanEmail)) {
+      showAlert("Revisa tu correo", "Escríbelo completo, por ejemplo nombre@gmail.com.");
+      return;
+    }
+    if (isRegister && !/^3\d{9}$/.test(phone)) {
       showAlert("Revisa tu celular", "Escribe tu celular de 10 dígitos; empieza por 3.");
       return;
     }
@@ -85,14 +92,14 @@ export default function Login() {
     setLoading(true);
     try {
       const res = isRegister
-        ? await register({ name: name.trim(), phone: `+57${phone}`, password, role })
-        : await login(`+57${phone}`, password);
+        ? await register({ name: name.trim(), email: cleanEmail, phone: `+57${phone}`, password, role })
+        : await login(cleanEmail, password);
       await setSession(res.user, res.token);
       router.replace("/(tabs)/home");
     } catch (err) {
       const message = apiErrorMessage(err);
       await showAlert(isRegister ? "No se pudo crear la cuenta" : "No se pudo entrar", message);
-      // El celular ya tiene cuenta: se pasa a iniciar sesión con ese número.
+      // El correo ya tiene cuenta: se pasa a iniciar sesión con ese correo.
       if (isRegister && message.includes("Inicia sesión")) switchMode("login");
     } finally {
       setLoading(false);
@@ -129,8 +136,8 @@ export default function Login() {
             </Text>
             <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, textAlign: "center" }}>
               {isRegister
-                ? "Con tu celular y una contraseña. Sin códigos ni correos."
-                : "Con el celular y la contraseña con que te registraste."}
+                ? "Con tu correo y una contraseña."
+                : "Con el correo y la contraseña con que te registraste."}
             </Text>
           </View>
 
@@ -151,23 +158,44 @@ export default function Login() {
             ) : null}
 
             <View>
-              <Text style={labelStyle}>Celular</Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-                <View style={{ ...inputStyle, justifyContent: "center" }}>
-                  <Text style={{ color: t.textPrimary, fontSize: fontSize.base }}>+57</Text>
-                </View>
-                <TextInput
-                  value={phone}
-                  onChangeText={(v) => setPhone(v.replace(/\D/g, "").slice(0, 10))}
-                  placeholder="300 123 4567"
-                  placeholderTextColor={t.textTertiary}
-                  keyboardType="phone-pad"
-                  autoComplete="tel"
-                  textContentType="telephoneNumber"
-                  style={{ ...inputStyle, flex: 1 }}
-                />
-              </View>
+              <Text style={labelStyle}>Correo electrónico</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="nombre@gmail.com"
+                placeholderTextColor={t.textTertiary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
+                textContentType={isRegister ? "emailAddress" : "username"}
+                style={inputStyle}
+              />
             </View>
+
+            {isRegister ? (
+              <View>
+                <Text style={labelStyle}>Celular</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+                  <View style={{ ...inputStyle, justifyContent: "center" }}>
+                    <Text style={{ color: t.textPrimary, fontSize: fontSize.base }}>+57</Text>
+                  </View>
+                  <TextInput
+                    value={phone}
+                    onChangeText={(v) => setPhone(v.replace(/\D/g, "").slice(0, 10))}
+                    placeholder="300 123 4567"
+                    placeholderTextColor={t.textTertiary}
+                    keyboardType="phone-pad"
+                    autoComplete="tel"
+                    textContentType="telephoneNumber"
+                    style={{ ...inputStyle, flex: 1 }}
+                  />
+                </View>
+                <Text style={{ fontSize: fontSize.sm, color: t.textTertiary, marginTop: 6 }}>
+                  Para coordinar las entregas.
+                </Text>
+              </View>
+            ) : null}
 
             <View>
               <Text style={labelStyle}>Contraseña</Text>
