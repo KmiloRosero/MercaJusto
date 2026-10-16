@@ -1,7 +1,8 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { radius, spacing, type, useTheme, useThemeScheme } from "../theme";
 import { Icon } from "./Icon";
+import { PressableScale } from "./PressableScale";
 
 interface BannerProps {
   title: string;
@@ -23,18 +24,17 @@ export function Banner({ title, subtitle, cta, onCta, iconName = "leaf" }: Banne
   const ctaGround = dark ? t.primary : t.onPrimary;
   const ctaInk = dark ? t.onPrimary : t.primary;
   return (
-    <Pressable
+    <PressableScale
       onPress={onCta}
       accessibilityRole="button"
-      style={({ pressed }) => ({
+      style={{
         marginHorizontal: spacing[5],
         borderRadius: radius.xl + 4,
         overflow: "hidden",
         backgroundColor: ground,
         padding: spacing[5],
         gap: spacing[2],
-        opacity: pressed ? 0.94 : 1,
-      })}
+      }}
     >
       {/* Marca de agua: hoja grande recortada en la esquina */}
       <View style={{ position: "absolute", right: -28, bottom: -32, opacity: 0.16 }}>
@@ -64,6 +64,6 @@ export function Banner({ title, subtitle, cta, onCta, iconName = "leaf" }: Banne
           <Icon name="arrow-forward" size={14} color={ctaInk} />
         </View>
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }

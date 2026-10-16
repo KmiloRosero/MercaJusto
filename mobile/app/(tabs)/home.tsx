@@ -25,6 +25,9 @@ import { useAddToCart } from "../../src/lib/useAddToCart";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
 
 import { ErrorState, LoadingState, ProductGridSkeleton } from "../../src/components/QueryState";
+import { PressableScale } from "../../src/components/PressableScale";
+import Animated from "react-native-reanimated";
+import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
 const GUTTER = spacing[5];
 const CAROUSEL_CARD = 152;
 /** Pedidos del inicio del productor; el resto queda en la pestaña Ventas. */
@@ -75,24 +78,24 @@ function GreetingRow({ placeLabel, place }: { placeLabel: string; place: string 
           <Icon name="chevron-down" size={16} color={t.textSecondary} />
         </Pressable>
       </View>
-      <Pressable
+      <PressableScale
+        scaleTo={0.95}
         onPress={() => router.push("/(tabs)/profile")}
         accessibilityRole="button"
         accessibilityLabel="Mi perfil"
-        style={({ pressed }) => ({
+        style={{
           width: 48,
           height: 48,
           borderRadius: 24,
           backgroundColor: t.primary,
           alignItems: "center",
           justifyContent: "center",
-          opacity: pressed ? 0.8 : 1,
-        })}
+        }}
       >
         <Text style={{ color: t.onPrimary, fontSize: 17, fontWeight: "700" }}>
           {user?.name?.charAt(0).toUpperCase() || "M"}
         </Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }
@@ -130,6 +133,7 @@ function BuyerHome() {
   });
 
   const products = productsData?.products || [];
+  const staggerIn = useFirstLoadStagger(products.length > 0);
   const surplus = surplusData?.products || [];
   const categoryName = categories.find((c) => c.slug === category)?.name;
 
@@ -140,10 +144,10 @@ function BuyerHome() {
         <GreetingRow placeLabel="Entregar en" place={placeOf(defaultAddress)} />
 
         {/* Acceso a búsqueda */}
-        <Pressable
+        <PressableScale
           onPress={() => router.push("/(tabs)/search")}
           accessibilityRole="search"
-          style={({ pressed }) => ({
+          style={{
             height: 50,
             borderRadius: radius.md + 2,
             backgroundColor: t.bgSecondary,
@@ -151,14 +155,13 @@ function BuyerHome() {
             alignItems: "center",
             gap: spacing[3],
             paddingHorizontal: spacing[4],
-            opacity: pressed ? 0.8 : 1,
-          })}
+          }}
         >
           <Icon name="search" size={18} color={t.textSecondary} />
           <Text style={[type.body, { color: t.textTertiary, flex: 1 }]} numberOfLines={1}>
             Busca papa, café, fresas…
           </Text>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <Banner
@@ -250,14 +253,14 @@ function BuyerHome() {
             </View>
           )
         }
-        renderItem={({ item }) => (
-          <View style={{ flex: 1, maxWidth: "50%" }}>
+        renderItem={({ item, index }) => (
+          <Animated.View entering={staggerIn(index)} style={{ flex: 1, maxWidth: "50%" }}>
             <ProductCard
               product={item}
               onPress={() => router.push(`/producto/${item.id}`)}
               onAdd={isBuyer ? () => addToCart(item.id, 1, item.name) : undefined}
             />
-          </View>
+          </Animated.View>
         )}
       />
     </SafeAreaView>

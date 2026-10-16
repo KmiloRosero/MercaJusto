@@ -7,12 +7,23 @@ import {
   View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeOut,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TopBar } from "../../src/components/TopBar";
 import { Button } from "../../src/components/Button";
 import { Pill } from "../../src/components/Pill";
 import { Icon } from "../../src/components/Icon";
-import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../../src/theme";
+import { fontSize, motion, radius, spacing, type, useTheme, formatCOP, shadow } from "../../src/theme";
 import { apiErrorMessage, getOrder, syncPayment, updateOrderStatus } from "../../src/api/client";
 import { payOnline } from "../../src/lib/payOnline";
 import { OrderStatus, PaymentMethod } from "../../src/api/types";
@@ -23,6 +34,7 @@ import MapPreview from "../../src/components/MapPreview";
 
 import { FieldTile } from "../../src/components/FieldTile";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
+import { PressableScale } from "../../src/components/PressableScale";
 const STEPS: { key: OrderStatus; label: string; icon: string; desc: string }[] = [
   { key: "CONFIRMED", label: "Pedido confirmado", icon: "checkmark-circle", desc: "El productor recibió tu pedido" },
   { key: "PREPARING", label: "Preparando", icon: "preparing", desc: "Están alistando tus productos" },
@@ -42,6 +54,30 @@ const STATUS_INDEX: Record<OrderStatus, number> = {
   IN_TRANSIT: 2,
   DELIVERED: 3,
   CANCELLED: -1 };
+
+// Pedido recién enviado: se ve una vez por compra, así que puede celebrarse un poco.
+const PLACED_ENTER = FadeInDown.duration(320).easing(Easing.bezier(...motion.easeOut));
+const PLACED_EXIT = FadeOut.duration(150);
+
+/** Check que aparece con un pequeño rebote, justo después del aviso. */
+function CheckPop({ color }: { color: string }) {
+  const reduceMotion = useReducedMotion();
+  const scale = useSharedValue(reduceMotion ? 1 : 0.6);
+  const opacity = useSharedValue(reduceMotion ? 1 : 0);
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    opacity.set(withDelay(140, withTiming(1, { duration: 160 })));
+    scale.set(withDelay(140, withSpring(1, { damping: 11, stiffness: 260 })));
+  }, [reduceMotion, opacity, scale]);
+
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value, transform: [{ scale: scale.value }] }));
+  return (
+    <Animated.View style={style}>
+      <Icon name="checkmark-circle" size={24} color={color} />
+    </Animated.View>
+  );
+}
 
 export default function Seguimiento() {
   const { id, nuevo } = useLocalSearchParams<{ id: string; nuevo?: string }>();
@@ -188,7 +224,9 @@ export default function Seguimiento() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[10] }}>
         {justPlaced && isBuyerView && !awaitingPayment ? (
-          <View
+          <Animated.View
+            entering={PLACED_ENTER}
+            exiting={PLACED_EXIT}
             accessibilityRole="alert"
             style={{
               margin: spacing[4],
@@ -199,7 +237,7 @@ export default function Seguimiento() {
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-              <Icon name="checkmark-circle" size={24} color={t.success} />
+              <CheckPop color={t.success} />
               <Text style={[type.headline, { flex: 1, color: t.textPrimary }]}>
                 ¡Pedido enviado{producerNames ? ` a ${producerNames}` : ""}!
               </Text>
@@ -217,7 +255,7 @@ export default function Seguimiento() {
             >
               <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.success }}>Entendido</Text>
             </Pressable>
-          </View>
+          </Animated.View>
         ) : null}
 
         {/* ═══ Mapa en vivo ═══ */}
@@ -303,21 +341,21 @@ export default function Seguimiento() {
                 </View>
               </View>
               {order.courier.phone ? (
-                <Pressable
+                <PressableScale
+                  scaleTo={0.95}
                   onPress={() => Linking.openURL(`tel:${order.courier!.phone}`)}
                   accessibilityRole="button"
                   accessibilityLabel={`Llamar a ${order.courier.name}`}
-                  style={({ pressed }) => ({
+                  style={{
                     width: 48,
                     height: 48,
                     borderRadius: radius.full,
                     backgroundColor: t.primary,
                     alignItems: "center",
-                    justifyContent: "center",
-                    opacity: pressed ? 0.8 : 1 })}
+                    justifyContent: "center" }}
                 >
                   <Icon name="call" size={20} color={t.onPrimary} />
-                </Pressable>
+                </PressableScale>
               ) : null}
             </View>
           ) : null}

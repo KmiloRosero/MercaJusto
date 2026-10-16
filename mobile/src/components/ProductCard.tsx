@@ -22,8 +22,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Presión: hundimiento rápido (respuesta inmediata) y regreso con resorte
 // interrumpible. Escalas pequeñas: es un gesto frecuente.
-const pressIn = { duration: 120, easing: Easing.bezier(...motion.easeOut) };
-const release = { damping: 18, stiffness: 320 };
+const pressIn = { duration: motion.pressIn, easing: Easing.bezier(...motion.easeOut) };
+const release = motion.release;
 
 interface ProductCardProps {
   product: Product;

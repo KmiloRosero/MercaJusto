@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { CartItem } from "../api/types";
 import * as api from "../api/client";
 import { toast } from "./toast";
+import { tapLight } from "../lib/haptics";
 
 interface CartState {
   items: CartItem[];
@@ -46,6 +47,7 @@ export const useCart = create<CartState>((set, get) => ({
   add: async (productId, quantity = 1) => {
     try {
       await api.addToCart(productId, quantity);
+      tapLight();
       await get().fetch();
       return true;
     } catch (err) {
