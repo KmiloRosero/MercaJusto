@@ -11,7 +11,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://mercajusto-backend.onrender.com"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
@@ -20,7 +21,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://mercajusto-backend.onrender.com"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

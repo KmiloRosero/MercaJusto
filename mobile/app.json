@@ -30,7 +30,10 @@
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
-      ]
+      ],
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -83,6 +86,9 @@
         "projectId": "788dc40f-72a0-40f4-91c7-77ab8645d576"
       }
     },
-    "owner": "kmilorosero"
+    "owner": "kmilorosero",
+    "updates": {
+      "url": "https://u.expo.dev/788dc40f-72a0-40f4-91c7-77ab8645d576"
+    }
   }
 }
