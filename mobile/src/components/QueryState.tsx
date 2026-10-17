@@ -29,6 +29,24 @@ function SlowHint() {
   );
 }
 
+/**
+ * Aviso bajo un botón que está enviando algo: solo aparece si la espera pasa
+ * de 6 s, para que no parezca que la app se congeló (servidor dormido o señal débil).
+ */
+export function SlowActionHint({ active, message }: { active: boolean; message: string }) {
+  const t = useTheme();
+  const slow = useSlowFlag(active);
+  if (!slow) return null;
+  return (
+    <Text
+      accessibilityLiveRegion="polite"
+      style={[type.footnote, { color: t.textSecondary, fontWeight: "400", textAlign: "center" }]}
+    >
+      {message}
+    </Text>
+  );
+}
+
 /** Carga a pantalla completa o dentro de una lista. */
 export function LoadingState({ label }: { label: string }) {
   const t = useTheme();

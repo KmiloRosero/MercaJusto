@@ -101,9 +101,9 @@ export default function Search() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: spacing[2] }}
         >
-          <Chip icon="sparkles" label="Todo" active={!category && !surplusOnly} onPress={() => { setCategory(null); setSurplusOnly(false); }} />
+          <Chip icon="grid-outline" label="Todo" active={!category && !surplusOnly} onPress={() => { setCategory(null); setSurplusOnly(false); }} />
           <Chip
-            icon="sparkles"
+            icon="leaf-outline"
             label="Excedente"
             active={surplusOnly}
             onPress={() => setSurplusOnly((s) => !s)}

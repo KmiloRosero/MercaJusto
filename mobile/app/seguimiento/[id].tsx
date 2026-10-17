@@ -201,6 +201,38 @@ export default function Seguimiento() {
   const isCancelled = order.status === "CANCELLED";
   const isDelivered = order.status === "DELIVERED";
 
+  // La acción que este estado necesita va en la tarjeta de estado, no al fondo:
+  // pagar (o reintentar), avanzar el pedido (productor) o calificar al recibir.
+  const primaryAction =
+    isBuyerView && awaitingPayment ? (
+      <Button
+        title={paymentFailed ? "Intentar pagar de nuevo" : `Pagar ahora · ${formatCOP(order.total)}`}
+        icon={<Icon name="card-outline" size={20} color={t.onPrimary} />}
+        full
+        size="lg"
+        loading={paying}
+        onPress={onPay}
+      />
+    ) : nextAction ? (
+      <Button
+        title={nextAction.label}
+        icon={<Icon name={nextAction.icon} size={20} color={t.onPrimary} />}
+        full
+        size="lg"
+        loading={updating}
+        onPress={() => changeStatus(nextAction.next)}
+      />
+    ) : isDelivered && isBuyerView && !reviewed ? (
+      <Button
+        title="Calificar pedido"
+        icon={<Icon name="star" size={20} color={t.onPrimary} />}
+        full
+        size="lg"
+        onPress={() => router.push(`/calificacion/${order.id}`)}
+      />
+    ) : null;
+  const showCall = !isDelivered && !isCancelled;
+
   const currentLabel =
     isCancelled ? "Pedido cancelado" :
     paymentFailed ? "Pago rechazado" :
@@ -302,6 +334,10 @@ export default function Seguimiento() {
             {currentDesc}
           </Text>
 
+          {primaryAction ? (
+            <View style={{ marginBottom: order.courier && !isCancelled ? spacing[4] : 0 }}>{primaryAction}</View>
+          ) : null}
+
           {/* ═══ Repartidor ═══ */}
           {order.courier && !isCancelled ? (
             <View
@@ -340,7 +376,7 @@ export default function Seguimiento() {
                   </Text>
                 </View>
               </View>
-              {order.courier.phone ? (
+              {order.courier.phone && showCall ? (
                 <PressableScale
                   scaleTo={0.95}
                   onPress={() => Linking.openURL(`tel:${order.courier!.phone}`)}
@@ -564,38 +600,12 @@ export default function Seguimiento() {
           </View>
         ) : null}
 
-        {/* ═══ CTA calificar ═══ */}
+        {/* ═══ Acciones secundarias ═══ */}
         <View style={{ marginHorizontal: spacing[4], marginTop: spacing[5], gap: spacing[2] }}>
-          {isBuyerView && awaitingPayment ? (
-            <Button
-              title={paymentFailed ? "Intentar pagar de nuevo" : `Pagar ahora · ${formatCOP(order.total)}`}
-              icon={<Icon name="card-outline" size={20} color={t.onPrimary} />}
-              full
-              size="lg"
-              loading={paying}
-              onPress={onPay}
-            />
-          ) : null}
-          {nextAction ? (
-            <Button
-              title={nextAction.label}
-              icon={<Icon name={nextAction.icon} size={20} color={t.onPrimary} />}
-              full
-              size="lg"
-              loading={updating}
-              variant="primary"
-              onPress={() => changeStatus(nextAction.next)}
-            />
-          ) : null}
-          {isDelivered && isBuyerView ? (
-            <Button
-              title={reviewed ? "Ya calificaste este pedido" : "Calificar pedido"}
-              icon={<Icon name="star" size={20} color={reviewed ? t.gray400 : t.onPrimary} />}
-              full
-              size="lg"
-              disabled={reviewed}
-              onPress={() => router.push(`/calificacion/${order.id}`)}
-            />
+          {isDelivered && isBuyerView && reviewed ? (
+            <Text style={[type.footnote, { color: t.textSecondary, textAlign: "center", fontWeight: "400" }]}>
+              Ya calificaste este pedido. ¡Gracias!
+            </Text>
           ) : null}
           {canCancel ? (
             <Button title="Cancelar pedido" variant="ghost" full loading={updating} onPress={onCancel} />

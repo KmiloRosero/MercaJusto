@@ -20,6 +20,7 @@ import { apiErrorMessage, login, register } from "../../src/api/client";
 import type { Role } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { showAlert } from "../../src/lib/dialog";
+import { SlowActionHint } from "../../src/components/QueryState";
 
 type Mode = "login" | "register";
 
@@ -255,6 +256,10 @@ export default function Login() {
               loading={loading}
               full
               size="lg"
+            />
+            <SlowActionHint
+              active={loading}
+              message="Estamos despertando el servidor. La primera vez del día puede tardar hasta un minuto."
             />
 
             <Pressable

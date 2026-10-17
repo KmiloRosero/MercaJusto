@@ -15,7 +15,7 @@ Build path: code-led (Operate surface, no image generation).
 
 THESIS: MercaJusto looks like the Nariño hillsides it sells from: the "colcha de retazos" patchwork of fields. It refuses the delivery-app default of electric blue, orange promo badges and the same grey product square for everything.
 
-OWN-WORLD: Field green #1F6B3D carries actions, the app bar of the brand moments, and selection; clay #A8501C (dark: #F2A56E) is reserved for excedente/discount; a green-tinted neutral ground #F7F8F3 with white cards (dark: green-black #0F1410 with tonal surfaces). Every category owns a field colour (ochre tierra, leaf green, mora red, maize yellow, páramo sky, coffee brown) shown as tile ground + ink. All text pairs ≥4.5:1, tokens as Material roles (onPrimary, containers).
+OWN-WORLD: Field green #1F6B3D carries actions, the app bar of the brand moments, and selection; clay #A8501C (dark: #F2A56E) is reserved for excedente/discount; a green-tinted neutral ground #F7F8F3 with white cards (dark: neutral black #000000/#0E0E0E with #161616 cards and brand green #3DBE72 for actions, no green tint on surfaces). Every category owns a field colour (ochre tierra, leaf green, mora red, maize yellow, páramo sky, coffee brown) shown as tile ground + ink. All text pairs ≥4.5:1, tokens as Material roles (onPrimary, containers).
 
 STORY: The buyer sees fresh produce from named fields, finds the action in one green, and spots excedentes by their clay colour.
 

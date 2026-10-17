@@ -86,7 +86,7 @@ export default function ProducerProfile() {
               {producer.municipios?.length ? (
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                   <Icon name="location-outline" size={14} color={t.textTertiary} />
-                  <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
+                  <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>
                     {producer.municipios.join(" · ")}, Nariño
                   </Text>
                 </View>
@@ -111,7 +111,7 @@ export default function ProducerProfile() {
                       {Array.from({ length: 5 }).map((_, i) => (
                         <Icon key={i} name={i < r.rating ? "star" : "star-outline"} size={12} color={t.warning} />
                       ))}
-                      <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, marginLeft: 4 }}>
+                      <Text style={{ fontSize: fontSize.sm, color: t.textTertiary, marginLeft: 4 }}>
                         {r.fromUser.name.split(" ")[0]}
                       </Text>
                     </View>

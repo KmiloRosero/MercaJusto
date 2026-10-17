@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
+import { ForbiddenError, NotFoundError } from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
 
 export const productsRouter = Router();
@@ -135,11 +135,13 @@ productsRouter.patch("/:id", requireAuth, requireRole("PRODUCER"), async (req, r
     const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
     if (!existing) throw new NotFoundError("Producto no encontrado");
     if (existing.producerId !== req.user!.userId) {
-      throw new BadRequestError("No puedes editar un producto de otro productor");
+      throw new ForbiddenError("No puedes editar un producto de otro productor");
     }
 
     const allowed = createProductSchema.partial();
     const data = allowed.parse(req.body);
+    // Sin modo excedente no hay descuento: así no queda un % oculto aplicado.
+    if (data.isSurplus === false) data.discountPct = 0;
 
     const updated = await prisma.product.update({
       where: { id: req.params.id },
@@ -160,7 +162,7 @@ productsRouter.delete("/:id", requireAuth, requireRole("PRODUCER"), async (req, 
     const existing = await prisma.product.findUnique({ where: { id: req.params.id } });
     if (!existing) throw new NotFoundError();
     if (existing.producerId !== req.user!.userId) {
-      throw new BadRequestError("No puedes eliminar un producto de otro productor");
+      throw new ForbiddenError("No puedes eliminar un producto de otro productor");
     }
     await prisma.product.update({
       where: { id: req.params.id },

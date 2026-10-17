@@ -49,7 +49,7 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
         </Pill>
       </View>
 
-      <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }} numberOfLines={1}>
+      <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }} numberOfLines={1}>
         {!isBuyer && order.buyer ? `${order.buyer.name} · ` : ""}
         {order.deliveryAddress ? `${order.deliveryAddress.municipio} · ` : ""}
         {new Date(order.createdAt).toLocaleDateString("es-CO", {

@@ -3,12 +3,13 @@ import type { OrderStatus } from "../api/types";
 
 export const ORDER_STATUS: Record<
   OrderStatus,
+  // Espera en ámbar, en curso en verde tonal, entregado en verde. La arcilla es solo del excedente.
   { label: string; icon: IconName; variant: "primary" | "success" | "warning" | "danger" | "accent" }
 > = {
   PENDING: { label: "Esperando pago", icon: "time-outline", variant: "warning" },
   CONFIRMED: { label: "Confirmado", icon: "checkmark-circle", variant: "primary" },
-  PREPARING: { label: "Preparando", icon: "preparing", variant: "accent" },
-  IN_TRANSIT: { label: "En camino", icon: "in_transit", variant: "accent" },
+  PREPARING: { label: "Preparando", icon: "preparing", variant: "primary" },
+  IN_TRANSIT: { label: "En camino", icon: "in_transit", variant: "primary" },
   DELIVERED: { label: "Entregado", icon: "delivered", variant: "success" },
   CANCELLED: { label: "Cancelado", icon: "close", variant: "danger" },
 };

@@ -253,6 +253,15 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
   return data;
 }
 
+/** Lo que el productor cambia después de publicar: precio, cantidad y excedente. */
+export async function updateProduct(
+  id: string,
+  input: Pick<CreateProductInput, "price" | "stock" | "isSurplus" | "discountPct">
+): Promise<Product> {
+  const { data } = await api.patch(`/products/${id}`, input);
+  return data;
+}
+
 export async function deleteProduct(id: string): Promise<void> {
   await api.delete(`/products/${id}`);
 }
