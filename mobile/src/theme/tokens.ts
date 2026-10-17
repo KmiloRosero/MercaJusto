@@ -81,9 +81,9 @@ export const colors: { light: ColorTokens; dark: ColorTokens } = {
     info: "#1D5C86",
     rating: "#B7791F",
 
-    gray50: "#F7F8F3",
-    gray100: "#EEF1E8",
-    gray200: "#D9DFD2",
+    gray50: "#F7F8F6",
+    gray100: "#F1F2EF",
+    gray200: "#E2E5DF",
     gray300: "#BCC5B8",
     gray400: "#5F6B62",
     gray500: "#4A564D",
@@ -92,17 +92,18 @@ export const colors: { light: ColorTokens; dark: ColorTokens } = {
     gray800: "#1E2721",
     gray900: "#17211A",
 
-    bgPrimary: "#F7F8F3",
-    bgSecondary: "#EEF1E8",
+    // Suelo blanco y pozos grises casi neutros, como las apps de domicilio.
+    bgPrimary: "#FFFFFF",
+    bgSecondary: "#F4F5F3",
     bgCard: "#FFFFFF",
-    bgInput: "#EEF1E8",
+    bgInput: "#F1F2EF",
 
     textPrimary: "#17211A",
     textSecondary: "#4A564D",
     textTertiary: "#5F6B62",
     textInverse: "#FFFFFF",
 
-    border: "#D9DFD2",
+    border: "#E2E5DF",
     borderFocus: "#1F6B3D",
     scrim: "rgba(10,20,14,0.5)",
     inverseSurface: "#26302A",

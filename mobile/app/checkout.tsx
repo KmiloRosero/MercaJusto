@@ -122,7 +122,7 @@ export default function Checkout() {
       <TopBar showBack onBack={() => router.back()} title="Finalizar compra" />
 
       <ScrollView
-        contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: 150 + insets.bottom }}
+        contentContainerStyle={{ gap: spacing[2], paddingBottom: 150 + insets.bottom }}
         keyboardShouldPersistTaps="handled"
       >
         {/* Dirección de entrega */}
@@ -262,7 +262,13 @@ export default function Checkout() {
                   borderBottomColor: t.border,
                 }}
               >
-                <FieldTile category={it.product.category} size={40} iconSize={20} radius={radius.sm} />
+                <FieldTile
+                  category={it.product.category}
+                  productName={it.product.name}
+                  size={40}
+                  iconSize={20}
+                  radius={radius.sm}
+                />
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
                     {it.product.name}
@@ -342,14 +348,13 @@ export default function Checkout() {
           padding: spacing[4],
           paddingBottom: spacing[4] + insets.bottom,
           backgroundColor: t.bgPrimary,
-          borderTopWidth: 1,
-          borderTopColor: t.border,
+          borderTopLeftRadius: 24,
+          borderTopRightRadius: 24,
           ...shadow.lg,
         }}
       >
         <Button
-          title={submitting ? "Procesando…" : `Confirmar pedido · ${formatCOP(total)}`}
-          icon={<Icon name="checkmark-circle" size={20} color={t.onPrimary} />}
+          title={submitting ? "Procesando…" : `Hacer pedido  ${formatCOP(total)}`}
           onPress={onConfirm}
           disabled={!canSubmit}
           loading={submitting}
@@ -384,19 +389,11 @@ export default function Checkout() {
 function SectionCard({ title, icon, children }: { title: string; icon?: IconName; children: React.ReactNode }) {
   const t = useTheme();
   return (
-    <View
-      style={{
-        backgroundColor: t.bgPrimary,
-        borderRadius: radius.lg,
-        padding: spacing[4],
-        borderWidth: 1,
-        borderColor: t.border,
-        ...shadow.sm,
-      }}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[3] }}>
-        {icon ? <Icon name={icon} size={18} color={t.primary} /> : null}
-        <Text style={[type.headline, { fontSize: 16, color: t.textPrimary }]} accessibilityRole="header">
+    // Secciones planas sobre el suelo gris, separadas por una franja: sin tarjetas.
+    <View style={{ backgroundColor: t.bgPrimary, paddingHorizontal: spacing[5], paddingVertical: spacing[5] }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], marginBottom: spacing[3] }}>
+        {icon ? <Icon name={icon} size={20} color={t.textPrimary} /> : null}
+        <Text style={[type.headline, { color: t.textPrimary }]} accessibilityRole="header">
           {title}
         </Text>
       </View>

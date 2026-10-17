@@ -3,34 +3,43 @@ import { FlatList, Pressable, ScrollView, Text, TextInput, View } from "react-na
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
-import { TopBar } from "../../src/components/TopBar";
 import { Chip } from "../../src/components/Chip";
 import { ProductCard } from "../../src/components/ProductCard";
 import { Icon } from "../../src/components/Icon";
-import { fontSize, radius, spacing, useTheme } from "../../src/theme";
+import { fontSize, radius, spacing, type, useTheme } from "../../src/theme";
+import { CartBar } from "../../src/components/CartBar";
 import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
-import { useAddToCart } from "../../src/lib/useAddToCart";
 
 import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
 export default function Search() {
   const router = useRouter();
   const t = useTheme();
-  const params = useLocalSearchParams<{ surplus?: string }>();
-  const addToCart = useAddToCart();
+  const params = useLocalSearchParams<{ surplus?: string; category?: string }>();
   const isBuyer = useAuth((s) => s.user?.role === "BUYER");
 
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(params.category ?? null);
   const [surplusOnly, setSurplusOnly] = useState(params.surplus === "true");
   const [sort, setSort] = useState<"recent" | "price_asc" | "price_desc">("recent");
 
-  // El banner "Ver ofertas" puede abrir esta pestaña ya montada con ?surplus=true
+  // El inicio puede abrir esta pestaña ya montada con ?surplus=true o ?category=slug
   const [lastSurplusParam, setLastSurplusParam] = useState(params.surplus);
   if (params.surplus !== lastSurplusParam) {
     setLastSurplusParam(params.surplus);
-    if (params.surplus === "true") setSurplusOnly(true);
+    if (params.surplus === "true") {
+      setSurplusOnly(true);
+      setCategory(null);
+    }
+  }
+  const [lastCategoryParam, setLastCategoryParam] = useState(params.category);
+  if (params.category !== lastCategoryParam) {
+    setLastCategoryParam(params.category);
+    if (params.category) {
+      setCategory(params.category);
+      setSurplusOnly(false);
+    }
   }
 
   // Esperar a que el usuario deje de escribir antes de consultar
@@ -58,29 +67,28 @@ export default function Search() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
-      <TopBar title="Buscar productos" />
-
-      <View style={{ padding: spacing[4], gap: spacing[3] }}>
-        <View style={{ position: "relative", justifyContent: "center" }}>
-          <View style={{ position: "absolute", left: 14, zIndex: 1 }}>
-            <Icon name="search" size={18} color={t.textTertiary} />
+      <View style={{ paddingTop: spacing[3], paddingBottom: spacing[3], gap: spacing[3] }}>
+        <Text accessibilityRole="header" style={[type.title, { color: t.textPrimary, paddingHorizontal: spacing[4] }]}>
+          Buscar
+        </Text>
+        <View style={{ position: "relative", justifyContent: "center", marginHorizontal: spacing[4] }}>
+          <View style={{ position: "absolute", left: 18, zIndex: 1 }}>
+            <Icon name="search" size={20} color={t.textPrimary} />
           </View>
           <TextInput
             value={search}
             onChangeText={setSearch}
-            placeholder="Buscar papa criolla, café, fresas..."
+            placeholder="Papa criolla, café, fresas…"
             returnKeyType="search"
             autoCorrect={false}
             placeholderTextColor={t.textTertiary}
             style={{
-              height: 46,
-              paddingLeft: 42,
-              paddingRight: spacing[4],
+              height: 50,
+              paddingLeft: 48,
+              paddingRight: 44,
               borderRadius: radius.full,
               backgroundColor: t.bgInput,
-              borderWidth: 1.5,
-              borderColor: t.border,
-              fontSize: 14,
+              fontSize: 16,
               color: t.textPrimary,
             }}
           />
@@ -91,7 +99,7 @@ export default function Search() {
               accessibilityLabel="Borrar búsqueda"
               style={{ position: "absolute", right: 0, width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
             >
-              <Icon name="close-circle" size={18} color={t.textTertiary} />
+              <Icon name="close-circle" size={20} color={t.textTertiary} />
             </Pressable>
           ) : null}
         </View>
@@ -99,7 +107,7 @@ export default function Search() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing[2] }}
+          contentContainerStyle={{ gap: spacing[2], paddingHorizontal: spacing[4] }}
         >
           <Chip icon="grid-outline" label="Todo" active={!category && !surplusOnly} onPress={() => { setCategory(null); setSurplusOnly(false); }} />
           <Chip
@@ -108,7 +116,8 @@ export default function Search() {
             active={surplusOnly}
             onPress={() => setSurplusOnly((s) => !s)}
           />
-          {categories.map((c) => (
+          {/* La categoría elegida va primero, para que se vea qué filtra la lista. */}
+          {[...categories].sort((a, b) => Number(b.slug === category) - Number(a.slug === category)).map((c) => (
             <Chip
               key={c.id}
               icon={c.name}
@@ -122,7 +131,7 @@ export default function Search() {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: spacing[2] }}
+          contentContainerStyle={{ gap: spacing[2], paddingHorizontal: spacing[4] }}
         >
           {[
             { key: "recent", label: "Más recientes", icon: "time-outline" },
@@ -144,8 +153,8 @@ export default function Search() {
         data={data?.products || []}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        columnWrapperStyle={{ gap: spacing[3], paddingHorizontal: spacing[4] }}
-        contentContainerStyle={{ gap: spacing[3], paddingBottom: spacing[10] }}
+        columnWrapperStyle={{ gap: spacing[4], paddingHorizontal: spacing[4] }}
+        contentContainerStyle={{ gap: spacing[6], paddingTop: spacing[2], paddingBottom: spacing[10] + 72 }}
         refreshing={isRefetching}
         onRefresh={refetch}
         ListEmptyComponent={
@@ -175,14 +184,11 @@ export default function Search() {
         }
         renderItem={({ item }) => (
           <View style={{ flex: 1, maxWidth: "48%" }}>
-            <ProductCard
-              product={item}
-              onPress={() => router.push(`/producto/${item.id}`)}
-              onAdd={isBuyer ? () => addToCart(item.id, 1, item.name) : undefined}
-            />
+            <ProductCard product={item} canAdd={isBuyer} onPress={() => router.push(`/producto/${item.id}`)} />
           </View>
         )}
       />
+      <CartBar overTabs />
     </SafeAreaView>
   );
 }
