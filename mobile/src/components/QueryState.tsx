@@ -95,9 +95,9 @@ export function ProductGridSkeleton({ count = 4, gutter = spacing[5] }: { count?
         <View key={r} style={{ flexDirection: "row", gap: spacing[4] }}>
           {[0, 1].map((c) => (
             <View key={c} style={{ flex: 1, gap: spacing[2] }}>
-              <View style={{ aspectRatio: 1, borderRadius: radius.lg, backgroundColor: t.bgSecondary }} />
-              <View style={{ height: 14, width: "70%", borderRadius: 4, backgroundColor: t.bgSecondary }} />
-              <View style={{ height: 12, width: "50%", borderRadius: 4, backgroundColor: t.bgSecondary }} />
+              <View style={{ aspectRatio: 1, borderRadius: radius.lg, backgroundColor: t.bgInput }} />
+              <View style={{ height: 14, width: "70%", borderRadius: 4, backgroundColor: t.bgInput }} />
+              <View style={{ height: 12, width: "50%", borderRadius: 4, backgroundColor: t.bgInput }} />
             </View>
           ))}
         </View>

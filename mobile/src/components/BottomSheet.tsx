@@ -157,7 +157,7 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
                       width: 32,
                       height: 32,
                       borderRadius: radius.full,
-                      backgroundColor: t.bgSecondary,
+                      backgroundColor: t.bgInput,
                       alignItems: "center",
                       justifyContent: "center",
                       opacity: pressed ? 0.7 : 1,

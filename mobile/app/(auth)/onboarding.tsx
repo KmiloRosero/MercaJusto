@@ -349,7 +349,7 @@ function SceneFrame({ t, children }: { t: ThemeColors; children: React.ReactNode
     <View
       style={{
         borderRadius: 28,
-        backgroundColor: t.bgSecondary,
+        backgroundColor: t.bgInput,
         padding: spacing[5],
         gap: spacing[3],
         justifyContent: "center",
@@ -651,7 +651,7 @@ function PriceBar({
         <Text style={[type.footnote, { color: t.textSecondary }]}>{label}</Text>
         <Text style={[type.footnote, { color: t.textPrimary, fontWeight: "700" }]}>{formatCOP(value)}</Text>
       </View>
-      <View style={{ height: 10, borderRadius: 5, backgroundColor: t.bgSecondary, overflow: "hidden" }}>
+      <View style={{ height: 10, borderRadius: 5, backgroundColor: t.bgInput, overflow: "hidden" }}>
         <Animated.View
           style={[
             {

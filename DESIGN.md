@@ -34,38 +34,38 @@ colors:
   scrim: "rgba(10,20,14,0.5)"
   inverseSurface: "#26302A"
   onInverseSurface: "#EEF3EC"
-  dark-primary: "#8FD3A1"
-  dark-onPrimary: "#0A2914"
-  dark-primaryDark: "#6FBF86"
-  dark-primaryLight: "#1E3D28"
-  dark-onPrimaryLight: "#B9EBC5"
+  dark-primary: "#3DBE72"
+  dark-onPrimary: "#03140A"
+  dark-primaryDark: "#2FA35F"
+  dark-primaryLight: "#0F2E1B"
+  dark-onPrimaryLight: "#9BE3B5"
   dark-accent: "#F2A56E"
   dark-onAccent: "#3A1704"
   dark-accentDark: "#E08A4E"
-  dark-accentLight: "#4A2510"
+  dark-accentLight: "#3D200D"
   dark-onAccentLight: "#FFD9BF"
-  dark-success: "#8FD3A1"
-  dark-successLight: "#1E3D28"
+  dark-success: "#3DBE72"
+  dark-successLight: "#0F2E1B"
   dark-warning: "#F0C062"
-  dark-warningLight: "#3D2F0E"
+  dark-warningLight: "#33280B"
   dark-danger: "#F2B8B5"
-  dark-dangerLight: "#4A1C19"
+  dark-dangerLight: "#3F1715"
   dark-rating: "#F0C062"
-  dark-bgPrimary: "#0F1410"
-  dark-bgSecondary: "#161D17"
-  dark-bgCard: "#1C241D"
-  dark-bgInput: "#222B23"
-  dark-textPrimary: "#E4EBE3"
-  dark-textSecondary: "#B3BFB4"
-  dark-textTertiary: "#95A397"
-  dark-border: "#344036"
-  dark-borderFocus: "#8FD3A1"
-  dark-gray200: "#2A342C"
-  dark-gray300: "#3E4A40"
-  dark-gray400: "#95A397"
-  dark-scrim: "rgba(0,0,0,0.6)"
-  dark-inverseSurface: "#E4EBE3"
-  dark-onInverseSurface: "#1C241D"
+  dark-bgPrimary: "#0E0E0E"
+  dark-bgSecondary: "#000000"
+  dark-bgCard: "#161616"
+  dark-bgInput: "#1E1E1E"
+  dark-textPrimary: "#F2F2F2"
+  dark-textSecondary: "#B8B8B8"
+  dark-textTertiary: "#8F8F8F"
+  dark-border: "#2E2E2E"
+  dark-borderFocus: "#3DBE72"
+  dark-gray200: "#262626"
+  dark-gray300: "#3A3A3A"
+  dark-gray400: "#8F8F8F"
+  dark-scrim: "rgba(0,0,0,0.7)"
+  dark-inverseSurface: "#F2F2F2"
+  dark-onInverseSurface: "#161616"
   field-tuberculos-ground: "#EFE0C8"
   field-tuberculos-ink: "#6B4A1A"
   field-verduras-ground: "#D7EBD3"
@@ -92,8 +92,8 @@ colors:
   dark-field-lacteos-huevos-ink: "#A8CDE6"
   dark-field-cafe-cacao-ground: "#38271D"
   dark-field-cafe-cacao-ink: "#E2BFA6"
-  dark-field-default-ground: "#243026"
-  dark-field-default-ink: "#B9CBBB"
+  dark-field-default-ground: "#1F1F1F"
+  dark-field-default-ink: "#C8C8C8"
   brand-field: "#1F6B3D"
   brand-basket: "#FFFFFF"
   brand-leaf: "#8FD3A1"
@@ -326,14 +326,17 @@ Una paleta de campo: verde de follaje como voz única, arcilla de tierra cocida 
 - **Colores de campo** (field-*): una pareja ground + ink por categoría. Tubérculos en ocre de tierra, verduras en verde hoja, frutas en rojo mora, granos en amarillo maíz, lácteos y huevos en cielo de páramo, café y cacao en marrón café; `default` en verde gris para categorías sin mapear. Se resuelven con `useFieldColor(category)` (por slug o por nombre normalizado) y existen en claro y oscuro.
 
 ### Neutral
-- **Suelo de Neblina** (bgPrimary): fondo de pantalla, barra superior, barra de pestañas y chip inactivo; neutro con un leve tinte verde.
-- **Surco** (bgSecondary / bgInput): campo de búsqueda, fondo de medios sin foto, botón atrás circular.
+- **Suelo de Neblina** (bgPrimary): fondo de pantalla, barra superior, barra de pestañas y chip inactivo; en claro, neutro con un leve tinte verde.
+- **Surco** (bgSecondary / bgInput): en claro son el mismo tono. bgSecondary es el suelo de las pantallas con tarjetas; bgInput, todo lo que va dentro del contenido: campos, búsqueda, selector de cantidad, fondo de medios sin foto, esqueletos de carga y botones circulares.
 - **Papel** (bgCard): tarjetas y el botón flotante de agregar.
 - **Tinta de Monte** (textPrimary), **Musgo** (textSecondary), **Liquen** (textTertiary): texto principal, secundario y metadatos (municipio, productor, unidad, precio tachado, pestañas inactivas).
 - **Lindero** (border): divisores de barra superior y pestañas, borde del chip inactivo y de tarjetas de resumen.
 - **Superficie inversa** (inverseSurface / onInverseSurface): snackbar y la etiqueta "Agotado".
 - **Velo** (scrim): detrás de hojas inferiores y diálogos.
 - **Estados** (success, warning, danger y sus contenedores *Light): pills de estado de pedidos y avisos; danger también tiñe el ícono de error del snackbar. **rating**: estrellas de calificación.
+
+### Modo oscuro
+Negro neutro, sin tinte verde: suelo `#000000`, pantallas `#0E0E0E`, tarjetas `#161616` y campos `#1E1E1E`, con bordes `#2E2E2E` y texto gris neutro. El verde de la marca sube a `#3DBE72` (8,8:1 sobre negro) con tinta casi negra encima, y sigue reservado a acciones, selección, precios de ahorro y estados. Los contenedores tonales (`primaryLight`) son un verde muy profundo, `#0F2E1B`. Los colores de campo de las categorías se mantienen: son la colcha de retazos.
 
 ### Named Rules
 **The One Green Rule.** La acción, la selección y el foco usan siempre `primary`. Ningún otro tono compite por "esto se toca".

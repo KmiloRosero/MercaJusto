@@ -96,7 +96,7 @@ export default function ProductDetail() {
         <View
           style={{
             aspectRatio: 1.3,
-            backgroundColor: t.bgSecondary,
+            backgroundColor: t.bgInput,
             alignItems: "center",
             justifyContent: "center",
             position: "relative" }}
@@ -192,7 +192,7 @@ export default function ProductDetail() {
           {product.description ? (
             <View
               style={{
-                backgroundColor: t.bgSecondary,
+                backgroundColor: t.bgInput,
                 padding: spacing[3],
                 borderRadius: radius.md,
                 borderWidth: 1,

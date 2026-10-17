@@ -59,7 +59,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
             aspectRatio: 1,
             borderRadius: radius.lg,
             overflow: "hidden",
-            backgroundColor: t.bgSecondary,
+            backgroundColor: t.bgInput,
             alignItems: "center",
             justifyContent: "center",
           }}
