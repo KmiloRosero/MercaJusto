@@ -11,6 +11,7 @@ import { formatCOP, motion, radius, spacing, type, useTheme } from "../theme";
 import { Product } from "../api/types";
 import { Icon } from "./Icon";
 import { FieldTile } from "./FieldTile";
+import { AddControl } from "./AddControl";
 import { effectivePrice } from "../lib/pricing";
 import { plazaComparison } from "../lib/savings";
 import { sizedImage } from "../lib/image";
@@ -20,62 +21,60 @@ const CARD_IMAGE_DP = 200;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-// Presión: hundimiento rápido (respuesta inmediata) y regreso con resorte
-// interrumpible. Escalas pequeñas: es un gesto frecuente.
 const pressIn = { duration: motion.pressIn, easing: Easing.bezier(...motion.easeOut) };
-const release = motion.release;
 
 interface ProductCardProps {
   product: Product;
   onPress?: () => void;
-  onAdd?: () => void;
+  /** Muestra el "+" que agrega sin salir de la lista (solo compradores). */
+  canAdd?: boolean;
 }
 
-export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
+/**
+ * Tarjeta de producto al estilo de las apps de domicilio: foto cuadrada con el
+ * "+" encima, y debajo el precio primero, luego el nombre y quién lo cultivó.
+ */
+export function ProductCard({ product, onPress, canAdd }: ProductCardProps) {
   const t = useTheme();
   const cardScale = useSharedValue(1);
-  const addScale = useSharedValue(1);
-
   const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: cardScale.value }] }));
-  const addStyle = useAnimatedStyle(() => ({ transform: [{ scale: addScale.value }] }));
 
   const finalPrice = effectivePrice(product);
+  const discounted = product.isSurplus && product.discountPct > 0;
   const plaza = plazaComparison(product);
   const soldOut = product.stock <= 0;
+  const producerFirst = product.producer?.name?.split(" ")[0];
 
   return (
     <View>
       <AnimatedPressable
         onPress={onPress}
         onPressIn={() => cardScale.set(withTiming(0.98, pressIn))}
-        onPressOut={() => cardScale.set(withSpring(1, release))}
+        onPressOut={() => cardScale.set(withSpring(1, motion.release))}
         accessibilityRole="button"
         accessibilityLabel={`${product.name}, ${formatCOP(finalPrice)} por ${product.unit}${plaza ? `, en plaza ${formatCOP(plaza.plaza)}` : ""}`}
         style={[cardStyle, { gap: spacing[2] }]}
       >
-        {/* Foto o placeholder de categoría */}
         <View
           style={{
             aspectRatio: 1,
             borderRadius: radius.lg,
             overflow: "hidden",
             backgroundColor: t.bgInput,
-            alignItems: "center",
-            justifyContent: "center",
           }}
         >
           {product.photoUrl ? (
             <Image
               source={{ uri: sizedImage(product.photoUrl, CARD_IMAGE_DP, 1) }}
-              style={{ width: "100%", height: "100%" }}
+              style={{ width: "100%", height: "100%", opacity: soldOut ? 0.5 : 1 }}
               resizeMode="cover"
               accessibilityIgnoresInvertColors
             />
           ) : (
-            <FieldTile category={product.category} iconSize={44} radius={0} />
+            <FieldTile category={product.category} productName={product.name} iconSize={48} radius={0} />
           )}
 
-          {product.isSurplus && product.discountPct > 0 ? (
+          {discounted ? (
             <View
               style={{
                 position: "absolute",
@@ -83,7 +82,7 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
                 left: spacing[2],
                 height: 24,
                 paddingHorizontal: 8,
-                borderRadius: radius.full,
+                borderRadius: radius.sm,
                 backgroundColor: t.accent,
                 flexDirection: "row",
                 alignItems: "center",
@@ -91,10 +90,9 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
               }}
             >
               <Icon name="leaf" size={11} color={t.onAccent} />
-              <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "700" }}>-{product.discountPct} %</Text>
+              <Text style={{ color: t.onAccent, fontSize: 12, fontWeight: "800" }}>-{product.discountPct}%</Text>
             </View>
           ) : null}
-
 
           {soldOut ? (
             <View
@@ -105,76 +103,58 @@ export function ProductCard({ product, onPress, onAdd }: ProductCardProps) {
                 paddingHorizontal: 8,
                 height: 24,
                 justifyContent: "center",
-                borderRadius: radius.full,
+                borderRadius: radius.sm,
                 backgroundColor: t.inverseSurface,
               }}
             >
-              <Text style={{ color: t.onInverseSurface, fontSize: 12, fontWeight: "600" }}>Agotado</Text>
+              <Text style={{ color: t.onInverseSurface, fontSize: 12, fontWeight: "700" }}>Agotado</Text>
             </View>
           ) : null}
         </View>
 
-        {/* Información */}
         <View style={{ gap: 2, paddingHorizontal: 2 }}>
-          <Text numberOfLines={1} style={[type.callout, { color: t.textPrimary }]}>
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+            <Text style={{ fontSize: 17, lineHeight: 22, fontWeight: "800", color: t.textPrimary, letterSpacing: -0.3 }}>
+              {formatCOP(finalPrice)}
+            </Text>
+            {discounted ? (
+              <Text
+                style={[
+                  type.footnote,
+                  { color: t.textTertiary, fontWeight: "400", textDecorationLine: "line-through" },
+                ]}
+              >
+                {formatCOP(product.price)}
+              </Text>
+            ) : null}
+          </View>
+          <Text numberOfLines={2} style={{ fontSize: 15, lineHeight: 20, fontWeight: "500", color: t.textPrimary }}>
             {product.name}
           </Text>
           <Text numberOfLines={1} style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>
-            {product.municipio}
-            {product.producer?.name ? ` · ${product.producer.name.split(" ")[0]}` : ""}
+            {product.unit}
+            {producerFirst ? ` · ${producerFirst}, ${product.municipio}` : ` · ${product.municipio}`}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
-            <Text style={{ fontSize: 16, lineHeight: 20, fontWeight: "700", color: t.textPrimary, letterSpacing: -0.2 }}>
-              {formatCOP(finalPrice)}
-            </Text>
-            <Text style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>/{product.unit}</Text>
-          </View>
           {plaza ? (
-            <Text numberOfLines={1} style={[type.footnote, { color: t.success, fontWeight: "600" }]}>
-              En plaza {formatCOP(plaza.plaza)}
+            <Text numberOfLines={2} style={[type.footnote, { color: t.success, fontWeight: "700" }]}>
+              {plaza.pct}% menos que en plaza
             </Text>
           ) : null}
         </View>
       </AnimatedPressable>
 
-      {/* El botón de agregar va encima de la foto pero fuera de la tarjeta:
+      {/* El "+" va encima de la foto pero fuera de la tarjeta:
           un botón dentro de otro no es válido en la web. */}
-      <View
-        pointerEvents="box-none"
-        style={{ position: "absolute", top: 0, left: 0, right: 0, aspectRatio: 1 }}
-      >
-        {onAdd && !soldOut ? (
-          <AnimatedPressable
-            onPress={onAdd}
-            onPressIn={() => addScale.set(withTiming(0.9, pressIn))}
-            onPressOut={() => addScale.set(withSpring(1, release))}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel={`Agregar ${product.name} a la canasta`}
-            style={[
-              addStyle,
-              {
-                position: "absolute",
-                right: spacing[2],
-                bottom: spacing[2],
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: t.bgCard,
-                alignItems: "center",
-                justifyContent: "center",
-                shadowColor: "#0A140E",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.14,
-                shadowRadius: 10,
-                elevation: 4,
-              },
-            ]}
-          >
-            <Icon name="add" size={22} color={t.primary} />
-          </AnimatedPressable>
-        ) : null}
-      </View>
+      {canAdd && !soldOut ? (
+        <View
+          pointerEvents="box-none"
+          style={{ position: "absolute", top: 0, left: 0, right: 0, aspectRatio: 1 }}
+        >
+          <View style={{ position: "absolute", right: spacing[2], bottom: spacing[2] }}>
+            <AddControl product={product} />
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

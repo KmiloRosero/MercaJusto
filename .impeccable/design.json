@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-14T06:57:51.711618+00:00",
+  "generatedAt": "2026-10-17T23:04:33.985089+00:00",
   "title": "Design System: MercaJusto",
   "extensions": {
     "colorMeta": {
@@ -66,37 +66,37 @@
       },
       "bgPrimary": {
         "role": "neutral",
-        "displayName": "Suelo de Neblina",
+        "displayName": "Blanco de Plaza",
         "tonalRamp": [
           "#17211A",
-          "#1E2721",
           "#2B352E",
-          "#3A453D",
           "#4A564D",
           "#5F6B62",
           "#BCC5B8",
-          "#F7F8F3"
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
         ],
         "darkCounterpart": "dark-bgPrimary"
       },
       "bgSecondary": {
         "role": "neutral",
-        "displayName": "Surco",
+        "displayName": "Neblina",
         "tonalRamp": [
           "#17211A",
-          "#1E2721",
           "#2B352E",
-          "#3A453D",
           "#4A564D",
           "#5F6B62",
           "#BCC5B8",
-          "#F7F8F3"
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
         ],
         "darkCounterpart": "dark-bgSecondary"
       },
       "bgCard": {
         "role": "neutral",
-        "displayName": "Papel",
+        "displayName": "Blanco de Plaza (tarjeta)",
         "darkCounterpart": "dark-bgCard"
       },
       "textPrimary": {
@@ -104,13 +104,13 @@
         "displayName": "Tinta de Monte",
         "tonalRamp": [
           "#17211A",
-          "#1E2721",
           "#2B352E",
-          "#3A453D",
           "#4A564D",
           "#5F6B62",
           "#BCC5B8",
-          "#F7F8F3"
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
         ],
         "darkCounterpart": "dark-textPrimary"
       },
@@ -119,13 +119,13 @@
         "displayName": "Musgo",
         "tonalRamp": [
           "#17211A",
-          "#1E2721",
           "#2B352E",
-          "#3A453D",
           "#4A564D",
           "#5F6B62",
           "#BCC5B8",
-          "#F7F8F3"
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
         ],
         "darkCounterpart": "dark-textSecondary"
       },
@@ -134,13 +134,13 @@
         "displayName": "Liquen",
         "tonalRamp": [
           "#17211A",
-          "#1E2721",
           "#2B352E",
-          "#3A453D",
           "#4A564D",
           "#5F6B62",
           "#BCC5B8",
-          "#F7F8F3"
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
         ],
         "darkCounterpart": "dark-textTertiary"
       },
@@ -149,13 +149,13 @@
         "displayName": "Lindero",
         "tonalRamp": [
           "#17211A",
-          "#1E2721",
           "#2B352E",
-          "#3A453D",
           "#4A564D",
           "#5F6B62",
           "#BCC5B8",
-          "#F7F8F3"
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
         ],
         "darkCounterpart": "dark-border"
       },
@@ -198,65 +198,112 @@
         "role": "tertiary",
         "displayName": "Campo genérico",
         "darkCounterpart": "dark-field-default-ground"
+      },
+      "bgInput": {
+        "role": "neutral",
+        "displayName": "Pozo",
+        "tonalRamp": [
+          "#17211A",
+          "#2B352E",
+          "#4A564D",
+          "#5F6B62",
+          "#BCC5B8",
+          "#E2E5DF",
+          "#F1F2EF",
+          "#FFFFFF"
+        ],
+        "darkCounterpart": "dark-bgInput"
+      },
+      "inversePrimary": {
+        "role": "primary",
+        "displayName": "Verde sobre superficie inversa",
+        "darkCounterpart": "dark-inversePrimary"
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Titular del onboarding."
+        "purpose": "Titular del onboarding y de acceso."
+      },
+      "page-title": {
+        "displayName": "Page title",
+        "purpose": "Nombre del producto en el detalle y del productor en su página."
+      },
+      "price-lg": {
+        "displayName": "Price large",
+        "purpose": "Precio del detalle."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Título del banner del Home."
+        "purpose": "Título de los anuncios del carrusel."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Encabezados de sección y título de la barra superior."
+        "purpose": "Encabezados de sección, municipio de entrega, barra superior."
+      },
+      "price": {
+        "displayName": "Price",
+        "purpose": "Precio de la tarjeta de producto; la línea más fuerte."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Texto corrido y campo de búsqueda."
+        "purpose": "Texto corrido y búsqueda."
       },
       "callout": {
         "displayName": "Callout",
-        "purpose": "Nombre del producto en la tarjeta."
+        "purpose": "Nombre del productor (700) y del producto en filas (500)."
       },
       "footnote": {
         "displayName": "Footnote",
-        "purpose": "Metadatos, chips, acciones de sección."
+        "purpose": "Metadatos, chips, etiquetas de círculos, CTA de anuncios. Piso de información."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Etiquetas de pestañas y pills."
+        "purpose": "Solo texto de pills."
       }
     },
     "shadows": [
       {
+        "name": "add",
+        "value": "0 3px 8px rgba(10,20,14,0.18)",
+        "purpose": "El \"+\" verde sobre la foto (elevation 3)."
+      },
+      {
+        "name": "float-control",
+        "value": "0 4px 10px rgba(10,20,14,0.16)",
+        "purpose": "Botón atrás circular sobre foto o portada (elevation 4)."
+      },
+      {
+        "name": "cart-bar",
+        "value": "0 8px 18px rgba(10,20,14,0.22)",
+        "purpose": "Barra flotante \"Ver canasta\" (elevation 8)."
+      },
+      {
+        "name": "sheet-up",
+        "value": "0 -6px 16px rgba(10,20,14,0.08)",
+        "purpose": "Resumen fijo de la canasta (elevation 12)."
+      },
+      {
         "name": "sm",
         "value": "0 1px 3px rgba(0,0,0,0.08)",
-        "purpose": "Paneles de resumen en checkout y seguimiento (Android elevation 1)."
+        "purpose": "Paneles de checkout y seguimiento (elevation 1)."
       },
       {
         "name": "md",
         "value": "0 4px 12px rgba(0,0,0,0.10)",
-        "purpose": "Tarjetas separadas del mapa en seguimiento (elevation 4)."
+        "purpose": "Tarjetas sobre el mapa en seguimiento (elevation 4)."
       },
       {
         "name": "lg",
         "value": "0 8px 24px rgba(0,0,0,0.12)",
-        "purpose": "Snackbar y barras de acción inferiores (elevation 8)."
-      },
-      {
-        "name": "add-button",
-        "value": "0 4px 10px rgba(10,20,14,0.14)",
-        "purpose": "Botón circular de agregar sobre la foto del producto (elevation 4)."
+        "purpose": "Snackbar y barra de acción del checkout (elevation 8)."
       }
     ],
     "motion": [
       {
         "name": "easeOut",
         "value": "cubic-bezier(0.23, 1, 0.32, 1)",
-        "purpose": "Entradas y respuestas; hundimiento de presión en 120ms."
+        "purpose": "Entradas, respuestas y hundimiento de presión en 120ms."
       },
       {
         "name": "easeInOut",
@@ -264,14 +311,34 @@
         "purpose": "Transiciones de ida y vuelta."
       },
       {
+        "name": "drawer",
+        "value": "cubic-bezier(0.32, 0.72, 0, 1)",
+        "purpose": "Hojas inferiores (320ms) y entrada de la barra \"Ver canasta\" (280ms)."
+      },
+      {
         "name": "press-release-spring",
         "value": "spring(damping 18, stiffness 320)",
         "purpose": "Regreso interrumpible tras presionar botón o tarjeta."
       },
       {
+        "name": "add-to-stepper",
+        "value": "layout 200ms easeOut; fade in 160ms / out 100ms",
+        "purpose": "El \"+\" se transforma en el contador en línea."
+      },
+      {
+        "name": "cart-bar-exit",
+        "value": "SlideOutDown 180ms",
+        "purpose": "Salida de la barra \"Ver canasta\"."
+      },
+      {
         "name": "snackbar-fade",
-        "value": "FadeInDown / FadeOutDown 200ms",
-        "purpose": "Entrada y salida del snackbar; se cierra a los 2600ms."
+        "value": "FadeInDown 220ms easeOut / FadeOut 150ms",
+        "purpose": "Snackbar; se cierra a los 2600ms."
+      },
+      {
+        "name": "list-stagger",
+        "value": "40ms entre elementos, 260ms easeOut, primeros 8",
+        "purpose": "Solo en la primera carga de Inicio y Pedidos."
       }
     ],
     "breakpoints": []
@@ -281,106 +348,125 @@
       "name": "Primary Button",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "Acción principal en verde campo.",
-      "html": "<button class=\"ds-btn-primary\">Agregar a la canasta</button>",
-      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:9999px;font:700 15px system-ui, Roboto, sans-serif;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);background:#1F6B3D;color:#FFFFFF;} .ds-btn-primary:active{transform:scale(0.97);} .ds-btn-primary:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+      "description": "Acción principal: píldora verde que se hunde al tocar.",
+      "html": "<button class=\"ds-btn-primary\">Ir a pagar  $42.500</button>",
+      "css": ".ds-btn-primary{height:48px;padding:0 20px;border:none;border-radius:9999px;background:#1F6B3D;color:#FFFFFF;font-family:system-ui, Roboto, sans-serif;font-weight:700;font-size:15px;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-btn-primary:hover{background:#16532F;} .ds-btn-primary:active{transform:scale(0.97);} .ds-btn-primary:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
     },
     {
-      "name": "Accent Button",
-      "kind": "button",
-      "refersTo": "button-accent",
-      "description": "Solo para acciones de excedente o descuento.",
-      "html": "<button class=\"ds-btn-accent\">Activar excedente</button>",
-      "css": ".ds-btn-accent{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:9999px;font:700 15px system-ui, Roboto, sans-serif;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);background:#A8501C;color:#FFFFFF;} .ds-btn-accent:active{transform:scale(0.97);} .ds-btn-accent:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+      "name": "Add Button and Inline Stepper",
+      "kind": "custom",
+      "refersTo": "add-button",
+      "description": "El \"+\" verde de la tarjeta y el contador en que se convierte al agregar.",
+      "html": "<div class=\"ds-add-row\"><button class=\"ds-add\" aria-label=\"Agregar\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button><div class=\"ds-stepper\"><button aria-label=\"Quitar uno\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/></svg></button><span>2</span><button aria-label=\"Agregar uno\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button></div></div>",
+      "css": ".ds-add-row{display:flex;gap:16px;align-items:center;} .ds-add{width:36px;height:36px;border:none;border-radius:9999px;background:#1F6B3D;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(10,20,14,0.18);cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-add:active{transform:scale(0.9);} .ds-add:focus-visible,.ds-stepper button:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-stepper{display:inline-flex;align-items:center;height:36px;border-radius:9999px;background:#1F6B3D;color:#FFFFFF;} .ds-stepper button{width:36px;height:36px;border:none;background:transparent;color:inherit;display:inline-flex;align-items:center;justify-content:center;border-radius:9999px;cursor:pointer;} .ds-stepper button:active{opacity:0.6;} .ds-stepper span{min-width:22px;text-align:center;font-family:system-ui, Roboto, sans-serif;font-weight:800;font-size:15px;}"
     },
     {
-      "name": "Outline Button",
-      "kind": "button",
-      "refersTo": "button-outline",
-      "description": "Acción secundaria con borde verde.",
-      "html": "<button class=\"ds-btn-outline\">Ver productor</button>",
-      "css": ".ds-btn-outline{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:48px;padding:0 20px;border-radius:9999px;font:700 15px system-ui, Roboto, sans-serif;border:none;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);background:transparent;color:#1F6B3D;border:1.5px solid #1F6B3D;} .ds-btn-outline:active{transform:scale(0.97);} .ds-btn-outline:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+      "name": "Cart Bar",
+      "kind": "custom",
+      "refersTo": "cart-bar",
+      "description": "Barra flotante \"Ver canasta\" con cantidad y subtotal.",
+      "html": "<button class=\"ds-cartbar\"><span class=\"ds-cartbar-n\">3</span><span class=\"ds-cartbar-l\">Ver canasta</span><span>$42.500</span><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 6l6 6-6 6\"/></svg></button>",
+      "css": ".ds-cartbar{display:flex;align-items:center;gap:12px;width:100%;max-width:560px;height:56px;padding:0 16px;border:none;border-radius:16px;background:#1F6B3D;color:#FFFFFF;font-family:system-ui, Roboto, sans-serif;font-weight:800;font-size:16px;box-shadow:0 8px 18px rgba(10,20,14,0.22);cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-cartbar:active{transform:scale(0.98);} .ds-cartbar:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-cartbar-n{min-width:28px;height:28px;padding:0 6px;border-radius:9999px;background:#FFFFFF;color:#1F6B3D;font-size:14px;display:inline-flex;align-items:center;justify-content:center;} .ds-cartbar-l{flex:1;text-align:left;}"
     },
     {
-      "name": "Category Chip",
+      "name": "Filter Chip",
       "kind": "chip",
       "refersTo": "chip",
-      "description": "Filtro de categoría; activo en contenedor verde con check.",
-      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-active\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M5 12l5 5 9-10\"/></svg>Todo</button><button class=\"ds-chip\">Frutas</button></div>",
-      "css": ".ds-chips{display:flex;gap:8px;} .ds-chip{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border-radius:9999px;background:#F7F8F3;color:#17211A;border:1px solid #D9DFD2;font:600 13px/18px system-ui, Roboto, sans-serif;cursor:pointer;} .ds-chip:active{opacity:0.7;} .ds-chip:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-chip-active{background:#D7EBD3;color:#0F3D21;border:1.5px solid #1F6B3D;}"
+      "description": "Filtro gris en reposo y verde lleno al elegirlo; responde solo con color.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip ds-chip-active\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12l5 5 9-10\"/></svg>Todo</button><button class=\"ds-chip\">Frutas</button></div>",
+      "css": ".ds-chips{display:flex;gap:8px;} .ds-chip{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:none;border-radius:9999px;background:#F1F2EF;color:#17211A;font-family:system-ui, Roboto, sans-serif;font-weight:600;font-size:13px;line-height:18px;cursor:pointer;} .ds-chip-active{background:#1F6B3D;color:#FFFFFF;font-weight:700;} .ds-chip:active{opacity:0.7;} .ds-chip:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Category Circles",
+      "kind": "nav",
+      "refersTo": "category-circle",
+      "description": "Fila de categorías en círculos de 64px con su color de campo; Excedentes primero en arcilla.",
+      "html": "<div class=\"ds-circles\"><button class=\"ds-circle\"><span style=\"background:#A8501C;color:#FFFFFF\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M20 4c-9 0-15 4-15 11 0 1.6.5 3 1.3 4.2C8 14 12 11 16 9c-3.4 2.4-6.4 5.6-8.3 10.6 1.2.9 2.7 1.4 4.3 1.4 7 0 8-8 8-17z\"/></svg></span>Excedentes</button><button class=\"ds-circle\"><span style=\"background:#F3D9DC;color:#8A2333\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"13\" r=\"7\"/></svg></span>Frutas</button><button class=\"ds-circle\"><span style=\"background:#EFE0C8;color:#6B4A1A\"><svg width=\"30\" height=\"30\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><ellipse cx=\"12\" cy=\"12\" rx=\"8\" ry=\"6\"/></svg></span>Tubérculos</button></div>",
+      "css": ".ds-circles{display:flex;gap:4px;} .ds-circle{width:76px;display:flex;flex-direction:column;align-items:center;gap:8px;border:none;background:transparent;color:#17211A;font-family:system-ui, Roboto, sans-serif;font-weight:600;font-size:13px;line-height:18px;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-circle span{width:64px;height:64px;border-radius:9999px;display:flex;align-items:center;justify-content:center;} .ds-circle:active{transform:scale(0.94);} .ds-circle:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Promo Banner",
+      "kind": "card",
+      "refersTo": "promo-banner-accent",
+      "description": "Anuncio del carrusel: color sólido, ícono grande recortado y CTA invertida.",
+      "html": "<button class=\"ds-promo\"><span class=\"ds-promo-mark\"><svg width=\"136\" height=\"136\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M20 4c-9 0-15 4-15 11 0 1.6.5 3 1.3 4.2C8 14 12 11 16 9c-3.4 2.4-6.4 5.6-8.3 10.6 1.2.9 2.7 1.4 4.3 1.4 7 0 8-8 8-17z\"/></svg></span><span class=\"ds-promo-t\">Cosecha que no se pierde</span><span class=\"ds-promo-b\">Excedentes de hoy con hasta 30% de descuento.</span><span class=\"ds-promo-cta\">Ver ofertas <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></span></button>",
+      "css": ".ds-promo{position:relative;overflow:hidden;width:300px;min-height:148px;padding:20px;border:none;border-radius:20px;background:#A8501C;color:#FFFFFF;display:flex;flex-direction:column;gap:4px;text-align:left;font-family:system-ui, Roboto, sans-serif;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-promo:active{transform:scale(0.98);} .ds-promo:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-promo-mark{position:absolute;right:-18px;bottom:-22px;opacity:0.22;} .ds-promo-t{max-width:72%;font-size:22px;line-height:28px;font-weight:700;letter-spacing:-0.4px;} .ds-promo-b{max-width:72%;font-size:13px;line-height:18px;font-weight:500;} .ds-promo-cta{margin-top:12px;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 16px;border-radius:9999px;background:#FFFFFF;color:#A8501C;font-size:13px;font-weight:800;}"
     },
     {
       "name": "Product Card",
       "kind": "card",
       "refersTo": "product-card-media",
-      "description": "Medio cuadrado con color de campo, insignia de descuento en arcilla y botón de agregar flotante.",
-      "html": "<div class=\"ds-card\"><div class=\"ds-card-media\"><span class=\"ds-badge\"><svg width=\"11\" height=\"11\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><path d=\"M17 3C9 3 4 8 4 15c0 2 .5 3.5 1 4.5L3 22l1.4 1.4 2.3-2.3C8 21.7 9.5 22 11 22c7 0 11-6 11-14V3h-5z\"/></svg>-20%</span><button class=\"ds-add\" aria-label=\"Agregar\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button></div><div class=\"ds-card-name\">Papa pastusa</div><div class=\"ds-card-meta\">Túquerres · José</div><div class=\"ds-card-price\"><b>$ 3.040</b> <span>/kg</span> <s>$ 3.800</s></div></div>",
-      "css": ".ds-card{width:160px;display:flex;flex-direction:column;gap:2px;font-family:system-ui, Roboto, sans-serif;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-card:active{transform:scale(0.98);} .ds-card-media{position:relative;aspect-ratio:1;border-radius:16px;background:#EFE0C8;color:#6B4A1A;margin-bottom:6px;} .ds-badge{position:absolute;top:8px;left:8px;height:24px;padding:0 8px;border-radius:9999px;background:#A8501C;color:#FFFFFF;display:inline-flex;align-items:center;gap:3px;font:700 12px system-ui, Roboto, sans-serif;} .ds-add{position:absolute;right:8px;bottom:8px;width:36px;height:36px;border-radius:18px;border:none;background:#FFFFFF;color:#1F6B3D;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(10,20,14,0.14);cursor:pointer;} .ds-add:active{transform:scale(0.9);} .ds-add:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-card-name{font:600 15px/20px system-ui, Roboto, sans-serif;letter-spacing:-0.1px;color:#17211A;} .ds-card-meta{font:400 13px/18px system-ui, Roboto, sans-serif;color:#5F6B62;} .ds-card-price{margin-top:4px;font:400 13px/18px system-ui, Roboto, sans-serif;color:#5F6B62;} .ds-card-price b{font:700 16px/20px system-ui, Roboto, sans-serif;letter-spacing:-0.2px;color:#17211A;}"
-    },
-    {
-      "name": "Home Banner",
-      "kind": "custom",
-      "refersTo": "banner",
-      "description": "Bloque en verde campo con hoja de marca de agua y CTA invertido.",
-      "html": "<div class=\"ds-banner\"><div class=\"ds-banner-title\">Cosecha que no se pierde</div><div class=\"ds-banner-sub\">Descuentos directos cuando al productor le sobra.</div><span class=\"ds-banner-cta\">Ver ofertas <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></span></div>",
-      "css": ".ds-banner{max-width:340px;border-radius:24px;background:#1F6B3D;color:#FFFFFF;padding:20px;display:flex;flex-direction:column;gap:8px;font-family:system-ui, Roboto, sans-serif;} .ds-banner-title{font:700 22px/28px system-ui, Roboto, sans-serif;letter-spacing:-0.4px;max-width:82%;} .ds-banner-sub{font:400 13px/18px system-ui, Roboto, sans-serif;max-width:82%;} .ds-banner-cta{margin-top:8px;align-self:flex-start;height:36px;padding:0 16px;border-radius:9999px;background:#FFFFFF;color:#1F6B3D;display:inline-flex;align-items:center;gap:6px;font:700 13px system-ui, Roboto, sans-serif;cursor:pointer;} .ds-banner:hover{opacity:0.94;}"
+      "description": "Precio primero; medio cuadrado con etiqueta de descuento y el \"+\" encima.",
+      "html": "<article class=\"ds-pcard\"><div class=\"ds-pcard-media\"><span class=\"ds-pcard-tag\">-20%</span><svg width=\"48\" height=\"48\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><ellipse cx=\"12\" cy=\"12\" rx=\"8\" ry=\"6\"/></svg><button class=\"ds-pcard-add\" aria-label=\"Agregar\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"/></svg></button></div><div class=\"ds-pcard-price\">$3.200 <s>$4.000</s></div><div class=\"ds-pcard-name\">Papa pastusa</div><div class=\"ds-pcard-meta\">kg · Rosa, Ipiales</div><div class=\"ds-pcard-plaza\">25% menos que en plaza</div></article>",
+      "css": ".ds-pcard{width:168px;font-family:system-ui, Roboto, sans-serif;color:#17211A;} .ds-pcard-media{position:relative;aspect-ratio:1;border-radius:16px;background:#EFE0C8;color:#6B4A1A;display:flex;align-items:center;justify-content:center;margin-bottom:8px;} .ds-pcard-tag{position:absolute;top:8px;left:8px;height:24px;padding:0 8px;border-radius:6px;background:#A8501C;color:#FFFFFF;font-size:12px;font-weight:800;display:flex;align-items:center;} .ds-pcard-add{position:absolute;right:8px;bottom:8px;width:36px;height:36px;border:none;border-radius:9999px;background:#1F6B3D;color:#FFFFFF;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(10,20,14,0.18);cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-pcard-add:active{transform:scale(0.9);} .ds-pcard-add:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-pcard-price{font-size:17px;line-height:22px;font-weight:800;letter-spacing:-0.3px;} .ds-pcard-price s{font-size:13px;font-weight:400;color:#5F6B62;letter-spacing:0;} .ds-pcard-name{font-size:15px;line-height:20px;font-weight:500;} .ds-pcard-meta{font-size:13px;line-height:18px;color:#5F6B62;} .ds-pcard-plaza{font-size:13px;line-height:18px;font-weight:700;color:#17703A;}"
     },
     {
       "name": "Search Field",
       "kind": "input",
       "refersTo": "search-field",
-      "description": "Acceso a la búsqueda en el Home.",
-      "html": "<button class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#4A564D\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4-4\"/></svg><span>Busca papa, café, fresas…</span></button>",
-      "css": ".ds-search{width:320px;height:50px;border-radius:14px;background:#EEF1E8;border:none;display:flex;align-items:center;gap:12px;padding:0 16px;font:400 16px/24px system-ui, Roboto, sans-serif;color:#5F6B62;cursor:pointer;} .ds-search:active{opacity:0.8;} .ds-search:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+      "description": "Búsqueda en píldora gris de ancho completo.",
+      "html": "<label class=\"ds-search\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4-4\"/></svg><input placeholder=\"Buscar papa, queso, café...\"></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:12px;height:50px;padding:0 20px;border-radius:9999px;background:#F1F2EF;color:#17211A;} .ds-search input{flex:1;border:none;background:transparent;font-family:system-ui, Roboto, sans-serif;font-size:16px;color:#17211A;outline:none;} .ds-search input::placeholder{color:#5F6B62;} .ds-search:focus-within{box-shadow:0 0 0 2px #1F6B3D;}"
     },
     {
       "name": "Tab Bar",
       "kind": "nav",
       "refersTo": "tab-bar",
-      "description": "Navegación inferior; activa en verde campo.",
-      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\">Inicio</a><a class=\"ds-tab\">Buscar</a><a class=\"ds-tab\">Canasta</a><a class=\"ds-tab\">Pedidos</a><a class=\"ds-tab\">Perfil</a></nav>",
-      "css": ".ds-tabs{display:flex;justify-content:space-around;align-items:center;height:68px;width:360px;background:#F7F8F3;border-top:1px solid #D9DFD2;} .ds-tab{font:700 11px/14px system-ui, Roboto, sans-serif;color:#5F6B62;text-decoration:none;cursor:pointer;} .ds-tab:hover{color:#1F6B3D;} .ds-tab-active{color:#1F6B3D;}"
+      "description": "Pestañas Material con la activa en verde.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"ds-tab ds-tab-active\">Inicio</a><a class=\"ds-tab\">Buscar</a><a class=\"ds-tab\">Canasta</a><a class=\"ds-tab\">Pedidos</a></nav>",
+      "css": ".ds-tabs{display:flex;height:68px;background:#FFFFFF;border-top:1px solid #E2E5DF;} .ds-tab{flex:1;display:flex;align-items:center;justify-content:center;font-family:system-ui, Roboto, sans-serif;font-size:12px;line-height:16px;font-weight:700;color:#5F6B62;text-decoration:none;cursor:pointer;} .ds-tab-active{color:#1F6B3D;} .ds-tab:hover{color:#17211A;} .ds-tab:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
     },
     {
       "name": "Snackbar",
       "kind": "custom",
       "refersTo": "snackbar",
-      "description": "Aviso breve sobre superficie inversa.",
-      "html": "<div class=\"ds-snack\">Agregado a la canasta</div>",
-      "css": ".ds-snack{display:inline-flex;align-items:center;min-height:48px;padding:12px 16px;border-radius:6px;background:#26302A;color:#EEF3EC;font:600 14px system-ui, Roboto, sans-serif;box-shadow:0 8px 24px rgba(0,0,0,0.12);}"
+      "description": "Aviso breve en superficie inversa con acción opcional.",
+      "html": "<div class=\"ds-snack\"><span>Quitaste Papa pastusa</span><button>Deshacer</button></div>",
+      "css": ".ds-snack{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px 16px;border-radius:6px;background:#26302A;color:#EEF3EC;font-family:system-ui, Roboto, sans-serif;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-width:480px;} .ds-snack span{flex:1;} .ds-snack button{border:none;background:transparent;color:#8FD3A1;font:inherit;font-weight:800;min-height:48px;cursor:pointer;} .ds-snack button:focus-visible{outline:2px solid #8FD3A1;}"
     }
   ],
   "narrative": {
-    "northStar": "La colcha de retazos",
-    "overview": "MercaJusto se ve como las laderas de Nariño desde donde vende: un mosaico de parcelas de colores distintos cosidas por un mismo verde. Cada categoría de producto es un campo con su propio color de tierra; la acción, la selección y la marca hablan en un único verde campo; y la arcilla aparece solo cuando hay excedente o descuento. El resultado es una app de mercado que se reconoce por su paisaje y no por las convenciones de las apps de domicilios.\n\nEs una superficie de operación: controles y navegación Material 3 estándar, densidad cómoda para un teléfono Android de gama baja usado a pleno sol, superficies planas en capas tonales y sombra solo donde algo flota. Claro y oscuro son igual de normativos: el oscuro no es una inversión del claro, sino un verde casi negro con superficies tonales y tintas claras derivadas del mismo campo.\n\nEl sistema rechaza de forma explícita el lenguaje por defecto de las apps de domicilio: azul eléctrico, insignias promocionales naranjas en todo y el mismo cuadro gris para cualquier producto.",
+    "northStar": "La plaza en el bolsillo",
+    "overview": "El flujo del comprador habla el idioma que el usuario ya conoce de las apps de domicilio (con Rappi como vara de oficio): dirección arriba, búsqueda grande, círculos de categorías, anuncios que se deslizan, rieles de \"tiendas\", tarjetas con el precio primero cuyo \"+\" se convierte en contador sin salir de la lista, y una barra flotante \"Ver canasta\". Lo propio de MercaJusto viaja dentro de ese canon: productores con nombre y municipio, la comparación con la plaza y el excedente.\n\nEl suelo es blanco puro con pozos grises casi neutros; un único verde campo carga todo lo que se toca para comprar (el \"+\" sólido, el contador, la barra de la canasta, el chip elegido, la pestaña activa). La arcilla aparece solo cuando el tema es una oportunidad de precio, y los colores de campo de cada categoría sobreviven en la fila de círculos y en los productos sin foto: la colcha de retazos quedó como la fila de categorías. Letra del sistema en negrita, precio más pesado que el nombre, tarjetas planas y sombra solo en lo que flota.\n\nLas pantallas de productor, repartidor, acceso y seguimiento conservan su tratamiento anterior (barra superior Material, tarjetas tonales) pero comparten los mismos tokens. Claro y oscuro son igual de normativos; el oscuro es negro neutro con el verde más vivo.",
     "keyCharacteristics": [
-      "Un solo verde (primary) para acción, selección, foco y marca.",
-      "Arcilla (accent) reservada a excedentes y descuentos.",
-      "Cada categoría tiene su color de campo (ground + ink) que reemplaza la foto ausente.",
-      "Fondo neutro teñido de verde, tarjetas blancas; en oscuro, verde-negro con superficies tonales.",
-      "Roles al estilo Material 3 (on*, contenedores) con todo par texto/fondo a 4,5:1 o más.",
-      "Formas redondeadas: píldoras para controles, 16px para medios de producto, 24px para el banner."
+      "Gramática de app de domicilios en el flujo del comprador; Material 3 estándar en el resto.",
+      "Un solo verde (`primary`) para toda acción y selección; sin segundo color de acción.",
+      "Arcilla (`accent`) solo donde el tema es un descuento o excedente.",
+      "Colores de campo por categoría: círculos de categoría y productos sin foto.",
+      "Suelo blanco, pozos grises `bgInput` para búsqueda, chips, contadores y medios.",
+      "Precio primero y en 800; nombre debajo en 500.",
+      "Tarjetas planas; sombra solo en el \"+\", la barra de la canasta, el botón atrás flotante y las barras inferiores."
     ],
     "rules": [
       {
         "name": "The One Green Rule",
-        "body": "La acción, la selección y el foco usan siempre `primary`. Ningún otro tono compite por \"esto se toca\".",
+        "body": "Agregar, cambiar cantidad, ir a la canasta, elegir y enfocar usan siempre `primary`. Ningún otro tono compite por \"esto se toca\".",
         "section": "colors"
       },
       {
         "name": "The Clay Is Earned Rule",
-        "body": "`accent` solo aparece donde hay excedente o descuento. Si la pantalla no habla de una oportunidad de precio, no lleva arcilla.",
+        "body": "`accent` solo aparece donde el tema es un descuento o excedente. Si la pieza no habla de una oportunidad de precio, no lleva arcilla.",
         "section": "colors"
       },
       {
         "name": "The Field Not Grey Rule",
-        "body": "Un producto sin foto se muestra sobre el color de campo de su categoría con su ícono en la tinta del mismo campo, nunca sobre un cuadro gris genérico.",
+        "body": "Un producto sin foto se muestra sobre el color de campo de su categoría con su ícono en la tinta del campo (afinado por nombre cuando el ícono de la categoría confunde: huevo, leche, cítrico, brote), nunca sobre un cuadro gris.",
         "section": "colors"
       },
       {
         "name": "The Paired Roles Rule",
-        "body": "Cada fondo se usa con su rol `on*` (o la tinta del campo); no se combinan texto y fondo fuera de sus pares, que cumplen 4,5:1 en ambos temas.",
+        "body": "Cada fondo va con su rol `on*` o con la tinta de su campo; todo par cumple 4,5:1 en ambos temas.",
         "section": "colors"
+      },
+      {
+        "name": "The Price Speaks Rule",
+        "body": "El precio va primero y en 800, por encima del nombre en 500; unidad y precio anterior lo acompañan en Footnote 400 `textTertiary`, el anterior tachado.",
+        "section": "typography"
+      },
+      {
+        "name": "The Footnote Floor Rule",
+        "body": "Ninguna información va por debajo de Footnote (13px); 11-12px es solo para pills, etiquetas sobre foto y pestañas. La app se usa al sol y con letra del sistema agrandada.",
+        "section": "typography"
       },
       {
         "name": "The Tight Top Rule",
@@ -388,30 +474,27 @@
         "section": "typography"
       },
       {
-        "name": "The Price Speaks Rule",
-        "body": "El precio es el dato más fuerte de la tarjeta (16/20, 700, tracking -0.2, textPrimary); unidad y precio anterior lo acompañan en Footnote 400 con textTertiary, el anterior tachado.",
-        "section": "typography"
-      },
-      {
         "name": "The Float Only Rule",
-        "body": "Solo lo que flota sobre otro contenido proyecta sombra; una tarjeta que descansa en la grilla es plana.",
+        "body": "Solo lo que flota sobre otro contenido proyecta sombra; una tarjeta que descansa en una grilla o un riel es plana.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "**Do** usar `primary` para toda acción, selección, pestaña activa y foco, y su contenedor `primaryLight` / `onPrimaryLight` para estados seleccionados tonales.",
-      "**Do** mostrar los productos sin foto con `FieldTile` y el color de campo de su categoría (`useFieldColor`).",
-      "**Do** usar la arcilla (`accent`, `accentLight`) solo para excedentes y descuentos.",
-      "**Do** emparejar cada fondo con su rol `on*` y verificar ambos temas, claro y oscuro.",
-      "**Do** hacer píldora (`rounded.full`) todo control táctil, y dejar las tarjetas planas sobre el suelo tonal.",
-      "**Do** responder al toque de botones y tarjetas con hundimiento corto (0.97-0.98, 120ms, easeOut) y regreso con resorte; los chips responden solo con color."
+      "**Do** usar `primary` para agregar, el contador, la barra \"Ver canasta\", el chip elegido, la pestaña activa y el foco.",
+      "**Do** dejar que el \"+\" de la tarjeta se convierta en el contador en el mismo lugar, sin navegar.",
+      "**Do** poner el precio primero y en 800, por encima del nombre en 500.",
+      "**Do** mostrar los productos sin foto con `FieldTile` y el color de campo de su categoría.",
+      "**Do** usar la arcilla (`accent`, `accentLight`) solo para descuentos y excedentes.",
+      "**Do** rellenar búsqueda, chips en reposo y selectores con `bgInput` sobre el suelo blanco.",
+      "**Do** emparejar cada fondo con su rol `on*` y verificar claro y oscuro.",
+      "**Do** responder al toque con hundimiento corto (0.97-0.98, 120ms, easeOut) y regreso con resorte; los chips responden solo con color."
     ],
     "donts": [
-      "**Don't** usar azul eléctrico, insignias promocionales naranjas genéricas ni un mismo cuadro gris para todos los productos.",
-      "**Don't** usar `accent` para acciones generales, navegación o decoración.",
-      "**Don't** introducir un segundo color de acción que compita con `primary`.",
-      "**Don't** poner sombra a las tarjetas que descansan en la grilla; la sombra es para lo que flota.",
-      "**Don't** escribir colores sueltos en pantalla: usar los roles de `colors`, `fields` y `BRAND`."
+      "**Don't** introducir un segundo color de acción (ni coral, ni azul) que compita con `primary`.",
+      "**Don't** usar `accent` para acciones generales, navegación, estados o decoración.",
+      "**Don't** poner sombra a las tarjetas que descansan en una grilla o un riel; la sombra es para lo que flota.",
+      "**Don't** escribir información por debajo de 13px.",
+      "**Don't** escribir colores sueltos en pantalla: usar los roles de `colors`, `fields` y `BRAND` (la sombra `#0A140E` es la única excepción establecida)."
     ]
   }
 }

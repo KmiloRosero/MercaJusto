@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -11,17 +10,17 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 import { SectionHeader } from "../../src/components/TopBar";
-import { Banner } from "../../src/components/Banner";
-import { Chip } from "../../src/components/Chip";
+import { CategoryCircles, ProducerCard, ProducerTile, Promo, PromoCarousel } from "../../src/components/HomeBlocks";
+import { CartBar } from "../../src/components/CartBar";
 import { ProductCard } from "../../src/components/ProductCard";
 import { OrderCard } from "../../src/components/OrderCard";
 import { Icon } from "../../src/components/Icon";
 import { Button } from "../../src/components/Button";
-import { radius, spacing, type, useTheme } from "../../src/theme";
+import { formatCOP, radius, spacing, type, useTheme } from "../../src/theme";
+import { BASE_DELIVERY_FEE } from "../../src/lib/pricing";
 import { getCategories, getMyOrders, getProducts } from "../../src/api/client";
-import type { Address } from "../../src/api/types";
+import type { Address, Product } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
-import { useAddToCart } from "../../src/lib/useAddToCart";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
 
 import { ErrorState, LoadingState, ProductGridSkeleton } from "../../src/components/QueryState";
@@ -31,15 +30,10 @@ import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
 import { Avatar } from "../../src/components/Avatar";
 const GUTTER = spacing[5];
 const CAROUSEL_CARD = 152;
+/** Espacio al final de las listas para que la barra "Ver canasta" no tape nada. */
+const CART_BAR_SPACE = 72;
 /** Pedidos del inicio del productor; el resto queda en la pestaña Ventas. */
 const HOME_ORDERS = 3;
-
-function greeting(date = new Date()) {
-  const h = date.getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 19) return "Buenas tardes";
-  return "Buenas noches";
-}
 
 function placeOf(address?: Address) {
   return address ? `${address.vereda ? `${address.vereda}, ` : ""}${address.municipio}` : "Nariño";
@@ -56,28 +50,22 @@ function GreetingRow({ placeLabel, place }: { placeLabel: string; place: string 
   const router = useRouter();
   const t = useTheme();
   const user = useAuth((s) => s.user);
-  const firstName = user?.name?.split(" ")[0] ?? "";
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={[type.footnote, { color: t.textSecondary }]}>
-          {greeting()}
-          {firstName ? `, ${firstName}` : ""}
-        </Text>
-        <Pressable
-          onPress={() => router.push("/(tabs)/profile")}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel={`${placeLabel} ${place}. Cambiar`}
-          style={({ pressed }) => ({ flexDirection: "row", alignItems: "center", gap: 4, opacity: pressed ? 0.6 : 1 })}
+        <Text style={[type.footnote, { color: t.textSecondary }]}>{placeLabel}</Text>
+        {/* Solo informa: la dirección se elige al pagar, no hay "predeterminada" que cambiar aquí. */}
+        <View
+          accessible
+          accessibilityLabel={`${placeLabel} ${place}`}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
         >
           <Icon name="location" size={16} color={t.primary} />
           <Text style={[type.headline, { color: t.textPrimary, flexShrink: 1 }]} numberOfLines={1}>
             {place}
           </Text>
-          <Icon name="chevron-down" size={16} color={t.textSecondary} />
-        </Pressable>
+        </View>
       </View>
       <PressableScale
         scaleTo={0.95}
@@ -96,11 +84,8 @@ function BuyerHome() {
   const router = useRouter();
   const t = useTheme();
   const user = useAuth((s) => s.user);
-  const addToCart = useAddToCart();
   const isBuyer = user?.role === "BUYER";
   const defaultAddress = user?.addresses?.find((a) => a.isDefault) ?? user?.addresses?.[0];
-
-  const [category, setCategory] = useState<string | null>(null);
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -115,62 +100,108 @@ function BuyerHome() {
     refetch,
     isRefetching,
   } = useQuery({
-    queryKey: ["products", "home", category],
-    queryFn: () => getProducts({ category: category || undefined, limit: 20 }),
+    queryKey: ["products", "home"],
+    queryFn: () => getProducts({ limit: 30 }),
   });
 
   const { data: surplusData } = useQuery({
     queryKey: ["products", "surplus"],
-    queryFn: () => getProducts({ surplus: true, limit: 6 }),
+    queryFn: () => getProducts({ surplus: true, limit: 8 }),
   });
 
   const products = productsData?.products || [];
   const staggerIn = useFirstLoadStagger(products.length > 0);
   const surplus = surplusData?.products || [];
-  const categoryName = categories.find((c) => c.slug === category)?.name;
+  const producers = producersFrom(products);
+  const topDiscount = surplus.reduce((max, p) => Math.max(max, p.discountPct), 0);
+
+  const openSurplus = () => router.push("/(tabs)/search?surplus=true");
+
+  // Solo afirmaciones que la app cumple: el descuento sale de los excedentes reales.
+  const promos: Promo[] = [
+    {
+      key: "surplus",
+      title: "Cosecha que no se pierde",
+      body:
+        topDiscount > 0
+          ? `Excedentes de hoy con hasta ${topDiscount}% de descuento.`
+          : "Descuentos cuando al productor le sobra cosecha.",
+      cta: "Ver ofertas",
+      icon: "leaf",
+      tone: "accent",
+      onPress: openSurplus,
+    },
+    {
+      key: "direct",
+      title: "Directo del campesino",
+      body: "Sabes quién cultivó tu comida y en qué municipio.",
+      cta: "Ver cosechas",
+      icon: "mci:account-cowboy-hat",
+      tone: "primary",
+      onPress: () => router.push("/(tabs)/search"),
+    },
+    {
+      key: "delivery",
+      title: `Un solo envío de ${formatCOP(BASE_DELIVERY_FEE)}`,
+      body: "Aunque compres a varios productores, el envío va agrupado.",
+      cta: "Empezar a comprar",
+      icon: "mci:truck-delivery",
+      tone: "field",
+      onPress: () => router.push("/(tabs)/search"),
+    },
+  ];
 
   const header = (
-    <View style={{ gap: spacing[6], paddingBottom: spacing[4] }}>
-      {/* Saludo + ubicación + avatar */}
+    <View style={{ gap: spacing[6] }}>
       <View style={{ paddingHorizontal: GUTTER, paddingTop: spacing[2], gap: spacing[4] }}>
         <GreetingRow placeLabel="Entregar en" place={placeOf(defaultAddress)} />
 
-        {/* Acceso a búsqueda */}
         <PressableScale
           onPress={() => router.push("/(tabs)/search")}
           accessibilityRole="search"
           style={{
             height: 50,
-            borderRadius: radius.md + 2,
+            borderRadius: radius.full,
             backgroundColor: t.bgInput,
             flexDirection: "row",
             alignItems: "center",
             gap: spacing[3],
-            paddingHorizontal: spacing[4],
+            paddingHorizontal: spacing[5],
           }}
         >
-          <Icon name="search" size={18} color={t.textSecondary} />
+          <Icon name="search" size={20} color={t.textPrimary} />
           <Text style={[type.body, { color: t.textTertiary, flex: 1 }]} numberOfLines={1}>
-            Busca papa, café, fresas…
+            ¿Qué buscas del campo hoy?
           </Text>
         </PressableScale>
       </View>
 
-      <Banner
-        title="Cosecha que no se pierde"
-        subtitle="Descuentos directos cuando al productor le sobra. Apoyas el campo y ahorras."
-        cta="Ver ofertas"
-        iconName="leaf"
-        onCta={() => router.push("/(tabs)/search?surplus=true")}
+      <CategoryCircles
+        categories={categories}
+        onSurplus={openSurplus}
+        onCategory={(slug) => router.push(`/(tabs)/search?category=${slug}`)}
       />
+
+      <PromoCarousel promos={promos} />
+
+      {producers.length > 0 ? (
+        <View>
+          <SectionHeader title="Productores cerca de ti" />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: GUTTER, gap: spacing[3] }}
+          >
+            {producers.map((p) => (
+              <ProducerCard key={p.id} producer={p} onPress={() => router.push(`/productor/${p.id}`)} />
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
 
       {surplus.length > 0 ? (
         <View>
-          <SectionHeader
-            title="Excedentes de hoy"
-            action="Ver todo"
-            onAction={() => router.push("/(tabs)/search?surplus=true")}
-          />
+          <SectionHeader title="Excedentes de hoy" action="Ver todo" onAction={openSurplus} />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -180,39 +211,16 @@ function BuyerHome() {
           >
             {surplus.map((p) => (
               <View key={p.id} style={{ width: CAROUSEL_CARD }}>
-                <ProductCard
-                  product={p}
-                  onPress={() => router.push(`/producto/${p.id}`)}
-                  onAdd={isBuyer ? () => addToCart(p.id, 1, p.name) : undefined}
-                />
+                <ProductCard product={p} canAdd={isBuyer} onPress={() => router.push(`/producto/${p.id}`)} />
               </View>
             ))}
           </ScrollView>
         </View>
       ) : null}
 
-      <View>
-        <SectionHeader
-          title={categoryName ?? "Cosechas frescas"}
-          action="Buscar"
-          onAction={() => router.push("/(tabs)/search")}
-        />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: GUTTER, gap: spacing[2] }}
-        >
-          <Chip icon="apps" label="Todo" active={category === null} onPress={() => setCategory(null)} />
-          {categories.map((c) => (
-            <Chip
-              key={c.id}
-              icon={c.name}
-              label={c.name}
-              active={category === c.slug}
-              onPress={() => setCategory((cur) => (cur === c.slug ? null : c.slug))}
-            />
-          ))}
-        </ScrollView>
+      {/* El gap de la grilla (24) ya separa: el encabezado queda a 12 de la primera fila, como los rieles. */}
+      <View style={{ marginBottom: -spacing[6] }}>
+        <SectionHeader title="Cosechas frescas" action="Ver todo" onAction={() => router.push("/(tabs)/search")} />
       </View>
     </View>
   );
@@ -224,7 +232,7 @@ function BuyerHome() {
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={{ gap: spacing[4], paddingHorizontal: GUTTER }}
-        contentContainerStyle={{ gap: spacing[6], paddingBottom: spacing[12] }}
+        contentContainerStyle={{ gap: spacing[6], paddingBottom: spacing[12] + CART_BAR_SPACE }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.primary} />}
         ListHeaderComponent={header}
@@ -237,26 +245,45 @@ function BuyerHome() {
             <View style={{ paddingHorizontal: GUTTER * 2, paddingVertical: spacing[8], alignItems: "center", gap: spacing[2] }}>
               <Icon name="leaf-outline" size={28} color={t.textTertiary} />
               <Text style={[type.callout, { color: t.textPrimary, textAlign: "center" }]}>
-                Aún no hay cosechas en {categoryName ?? "el catálogo"}
+                Aún no hay cosechas en el catálogo
               </Text>
               <Text style={[type.footnote, { color: t.textSecondary, textAlign: "center", fontWeight: "400" }]}>
-                Prueba otra categoría o vuelve más tarde: los productores publican a diario.
+                Vuelve más tarde: los productores publican a diario.
               </Text>
             </View>
           )
         }
         renderItem={({ item, index }) => (
           <Animated.View entering={staggerIn(index)} style={{ flex: 1, maxWidth: "50%" }}>
-            <ProductCard
-              product={item}
-              onPress={() => router.push(`/producto/${item.id}`)}
-              onAdd={isBuyer ? () => addToCart(item.id, 1, item.name) : undefined}
-            />
+            <ProductCard product={item} canAdd={isBuyer} onPress={() => router.push(`/producto/${item.id}`)} />
           </Animated.View>
         )}
       />
+      <CartBar overTabs />
     </SafeAreaView>
   );
+}
+
+/** Productores del catálogo, para el riel "Productores cerca de ti". */
+function producersFrom(products: Product[]): ProducerTile[] {
+  const byId = new Map<string, ProducerTile>();
+  for (const p of products) {
+    if (!p.producer) continue;
+    const found = byId.get(p.producer.id);
+    if (found) {
+      found.harvests += 1;
+    } else {
+      byId.set(p.producer.id, {
+        id: p.producer.id,
+        name: p.producer.name,
+        rating: p.producer.rating,
+        ratingCount: p.producer.ratingCount,
+        municipio: p.municipio,
+        harvests: 1,
+      });
+    }
+  }
+  return [...byId.values()].sort((a, b) => b.harvests - a.harvests);
 }
 
 /**

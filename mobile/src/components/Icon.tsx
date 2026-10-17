@@ -87,7 +87,7 @@ function mapIconName(name: string): string {
     return "mci:carrot";
   }
   if (clean.includes("fruta") || clean.includes("🍎") || clean.includes("🍓") || clean === "frutas") {
-    return "mci:fruit-cherries";
+    return "mci:food-apple";
   }
   if (clean.includes("lácteo") || clean.includes("queso") || clean.includes("leche") || clean.includes("🧀") || clean.includes("🥛")) {
     return "mci:cheese";
@@ -105,7 +105,8 @@ function mapIconName(name: string): string {
     return "cafe-outline";
   }
   if (clean.includes("hierba") || clean.includes("aromática") || clean.includes("🌿")) {
-    return "leaf-outline";
+    // La hoja ya es el excedente: las hierbas llevan su brote.
+    return "mci:sprout";
   }
 
   // Iconos por defecto de estado / navegación

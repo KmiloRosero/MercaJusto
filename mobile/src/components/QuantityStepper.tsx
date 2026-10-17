@@ -41,7 +41,7 @@ export function QuantityStepper({ value, min = 1, max, onChange, pending, label 
         backgroundColor: pressed ? t.gray200 : "transparent",
       })}
     >
-      <Icon name={icon} size={20} color={enabled ? t.textPrimary : t.gray300} />
+      <Icon name={icon} size={20} color={enabled ? t.primary : t.gray300} />
     </Pressable>
   );
 
@@ -54,8 +54,6 @@ export function QuantityStepper({ value, min = 1, max, onChange, pending, label 
         height: TARGET,
         borderRadius: radius.full,
         backgroundColor: t.bgInput,
-        borderWidth: 1,
-        borderColor: t.border,
       }}
     >
       {step("remove", canDec, value - 1, `Quitar uno de ${label}`)}
