@@ -310,7 +310,7 @@ export default function Seguimiento() {
                 alignItems: "center",
                 gap: spacing[3],
                 padding: spacing[3],
-                backgroundColor: t.bgSecondary,
+                backgroundColor: t.bgInput,
                 borderRadius: radius.lg }}
             >
               <View

@@ -142,7 +142,7 @@ function BuyerHome() {
           style={{
             height: 50,
             borderRadius: radius.md + 2,
-            backgroundColor: t.bgSecondary,
+            backgroundColor: t.bgInput,
             flexDirection: "row",
             alignItems: "center",
             gap: spacing[3],
@@ -421,7 +421,7 @@ function HomeNote({ icon, title, body }: { icon: "receipt-outline" | "leaf-outli
         gap: spacing[3],
         padding: spacing[4],
         borderRadius: radius.lg,
-        backgroundColor: t.bgSecondary,
+        backgroundColor: t.bgInput,
       }}
     >
       <Icon name={icon} size={22} color={t.textSecondary} />

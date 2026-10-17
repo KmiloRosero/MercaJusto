@@ -160,7 +160,7 @@ export default function Search() {
                 width: 64,
                 height: 64,
                 borderRadius: radius.full,
-                backgroundColor: t.bgSecondary,
+                backgroundColor: t.bgInput,
                 alignItems: "center",
                 justifyContent: "center",
               }}

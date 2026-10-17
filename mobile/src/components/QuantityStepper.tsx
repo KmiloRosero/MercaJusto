@@ -53,7 +53,7 @@ export function QuantityStepper({ value, min = 1, max, onChange, pending, label 
         alignItems: "center",
         height: TARGET,
         borderRadius: radius.full,
-        backgroundColor: t.bgSecondary,
+        backgroundColor: t.bgInput,
         borderWidth: 1,
         borderColor: t.border,
       }}
