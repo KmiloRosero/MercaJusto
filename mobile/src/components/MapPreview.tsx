@@ -40,7 +40,7 @@ export default function MapPreview({ origin, destination }: MapPreviewProps) {
           backgroundColor: theme.bgSecondary,
         }}
       >
-        <Text style={{ color: theme.textTertiary, fontSize: 12 }}>
+        <Text style={{ color: theme.textTertiary, fontSize: 13 }}>
           Sin coordenadas disponibles para este pedido
         </Text>
       </View>

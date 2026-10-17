@@ -362,7 +362,9 @@ Negro neutro, sin tinte verde: suelo `#000000`, pantallas `#0E0E0E`, tarjetas `#
 - **Body** (400, 16/24): texto corrido y el texto del campo de búsqueda.
 - **Callout** (600, 15/20, tracking -0.1): nombre del producto en la tarjeta.
 - **Footnote** (500, 13/18): metadatos, chips, acciones de sección y CTA del banner (estos dos en 600-700).
-- **Label** (700, 11/14): etiquetas de la barra de pestañas y texto de pills.
+- **Label** (700, 11/14): solo texto de pills e insignias, siempre en negrita y corto. Las etiquetas de la barra de pestañas van en 12/16.
+
+**The Footnote Floor Rule.** Ninguna información se escribe por debajo de Footnote (13px): ni metadatos, ni calificaciones, ni detalles de un producto. Los 11px son solo para Label. La app se usa al sol y con letra del sistema agrandada.
 
 ### Named Rules
 **The Tight Top Rule.** Desde Callout hacia arriba el tracking es negativo y crece con el tamaño; Body y menores van sin tracking.
@@ -415,6 +417,9 @@ Filtros de categoría que responden con color, no con movimiento.
 - **Resumen fijo de la canasta:** subtotal, envío y comisión en Footnote; la comisión lleva un ⓘ que explica para qué es al tocarla, en vez de un párrafo fijo. El checkout sí muestra el texto completo.
 - **Tarjetas y filas presionables** (pedidos, filas del perfil, banner, dirección del checkout): `PressableScale`, que se hunde a 0.98 y vuelve con el resorte de `motion.release`. Los controles pequeños sueltos (avatar, botón de llamar) bajan a 0.95. Los enlaces de texto responden con opacidad.
 
+### Opciones de elección única
+Dentro de una tarjeta, las opciones (método de pago) son filas de lista, no tarjetas: sin borde, la elegida con fondo `primaryLight` y radio relleno; el radio sin elegir usa `gray400` para tener contraste de control.
+
 ### Inputs / Fields
 - **Búsqueda del Home:** acceso de 50px a 14px de radio, `bgSecondary`, ícono de lupa de 18px en `textSecondary` y placeholder Body en `textTertiary`. Se hunde a 0.98 al presionar.
 - **Campo de texto:** 48px de alto a 12px (`rounded.md`), `bgInput`, borde 1.5px `border`, padding lateral 16px y texto 16px en `textPrimary`; placeholder en `textTertiary`. La etiqueta va encima en Footnote 500 `textSecondary`, a 6px, y la ayuda debajo en Footnote `textTertiary`.
@@ -447,6 +452,21 @@ El fondo `scrim` aparece con fundido y la hoja sube con la curva `motion.drawer`
 
 ### Snackbar
 Aviso breve en `inverseSurface` con texto 14px 600 `onInverseSurface`, ícono de 18px (en error, `dangerLight`), radio `rounded.sm`, mínimo 48px, sombra lg. Entra con fundido hacia abajo de 220ms en easeOut, sale en 150ms y se cierra solo a los 2,6 segundos o al tocarlo. Con acción (p. ej. "Deshacer" al quitar algo de la canasta), la acción va a la derecha en 14px 800 `inversePrimary`, con objetivo de 48px, y el aviso dura el doble. En pantallas con barra de acciones fija, se ancla encima de ella (`useSnackbarAnchor`).
+
+### Estados de pedido
+Ámbar (`warning`) para lo que espera (pago); verde tonal (`primary`) para lo que está en curso (confirmado, preparando, en camino); verde (`success`) para entregado; rojo (`danger`) para cancelado. La arcilla nunca marca un estado: es del excedente.
+
+### Seguimiento
+La tarjeta de estado lleva la única acción que el estado necesita, como botón principal: pagar o reintentar (comprador), avanzar el pedido (productor) o calificar al recibir. El botón de llamar al repartidor desaparece al entregar o cancelar. Al fondo solo quedan Cancelar y Volver.
+
+### Excedente
+Se marca con la hoja (nunca destellos) y la arcilla. En el detalle, la píldora dice solo "Excedente"; junto al precio va "antes $X"; el ahorro se dice una vez, en pesos frente a la plaza. Un solo número por idea.
+
+### Editar cosecha
+El dueño ve "Editar" como acción principal y "Retirar" como texto rojo con confirmación. Editar abre una hoja inferior con precio, cantidad (0 = agotado) y modo excedente, con la vista previa de lo que paga el comprador.
+
+### Esperas al enviar
+Los botones que envían (Entrar, Confirmar pedido, Publicar) muestran debajo un aviso en Footnote si la espera pasa de 6 s (`SlowActionHint`), con lo que está pasando y qué hacer.
 
 ### Estado del pago (seguimiento)
 Píldora con el método y el estado ("En línea · Pagado"): "Pagado" en `success`, "Rechazado" en `danger`, y "Pendiente" o "Contraentrega" en `warning`. Mientras un pedido en línea espera el pago, el encabezado dice "Esperando tu pago" y la acción principal es "Pagar ahora · $total"; si Wompi lo rechaza, "Pago rechazado" e "Intentar pagar de nuevo".

@@ -178,7 +178,7 @@ export function AddressSheet({
                     <Text style={{ fontSize: 14, fontWeight: "600", color: t.textPrimary }}>
                       {addr.label} · {addr.municipio}
                     </Text>
-                    <Text style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }} numberOfLines={2}>
+                    <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginTop: 2 }} numberOfLines={2}>
                       {[addr.vereda, addr.detail].filter(Boolean).join(" — ")}
                     </Text>
                   </View>

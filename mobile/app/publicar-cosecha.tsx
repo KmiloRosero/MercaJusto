@@ -30,6 +30,7 @@ import { DEFAULT_COORDS, municipioCoords } from "../src/lib/municipios";
 import { toast } from "../src/store/toast";
 
 import { clearPublishDraft, draftHasContent, loadPublishDraft, PublishDraft, savePublishDraft } from "../src/lib/publishDraft";
+import { SlowActionHint } from "../src/components/QueryState";
 const UNITS = ["Kilo", "Libra", "Atado", "Docena", "Unidad", "Litro"];
 const DISCOUNTS = [10, 20, 30];
 
@@ -749,6 +750,16 @@ export default function PublicarCosecha() {
                 onPress={submit}
               />
             )}
+            <View style={{ marginTop: saving ? 6 : 0 }}>
+              <SlowActionHint
+                active={saving}
+                message={
+                  photoUri
+                    ? "Subiendo la foto. Con señal débil puede tardar un poco; tu cosecha queda guardada."
+                    : "Publicando tu cosecha. Con señal débil puede tardar un poco."
+                }
+              />
+            </View>
           </View>
         </View>
       </KeyboardAvoidingView>

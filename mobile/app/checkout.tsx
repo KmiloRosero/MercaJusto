@@ -27,6 +27,7 @@ import { payOnline } from "../src/lib/payOnline";
 import { FieldTile } from "../src/components/FieldTile";
 import { FeeExplainer, SavingsNote } from "../src/components/SavingsNote";
 import { PressableScale } from "../src/components/PressableScale";
+import { SlowActionHint } from "../src/components/QueryState";
 const PAYMENT_METHODS: {
   key: PaymentMethod;
   icon: IconName;
@@ -153,11 +154,11 @@ export default function Checkout() {
                   {selectedAddress.vereda ? `${selectedAddress.vereda}, ` : ""}
                   {selectedAddress.municipio}
                 </Text>
-                <Text style={{ fontSize: 12, color: t.textSecondary, marginTop: 2 }} numberOfLines={2}>
+                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginTop: 2 }} numberOfLines={2}>
                   {[selectedAddress.label, selectedAddress.detail].filter(Boolean).join(" — ")}
                 </Text>
               </View>
-              <Text style={{ fontSize: 12, color: t.primary, fontWeight: "700" }}>Cambiar</Text>
+              <Text style={{ fontSize: fontSize.sm, color: t.primary, fontWeight: "700" }}>Cambiar</Text>
             </PressableScale>
           ) : (
             <Button
@@ -185,11 +186,13 @@ export default function Checkout() {
                     flexDirection: "row",
                     alignItems: "center",
                     gap: spacing[3],
+                    // Opciones de una lista, no tarjetas dentro de la tarjeta: la elegida
+                    // se marca con el fondo tonal y el radio.
+                    minHeight: 64,
                     padding: spacing[3],
-                    borderRadius: radius.lg,
-                    borderWidth: 1.5,
-                    borderColor: selected ? t.primary : t.border,
-                    backgroundColor: selected ? t.primaryLight : t.bgPrimary,
+                    marginHorizontal: -spacing[3],
+                    borderRadius: radius.md,
+                    backgroundColor: selected ? t.primaryLight : "transparent",
                   }}
                 >
                   <View
@@ -197,7 +200,7 @@ export default function Checkout() {
                       width: 40,
                       height: 40,
                       borderRadius: radius.md,
-                      backgroundColor: selected ? t.primary : t.bgSecondary,
+                      backgroundColor: selected ? t.primary : t.bgInput,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -205,8 +208,8 @@ export default function Checkout() {
                     <Icon name={m.icon} size={20} color={selected ? t.onPrimary : t.primary} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{m.name}</Text>
-                    <Text style={{ fontSize: 12, color: t.textSecondary }}>{m.desc}</Text>
+                    <Text style={[type.callout, { color: t.textPrimary }]}>{m.name}</Text>
+                    <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{m.desc}</Text>
                   </View>
                   <View
                     style={{
@@ -214,7 +217,7 @@ export default function Checkout() {
                       height: 20,
                       borderRadius: radius.full,
                       borderWidth: 2,
-                      borderColor: selected ? t.primary : t.border,
+                      borderColor: selected ? t.primary : t.gray400,
                       backgroundColor: selected ? t.primary : "transparent",
                       alignItems: "center",
                       justifyContent: "center",
@@ -264,7 +267,7 @@ export default function Checkout() {
                   <Text style={{ fontSize: 13, fontWeight: "700", color: t.textPrimary }}>
                     {it.product.name}
                   </Text>
-                  <Text style={{ fontSize: 11, color: t.textTertiary }}>
+                  <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>
                     {it.quantity} {it.product.unit} · {it.product.producer?.name}
                   </Text>
                 </View>
@@ -353,6 +356,12 @@ export default function Checkout() {
           full
           size="lg"
         />
+        <View style={{ marginTop: 6 }}>
+          <SlowActionHint
+            active={submitting}
+            message="Seguimos creando tu pedido. No cierres la app: con mala señal puede tardar un poco."
+          />
+        </View>
         {!selectedAddress ? (
           <Text style={[type.footnote, { color: t.danger, textAlign: "center", marginTop: 6, fontWeight: "600" }]}>
             Selecciona una dirección de entrega para continuar

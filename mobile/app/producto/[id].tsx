@@ -21,6 +21,7 @@ import { sizedImage } from "../../src/lib/image";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { QuantityStepper } from "../../src/components/QuantityStepper";
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
+import { EditHarvestSheet } from "../../src/components/EditHarvestSheet";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function ProductDetail() {
   const addToCart = useAddToCart();
   const [qty, setQty] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const { data: product, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["product", id],
@@ -114,8 +116,8 @@ export default function ProductDetail() {
 
           {product.isSurplus ? (
             <View style={{ position: "absolute", top: spacing[4], left: spacing[4] }}>
-              <Pill variant="accent" icon="sparkles">
-                Excedente -{product.discountPct} %
+              <Pill variant="accent" icon="leaf">
+                Excedente
               </Pill>
             </View>
           ) : null}
@@ -139,11 +141,9 @@ export default function ProductDetail() {
               <Text style={{ fontSize: fontSize["2xl"], fontWeight: "800", color: t.textPrimary }}>
                 {formatCOP(finalPrice)}
               </Text>
-              <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>por {product.unit}</Text>
+              <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>por {product.unit}</Text>
               {product.isSurplus && product.discountPct > 0 ? (
-                <Text style={{ fontSize: fontSize.xs, color: t.textTertiary, textDecorationLine: "line-through" }}>
-                  {formatCOP(product.price)}
-                </Text>
+                <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>antes {formatCOP(product.price)}</Text>
               ) : null}
             </View>
           </View>
@@ -151,7 +151,7 @@ export default function ProductDetail() {
           {plaza ? (
             <View
               accessible
-              accessibilityLabel={`En plaza cuesta ${formatCOP(plaza.plaza)} por ${product.unit}. Aquí ahorras ${formatCOP(plaza.perUnit)}, un ${plaza.pct} por ciento.`}
+              accessibilityLabel={`Ahorras ${formatCOP(plaza.perUnit)} por ${product.unit}. En plaza de mercado cuesta ${formatCOP(plaza.plaza)}.`}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -166,7 +166,7 @@ export default function ProductDetail() {
                   Ahorras {formatCOP(plaza.perUnit)} por {product.unit}
                 </Text>
                 <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
-                  En plaza de mercado cuesta {formatCOP(plaza.plaza)}: pagas {plaza.pct} % menos.
+                  En plaza de mercado cuesta {formatCOP(plaza.plaza)}.
                 </Text>
               </View>
             </View>
@@ -237,7 +237,7 @@ export default function ProductDetail() {
               </Text>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
                 <Icon name="star" size={13} color={t.rating} />
-                <Text style={{ fontSize: fontSize.xs, color: t.textSecondary, fontWeight: "600" }}>
+                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, fontWeight: "600" }}>
                   {product.producer?.ratingCount
                     ? `${product.producer.rating.toFixed(1)} · ${product.producer.ratingCount} calificaciones`
                     : "Productor nuevo"}
@@ -272,16 +272,31 @@ export default function ProductDetail() {
               <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.textPrimary }}>
                 Esta es tu publicación
               </Text>
-              <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
-                Stock: {product.stock} {product.unit}
+              <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
+                Quedan {product.stock} {product.unit.toLowerCase()}
               </Text>
             </View>
+            <Pressable
+              onPress={busy ? undefined : onWithdraw}
+              accessibilityRole="button"
+              accessibilityLabel={`Retirar ${product.name} del catálogo`}
+              hitSlop={4}
+              style={({ pressed }) => ({
+                minHeight: 48,
+                paddingHorizontal: spacing[2],
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 4,
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Icon name="trash-outline" size={18} color={t.danger} />
+              <Text style={{ fontSize: fontSize.sm, fontWeight: "700", color: t.danger }}>Retirar</Text>
+            </Pressable>
             <Button
-              title="Retirar"
-              variant="outline"
-              icon={<Icon name="trash-outline" size={18} color={t.primary} />}
-              onPress={onWithdraw}
-              loading={busy}
+              title="Editar"
+              icon={<Icon name="create-outline" size={18} color={t.onPrimary} />}
+              onPress={() => setEditing(true)}
             />
           </>
         ) : !isBuyer ? (
@@ -312,6 +327,15 @@ export default function ProductDetail() {
         </>
         )}
       </View>
+      {isOwner ? (
+        // La clave cambia cuando cambian los datos: la hoja se abre siempre con los valores guardados.
+        <EditHarvestSheet
+          key={`${product.price}-${product.stock}-${product.isSurplus}-${product.discountPct}`}
+          product={product}
+          visible={editing}
+          onClose={() => setEditing(false)}
+        />
+      ) : null}
     </SafeAreaView>
   );
 }

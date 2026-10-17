@@ -179,7 +179,7 @@ export default function Profile() {
                   <FieldTile category={p.category} size={40} iconSize={20} radius={radius.sm} />
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: 14, fontWeight: "700", color: t.textPrimary }}>{p.name}</Text>
-                    <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>
+                    <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>
                       {formatCOP(effectivePrice(p))}/{p.unit} · Stock {p.stock}
                       {p.isSurplus ? ` · Excedente -${p.discountPct} %` : ""}
                     </Text>
@@ -225,7 +225,7 @@ export default function Profile() {
           </View>
           <View style={{ flex: 1, gap: 2 }}>
             <Text style={{ fontSize: fontSize.base, fontWeight: "700", color: t.textPrimary }}>Modo oscuro</Text>
-            <Text style={{ fontSize: fontSize.xs, color: t.textSecondary }}>
+            <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>
               {themeScheme === "dark" ? "Apariencia oscura activa" : "Apariencia clara activa"}
             </Text>
           </View>
@@ -342,7 +342,7 @@ function MenuItem({
     >
       <Icon name={icon} size={20} color={t.primary} />
       <Text style={{ flex: 1, fontSize: fontSize.base, color: t.textPrimary, fontWeight: "600" }}>{label}</Text>
-      {hint ? <Text style={{ fontSize: fontSize.xs, color: t.textTertiary }}>{hint}</Text> : null}
+      {hint ? <Text style={{ fontSize: fontSize.sm, color: t.textTertiary }}>{hint}</Text> : null}
       <Icon name="chevron-forward" size={18} color={t.textTertiary} />
     </PressableScale>
   );

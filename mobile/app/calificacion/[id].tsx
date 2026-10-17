@@ -229,7 +229,7 @@ export default function Calificacion() {
                 <Text style={{ fontSize: 15, fontWeight: "700", color: t.textPrimary }}>
                   {entry.name}
                 </Text>
-                <Text style={{ fontSize: 12, color: t.textSecondary, textTransform: "capitalize" }}>
+                <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, textTransform: "capitalize" }}>
                   {entry.role}
                 </Text>
               </View>
@@ -285,7 +285,7 @@ export default function Calificacion() {
                 backgroundColor: t.bgInput,
                 textAlignVertical: "top" }}
             />
-            <Text style={{ fontSize: 11, color: t.textTertiary, textAlign: "right", marginTop: 4 }}>
+            <Text style={{ fontSize: fontSize.sm, color: t.textTertiary, textAlign: "right", marginTop: 4 }}>
               {entry.comment.length}/500
             </Text>
           </View>
