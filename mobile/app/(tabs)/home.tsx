@@ -32,6 +32,20 @@ const GUTTER = spacing[5];
 const CAROUSEL_CARD = 152;
 /** Espacio al final de las listas para que la barra "Ver canasta" no tape nada. */
 const CART_BAR_SPACE = 72;
+/**
+ * Fotos de prueba de los anuncios (Unsplash, licencia libre). Son ilustrativas:
+ * no son productores de MercaJusto. Reemplazar por fotos propias antes de publicar.
+ * Tamaño pedido a la medida de la tarjeta, para no gastar datos con mala señal.
+ */
+const PROMO_PHOTOS = {
+  // Canasta de verduras recién cosechadas (Bade Saba)
+  surplus: "https://images.unsplash.com/photo-1752917680382-3ac274d84103?w=600&q=70&auto=format&fit=crop",
+  // Campesino con sombrero en su cultivo (Jason Hu)
+  direct: "https://images.unsplash.com/photo-1780359397833-b50a6ed288d8?w=600&q=70&auto=format&fit=crop",
+  // Cosecha en canastas de plaza
+  delivery: "https://images.unsplash.com/photo-1599660869952-3852916ff82b?w=600&q=70&auto=format&fit=crop",
+};
+
 /** Pedidos del inicio del productor; el resto queda en la pestaña Ventas. */
 const HOME_ORDERS = 3;
 
@@ -129,6 +143,7 @@ function BuyerHome() {
       cta: "Ver ofertas",
       icon: "leaf",
       tone: "accent",
+      image: PROMO_PHOTOS.surplus,
       onPress: openSurplus,
     },
     {
@@ -138,6 +153,7 @@ function BuyerHome() {
       cta: "Ver cosechas",
       icon: "mci:account-cowboy-hat",
       tone: "primary",
+      image: PROMO_PHOTOS.direct,
       onPress: () => router.push("/(tabs)/search"),
     },
     {
@@ -147,6 +163,7 @@ function BuyerHome() {
       cta: "Empezar a comprar",
       icon: "mci:truck-delivery",
       tone: "field",
+      image: PROMO_PHOTOS.delivery,
       onPress: () => router.push("/(tabs)/search"),
     },
   ];

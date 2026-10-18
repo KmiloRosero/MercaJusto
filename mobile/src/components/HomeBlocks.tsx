@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { Image, NativeScrollEvent, NativeSyntheticEvent, ScrollView, Text, View, useWindowDimensions } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { radius, spacing, type, useTheme, useThemeScheme, fields, fieldFor, formatCOP } from "../theme";
 import { Category } from "../api/types";
 import { Icon } from "./Icon";
@@ -77,12 +78,26 @@ export interface Promo {
   cta: string;
   icon: string;
   tone: "accent" | "primary" | "field";
+  /** Foto a la derecha que se funde con el color de la tarjeta. Sin foto, ícono de marca de agua. */
+  image?: string;
   onPress: () => void;
+}
+
+const PROMO_HEIGHT = 156;
+/** Parte de la tarjeta que ocupa la foto, desde el borde derecho. */
+const PHOTO_SHARE = 0.56;
+
+/** Mismo color con transparencia: un degradado hacia "transparent" pasa por gris en iOS. */
+function withAlpha(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.replace(/./g, "$&$&") : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
 /**
  * Carrusel de anuncios que se desliza de a uno, con el siguiente asomando
- * y puntos debajo. Sin fotos: color sólido y un ícono grande.
+ * y puntos debajo. La foto vive a la derecha y se funde con el color sólido
+ * de la izquierda, donde va el texto: el texto nunca queda sobre la foto.
  */
 export function PromoCarousel({ promos }: { promos: Promo[] }) {
   const t = useTheme();
@@ -126,7 +141,7 @@ export function PromoCarousel({ promos }: { promos: Promo[] }) {
               accessibilityLabel={`${p.title}. ${p.body}. ${p.cta}`}
               style={{
                 width: cardWidth,
-                minHeight: 148,
+                minHeight: PROMO_HEIGHT,
                 borderRadius: radius.xl,
                 backgroundColor: tone.ground,
                 padding: spacing[5],
@@ -135,10 +150,33 @@ export function PromoCarousel({ promos }: { promos: Promo[] }) {
                 gap: spacing[3],
               }}
             >
-              <View style={{ position: "absolute", right: -18, bottom: -22, opacity: 0.22 }}>
-                <Icon name={p.icon} size={136} color={tone.ink} />
-              </View>
-              <View style={{ gap: 4, maxWidth: "72%" }}>
+              {p.image ? (
+                <View
+                  pointerEvents="none"
+                  style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: `${PHOTO_SHARE * 100}%` }}
+                >
+                  {/* Si la foto no carga (mala señal), queda la tarjeta de color sólido. */}
+                  <Image
+                    source={{ uri: p.image }}
+                    resizeMode="cover"
+                    accessibilityIgnoresInvertColors
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                  {/* Fundido: color sólido en el borde izquierdo de la foto, transparente hacia la derecha. */}
+                  <LinearGradient
+                    colors={[tone.ground, withAlpha(tone.ground, 0.85), withAlpha(tone.ground, 0.35), withAlpha(tone.ground, 0)]}
+                    locations={[0, 0.25, 0.6, 1]}
+                    start={{ x: 0, y: 0.5 }}
+                    end={{ x: 1, y: 0.5 }}
+                    style={{ position: "absolute", top: 0, left: 0, bottom: 0, right: 0 }}
+                  />
+                </View>
+              ) : (
+                <View style={{ position: "absolute", right: -18, bottom: -22, opacity: 0.22 }}>
+                  <Icon name={p.icon} size={136} color={tone.ink} />
+                </View>
+              )}
+              <View style={{ gap: 4, maxWidth: p.image ? "62%" : "72%" }}>
                 <Text style={[type.title, { color: tone.ink }]}>{p.title}</Text>
                 <Text style={[type.footnote, { color: tone.ink, fontWeight: "500" }]}>{p.body}</Text>
               </View>
