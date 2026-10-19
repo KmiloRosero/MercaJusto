@@ -16,7 +16,9 @@ import { scheduleOnRN } from "react-native-worklets";
 import { Button } from "../../src/components/Button";
 import { Icon, IconName } from "../../src/components/Icon";
 import { BRAND, LogoMark } from "../../src/components/Logo";
-import { formatCOP, radius, spacing, type, useTheme, useFieldColor, ThemeColors } from "../../src/theme";
+import { formatCOP, radius, spacing, type, useTheme, useThemeScheme, useFieldColor, ThemeColors } from "../../src/theme";
+import { LiquidMetalShader } from "../../src/components/LiquidMetalShader";
+import { LIQUID_METAL_GREEN } from "../../src/components/liquidMetal";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../../src/api/client";
 import { plazaComparison } from "../../src/lib/savings";
@@ -344,12 +346,18 @@ function RoleOption({
 // Escenas: fragmentos reales de la app como ilustración
 // ═══════════════════════════════════════════
 
-function SceneFrame({ t, children }: { t: ThemeColors; children: React.ReactNode }) {
+/**
+ * Marco de cada escena: metal líquido en los verdes de la marca detrás de
+ * las tarjetas blancas. Animado en la web; en el celular, degradado quieto.
+ */
+function SceneFrame({ children }: { t: ThemeColors; children: React.ReactNode }) {
+  const metal = LIQUID_METAL_GREEN[useThemeScheme()];
   return (
     <View
       style={{
         borderRadius: 28,
-        backgroundColor: t.bgInput,
+        overflow: "hidden",
+        backgroundColor: metal.baseColor,
         padding: spacing[5],
         gap: spacing[3],
         justifyContent: "center",
@@ -358,6 +366,14 @@ function SceneFrame({ t, children }: { t: ThemeColors; children: React.ReactNode
         maxHeight: 420,
       }}
     >
+      <LiquidMetalShader
+        {...metal}
+        speed={0.5}
+        distortion={0.8}
+        scale={1.15}
+        pixelRatio={1}
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+      />
       {children}
     </View>
   );
