@@ -22,7 +22,8 @@ import { PressableScale } from "./PressableScale";
 export const GLASS = {
   ground: "#030806",
   glow: "#1F6B3D",
-  card: "rgba(255,255,255,0.05)",
+  /** Vidrio ahumado: lo bastante opaco para que el texto blanco nunca quede sobre humo brillante. */
+  card: "rgba(6,14,10,0.78)",
   cardBorder: "rgba(255,255,255,0.09)",
   field: "rgba(255,255,255,0.06)",
   fieldBorder: "rgba(255,255,255,0.10)",
@@ -68,16 +69,16 @@ export function GlassBackdrop() {
 }
 
 /**
- * Tarjeta de vidrio con un haz de luz que recorre el borde superior.
- * Un solo elemento animado; con movimiento reducido el haz no aparece.
+ * Tarjeta de vidrio, con un haz de luz opcional que recorre el borde superior.
+ * Sobre un fondo animado (humo) va sin haz: un solo movimiento por pantalla.
  */
-export function GlassCard({ children }: { children: React.ReactNode }) {
+export function GlassCard({ children, beam: withBeam = true }: { children: React.ReactNode; beam?: boolean }) {
   const reduceMotion = useReducedMotion();
   const [width, setWidth] = useState(0);
   const beam = useSharedValue(0);
 
   useEffect(() => {
-    if (reduceMotion || !width) return;
+    if (reduceMotion || !width || !withBeam) return;
     beam.set(
       withRepeat(
         withSequence(
@@ -87,7 +88,7 @@ export function GlassCard({ children }: { children: React.ReactNode }) {
         -1
       )
     );
-  }, [reduceMotion, width, beam]);
+  }, [reduceMotion, width, beam, withBeam]);
 
   const beamStyle = useAnimatedStyle(() => ({
     opacity: beam.value > 0 && beam.value < 1 ? 1 : 0,
@@ -109,9 +110,11 @@ export function GlassCard({ children }: { children: React.ReactNode }) {
         shadowOpacity: 0.5,
         shadowRadius: 40,
         elevation: 12,
+        // En la web, el vidrio desenfoca lo que hay detrás.
+        ...(Platform.OS === "web" ? ({ backdropFilter: "blur(16px)" } as object) : null),
       }}
     >
-      {!reduceMotion ? (
+      {!reduceMotion && withBeam ? (
         <Animated.View pointerEvents="none" style={[{ position: "absolute", top: 0, left: 0, width: "50%", height: 2 }, beamStyle]}>
           <LinearGradient
             colors={["rgba(155,227,181,0)", "rgba(155,227,181,0.9)", "rgba(155,227,181,0)"]}
@@ -136,36 +139,77 @@ type FieldProps = Omit<TextInputProps, "style"> & {
   hint?: string;
 };
 
-/** Campo con etiqueta visible arriba (nunca solo el placeholder), ícono y borde verde al enfocar. */
-export function GlassField({ label, icon, password, prefix, hint, onFocus, onBlur, ...props }: FieldProps) {
+/** Alto del campo: la etiqueta flotada arriba, el texto abajo sobre la línea. */
+const FIELD_HEIGHT = 60;
+const INPUT_HEIGHT = 40;
+
+/**
+ * Campo con etiqueta flotante y línea inferior. La etiqueta (con su ícono)
+ * descansa dentro del campo y sube al enfocarlo o al escribir: nunca
+ * desaparece, así que el campo siempre dice qué pide. El ejemplo
+ * ("nombre@gmail.com") solo aparece cuando la etiqueta ya subió.
+ */
+export function GlassField({ label, icon, password, prefix, hint, placeholder, value, onFocus, onBlur, ...props }: FieldProps) {
+  const reduceMotion = useReducedMotion();
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
+  const floated = focused || !!value;
+  const lift = useSharedValue(floated ? 1 : 0);
+
+  useEffect(() => {
+    const to = floated ? 1 : 0;
+    lift.set(reduceMotion ? to : withTiming(to, { duration: 200, easing: Easing.out(Easing.cubic) }));
+  }, [floated, reduceMotion, lift]);
+
+  // Sube 26 dp y se reduce al 80 %, anclada a la izquierda.
+  const labelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: -26 * lift.value }, { scale: 1 - 0.2 * lift.value }],
+  }));
 
   return (
     <View style={{ gap: 6 }}>
-      <Text style={{ color: GLASS.textSecondary, fontSize: 13, fontWeight: "600" }}>{label}</Text>
-      <View
-        style={{
-          height: 48,
-          borderRadius: radius.md,
-          backgroundColor: focused ? "rgba(255,255,255,0.09)" : GLASS.field,
-          borderWidth: 1.5,
-          borderColor: focused ? GLASS.focus : GLASS.fieldBorder,
-          flexDirection: "row",
-          alignItems: "center",
-          paddingLeft: spacing[3],
-        }}
-      >
-        <Icon name={icon} size={18} color={focused ? GLASS.text : GLASS.placeholder} />
-        {prefix ? (
-          <Text style={{ color: GLASS.text, fontSize: 16, marginLeft: spacing[2] }}>{prefix}</Text>
-        ) : null}
-        <TextInput
-          placeholderTextColor={GLASS.placeholder}
-          selectionColor={GLASS.focus}
-          accessibilityLabel={label}
-          {...props}
-          secureTextEntry={password ? !visible : undefined}
+      <View style={{ height: FIELD_HEIGHT, justifyContent: "flex-end" }}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              position: "absolute",
+              left: 0,
+              bottom: (INPUT_HEIGHT - 20) / 2,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing[2],
+              transformOrigin: "left",
+            },
+            labelStyle,
+          ]}
+        >
+          <Icon name={icon} size={18} color={focused ? GLASS.focus : GLASS.textSecondary} />
+          <Text style={{ color: focused ? GLASS.focus : GLASS.textSecondary, fontSize: 16, lineHeight: 20, fontWeight: "600" }}>
+            {label}
+          </Text>
+        </Animated.View>
+
+        <View
+          style={{
+            height: INPUT_HEIGHT,
+            flexDirection: "row",
+            alignItems: "center",
+            borderBottomWidth: 2,
+            borderBottomColor: focused ? GLASS.focus : "rgba(255,255,255,0.28)",
+          }}
+        >
+          {prefix && floated ? (
+            <Text style={{ color: GLASS.text, fontSize: 16, marginRight: spacing[2] }}>{prefix}</Text>
+          ) : null}
+          <TextInput
+            placeholderTextColor={GLASS.placeholder}
+            selectionColor={GLASS.focus}
+            accessibilityLabel={label}
+            {...props}
+            value={value}
+            placeholder={floated ? placeholder : undefined}
+            secureTextEntry={password ? !visible : undefined}
           onFocus={(e) => {
             setFocused(true);
             onFocus?.(e);
@@ -174,29 +218,30 @@ export function GlassField({ label, icon, password, prefix, hint, onFocus, onBlu
             setFocused(false);
             onBlur?.(e);
           }}
-          style={{
-            flex: 1,
-            height: "100%",
-            paddingLeft: spacing[2],
-            paddingRight: password ? 0 : spacing[3],
-            color: GLASS.text,
-            fontSize: 16,
-            // En la web el foco lo marca el borde verde del contenedor, no el contorno del navegador.
-            ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : null),
-          }}
-        />
-        {password ? (
-          <Pressable
-            onPress={() => setVisible((v) => !v)}
-            accessibilityRole="button"
-            accessibilityLabel={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-            style={{ width: 48, height: 48, alignItems: "center", justifyContent: "center" }}
-          >
-            <Icon name={visible ? "eye-off-outline" : "eye-outline"} size={20} color={GLASS.textSecondary} />
-          </Pressable>
-        ) : null}
+            style={{
+              flex: 1,
+              height: "100%",
+              paddingHorizontal: 0,
+              color: GLASS.text,
+              fontSize: 16,
+              // En la web el foco lo marca la línea verde, no el contorno del navegador.
+              ...(Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : null),
+            }}
+          />
+          {password ? (
+            <Pressable
+              onPress={() => setVisible((v) => !v)}
+              accessibilityRole="button"
+              accessibilityLabel={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+              hitSlop={4}
+              style={{ width: 44, height: INPUT_HEIGHT, alignItems: "center", justifyContent: "center" }}
+            >
+              <Icon name={visible ? "eye-off-outline" : "eye-outline"} size={20} color={GLASS.textSecondary} />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
-      {hint ? <Text style={{ color: GLASS.placeholder, fontSize: 13 }}>{hint}</Text> : null}
+      {hint ? <Text style={{ color: GLASS.textSecondary, fontSize: 13 }}>{hint}</Text> : null}
     </View>
   );
 }

@@ -6,7 +6,8 @@ import { StatusBar } from "expo-status-bar";
 import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { Icon } from "../../src/components/Icon";
 import { BRAND, LogoMark } from "../../src/components/Logo";
-import { GLASS, GlassBackdrop, GlassButton, GlassCard, GlassField } from "../../src/components/GlassAuth";
+import { GLASS, GlassButton, GlassCard, GlassField } from "../../src/components/GlassAuth";
+import { SmokeyBackground } from "../../src/components/SmokeyBackground";
 import { useSlowFlag } from "../../src/components/QueryState";
 import { radius, spacing } from "../../src/theme";
 import { apiErrorMessage, login, register } from "../../src/api/client";
@@ -92,7 +93,8 @@ export default function Login() {
   return (
     <View style={{ flex: 1, backgroundColor: GLASS.ground }}>
       <StatusBar style="light" />
-      <GlassBackdrop />
+      {/* Humo verde animado en la web; en el celular, el resplandor que respira. */}
+      <SmokeyBackground color="#2FA35F" groundColor={GLASS.ground} veil={0.35} />
       <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <View style={{ height: 56, paddingHorizontal: spacing[3], justifyContent: "center" }}>
           <Pressable
@@ -123,7 +125,7 @@ export default function Login() {
               entering={reduceMotion ? undefined : FadeInDown.duration(500)}
               style={{ width: "100%", maxWidth: 420, alignSelf: "center" }}
             >
-              <GlassCard>
+              <GlassCard beam={false}>
                 {/* Sello y encabezado */}
                 <View style={{ alignItems: "center", gap: spacing[2], marginBottom: spacing[6] }}>
                   <View
@@ -154,7 +156,7 @@ export default function Login() {
                   </Text>
                 </View>
 
-                <View style={{ gap: spacing[4] }}>
+                <View style={{ gap: spacing[5] }}>
                   {isRegister ? (
                     <GlassField
                       label="Nombre completo"
