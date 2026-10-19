@@ -1,26 +1,18 @@
 import React, { useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "../../src/components/Button";
-import { TopBar } from "../../src/components/TopBar";
+import { StatusBar } from "expo-status-bar";
+import Animated, { FadeInDown, useReducedMotion } from "react-native-reanimated";
 import { Icon } from "../../src/components/Icon";
-import { PasswordInput } from "../../src/components/PasswordInput";
 import { BRAND, LogoMark } from "../../src/components/Logo";
-import { fontSize, radius, spacing, type, useTheme } from "../../src/theme";
+import { GLASS, GlassBackdrop, GlassButton, GlassCard, GlassField } from "../../src/components/GlassAuth";
+import { useSlowFlag } from "../../src/components/QueryState";
+import { radius, spacing } from "../../src/theme";
 import { apiErrorMessage, login, register } from "../../src/api/client";
 import type { Role } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { showAlert } from "../../src/lib/dialog";
-import { SlowActionHint } from "../../src/components/QueryState";
 
 type Mode = "login" | "register";
 
@@ -35,7 +27,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function Login() {
   const router = useRouter();
-  const t = useTheme();
+  const reduceMotion = useReducedMotion();
   const params = useLocalSearchParams<{ role?: string; mode?: string }>();
   const setSession = useAuth((s) => s.setSession);
 
@@ -48,21 +40,10 @@ export default function Login() {
     ROLES.some((r) => r.key === params.role) ? (params.role as Role) : "BUYER"
   );
   const [loading, setLoading] = useState(false);
+  const slow = useSlowFlag(loading);
 
   const isRegister = mode === "register";
   const cleanEmail = email.trim().toLowerCase();
-
-  const inputStyle = {
-    height: 48,
-    paddingHorizontal: spacing[4],
-    borderRadius: radius.md,
-    backgroundColor: t.bgInput,
-    borderWidth: 1.5,
-    borderColor: t.border,
-    fontSize: fontSize.base,
-    color: t.textPrimary,
-  } as const;
-  const labelStyle = { fontSize: fontSize.sm, color: t.textSecondary, marginBottom: 6, fontWeight: "500" } as const;
 
   const switchMode = (next: Mode) => {
     setMode(next);
@@ -109,174 +90,192 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
-      <TopBar showBack onBack={() => router.back()} title={isRegister ? "Crear cuenta" : "Iniciar sesión"} />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={{ padding: spacing[4], gap: spacing[5] }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={{ gap: spacing[2], marginTop: spacing[2] }}>
-            <View
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                backgroundColor: BRAND.field,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: spacing[3],
-              }}
+    <View style={{ flex: 1, backgroundColor: GLASS.ground }}>
+      <StatusBar style="light" />
+      <GlassBackdrop />
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
+        <View style={{ height: 56, paddingHorizontal: spacing[3], justifyContent: "center" }}>
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace("/(auth)/onboarding"))}
+            accessibilityRole="button"
+            accessibilityLabel="Volver"
+            style={({ pressed }) => ({
+              width: 44,
+              height: 44,
+              borderRadius: radius.full,
+              backgroundColor: pressed ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.07)",
+              borderWidth: 1,
+              borderColor: GLASS.cardBorder,
+              alignItems: "center",
+              justifyContent: "center",
+            })}
+          >
+            <Icon name="arrow-back" size={22} color={GLASS.text} />
+          </Pressable>
+        </View>
+
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: "center", padding: spacing[4], paddingBottom: spacing[8] }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Animated.View
+              entering={reduceMotion ? undefined : FadeInDown.duration(500)}
+              style={{ width: "100%", maxWidth: 420, alignSelf: "center" }}
             >
-              <LogoMark size={38} />
-            </View>
-            <Text style={[type.display, { color: t.textPrimary }]}>
-              {isRegister ? "Crea tu cuenta" : "Entra a tu cuenta"}
-            </Text>
-            <Text style={[type.body, { color: t.textSecondary }]}>
-              {isRegister
-                ? "Compra directo al campo o vende tu cosecha, con tu correo y una contraseña."
-                : "Con el correo y la contraseña con que te registraste."}
-            </Text>
-          </View>
-
-          <View style={{ gap: spacing[3] }}>
-            {isRegister ? (
-              <View>
-                <Text style={labelStyle}>Nombre completo</Text>
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Ej. María Rodríguez"
-                  placeholderTextColor={t.textTertiary}
-                  autoComplete="name"
-                  textContentType="name"
-                  style={inputStyle}
-                />
-              </View>
-            ) : null}
-
-            <View>
-              <Text style={labelStyle}>Correo electrónico</Text>
-              <TextInput
-                value={email}
-                onChangeText={setEmail}
-                placeholder="nombre@gmail.com"
-                placeholderTextColor={t.textTertiary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                textContentType={isRegister ? "emailAddress" : "username"}
-                style={inputStyle}
-              />
-            </View>
-
-            {isRegister ? (
-              <View>
-                <Text style={labelStyle}>Celular</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-                  <View style={{ ...inputStyle, justifyContent: "center" }}>
-                    <Text style={{ color: t.textPrimary, fontSize: fontSize.base }}>+57</Text>
+              <GlassCard>
+                {/* Sello y encabezado */}
+                <View style={{ alignItems: "center", gap: spacing[2], marginBottom: spacing[6] }}>
+                  <View
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: 16,
+                      backgroundColor: BRAND.field,
+                      borderWidth: 1,
+                      borderColor: "rgba(255,255,255,0.14)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: spacing[1],
+                    }}
+                  >
+                    <LogoMark size={34} />
                   </View>
-                  <TextInput
-                    value={phone}
-                    onChangeText={(v) => setPhone(v.replace(/\D/g, "").slice(0, 10))}
-                    placeholder="300 123 4567"
-                    placeholderTextColor={t.textTertiary}
-                    keyboardType="phone-pad"
-                    autoComplete="tel"
-                    textContentType="telephoneNumber"
-                    style={{ ...inputStyle, flex: 1 }}
+                  <Text
+                    accessibilityRole="header"
+                    style={{ color: GLASS.text, fontSize: 24, lineHeight: 30, fontWeight: "800", letterSpacing: -0.4, textAlign: "center" }}
+                  >
+                    {isRegister ? "Crea tu cuenta" : "Bienvenido de nuevo"}
+                  </Text>
+                  <Text style={{ color: GLASS.textSecondary, fontSize: 15, lineHeight: 21, textAlign: "center" }}>
+                    {isRegister
+                      ? "Compra directo al campo o vende tu cosecha."
+                      : "Entra para seguir comprando en MercaJusto."}
+                  </Text>
+                </View>
+
+                <View style={{ gap: spacing[4] }}>
+                  {isRegister ? (
+                    <GlassField
+                      label="Nombre completo"
+                      icon="person-outline"
+                      value={name}
+                      onChangeText={setName}
+                      placeholder="Ej. María Rodríguez"
+                      autoComplete="name"
+                      textContentType="name"
+                    />
+                  ) : null}
+
+                  <GlassField
+                    label="Correo electrónico"
+                    icon="mail-outline"
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="nombre@gmail.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete="email"
+                    textContentType={isRegister ? "emailAddress" : "username"}
                   />
-                </View>
-                <Text style={{ fontSize: fontSize.sm, color: t.textTertiary, marginTop: 6 }}>
-                  Para coordinar las entregas.
-                </Text>
-              </View>
-            ) : null}
 
-            <View>
-              <Text style={labelStyle}>Contraseña</Text>
-              <PasswordInput
-                kind={isRegister ? "new" : "current"}
-                value={password}
-                onChangeText={setPassword}
-                placeholder={isRegister ? `Mínimo ${MIN_PASSWORD} caracteres` : "Tu contraseña"}
-                onSubmitEditing={isRegister ? undefined : submit}
-                returnKeyType={isRegister ? "next" : "go"}
-              />
-            </View>
+                  {isRegister ? (
+                    <GlassField
+                      label="Celular"
+                      icon="call-outline"
+                      prefix="+57"
+                      value={phone}
+                      onChangeText={(v) => setPhone(v.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="300 123 4567"
+                      keyboardType="phone-pad"
+                      autoComplete="tel"
+                      textContentType="telephoneNumber"
+                      hint="Para coordinar las entregas."
+                    />
+                  ) : null}
 
-            {isRegister ? (
-              <View>
-                <Text style={labelStyle}>Soy...</Text>
-                <View style={{ flexDirection: "row", gap: spacing[2] }}>
-                  {ROLES.map((r) => (
-                    <Pressable
-                      key={r.key}
-                      onPress={() => setRole(r.key)}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: role === r.key }}
-                      style={{
-                        flex: 1,
-                        minHeight: 72,
-                        padding: spacing[3],
-                        borderRadius: radius.md,
-                        borderWidth: 1.5,
-                        borderColor: role === r.key ? t.primary : t.border,
-                        backgroundColor: role === r.key ? t.primaryLight : t.bgPrimary,
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon name={r.icon} size={24} color={role === r.key ? t.primary : t.textSecondary} />
+                  <GlassField
+                    label="Contraseña"
+                    icon="lock-closed-outline"
+                    password
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder={isRegister ? `Mínimo ${MIN_PASSWORD} caracteres` : "Tu contraseña"}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    autoComplete={isRegister ? "new-password" : "current-password"}
+                    textContentType={isRegister ? "newPassword" : "password"}
+                    onSubmitEditing={isRegister ? undefined : submit}
+                    returnKeyType={isRegister ? "next" : "go"}
+                  />
+
+                  {isRegister ? (
+                    <View style={{ gap: 6 }}>
+                      <Text style={{ color: GLASS.textSecondary, fontSize: 13, fontWeight: "600" }}>Soy...</Text>
+                      <View style={{ flexDirection: "row", gap: spacing[2] }} accessibilityRole="radiogroup">
+                        {ROLES.map((r) => {
+                          const active = role === r.key;
+                          return (
+                            <Pressable
+                              key={r.key}
+                              onPress={() => setRole(r.key)}
+                              accessibilityRole="radio"
+                              accessibilityState={{ checked: active }}
+                              style={{
+                                flex: 1,
+                                minHeight: 72,
+                                padding: spacing[2],
+                                borderRadius: radius.md,
+                                borderWidth: 1.5,
+                                borderColor: active ? GLASS.focus : GLASS.fieldBorder,
+                                backgroundColor: active ? "rgba(61,190,114,0.14)" : GLASS.field,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 4,
+                              }}
+                            >
+                              <Icon name={r.icon} size={24} color={active ? GLASS.focus : GLASS.textSecondary} />
+                              <Text style={{ fontSize: 13, fontWeight: "700", color: active ? GLASS.text : GLASS.textSecondary }}>
+                                {r.label}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  ) : null}
+
+                  <View style={{ marginTop: spacing[2], gap: spacing[2] }}>
+                    <GlassButton title={isRegister ? "Crear cuenta y entrar" : "Entrar"} onPress={submit} loading={loading} />
+                    {slow ? (
                       <Text
-                        style={{
-                          fontSize: fontSize.sm,
-                          fontWeight: "600",
-                          color: role === r.key ? t.primary : t.textSecondary,
-                          marginTop: 4,
-                        }}
+                        accessibilityLiveRegion="polite"
+                        style={{ color: GLASS.textSecondary, fontSize: 13, textAlign: "center" }}
                       >
-                        {r.label}
+                        Estamos despertando el servidor. La primera vez del día puede tardar hasta un minuto.
                       </Text>
-                    </Pressable>
-                  ))}
+                    ) : null}
+                  </View>
+
+                  <View style={{ height: 1, backgroundColor: GLASS.cardBorder, marginVertical: spacing[1] }} />
+
+                  <Pressable
+                    onPress={() => switchMode(isRegister ? "login" : "register")}
+                    accessibilityRole="button"
+                    style={({ pressed }) => ({ minHeight: 44, justifyContent: "center", opacity: pressed ? 0.6 : 1 })}
+                  >
+                    <Text style={{ textAlign: "center", color: GLASS.textSecondary, fontSize: 14 }}>
+                      {isRegister ? "¿Ya tienes cuenta? " : "¿No tienes cuenta? "}
+                      <Text style={{ color: GLASS.focus, fontWeight: "800" }}>{isRegister ? "Inicia sesión" : "Crea una"}</Text>
+                    </Text>
+                  </Pressable>
                 </View>
-              </View>
-            ) : null}
-
-            <Button
-              title={isRegister ? "Crear cuenta y entrar" : "Entrar"}
-              onPress={submit}
-              loading={loading}
-              full
-              size="lg"
-            />
-            <SlowActionHint
-              active={loading}
-              message="Estamos despertando el servidor. La primera vez del día puede tardar hasta un minuto."
-            />
-
-            <Pressable
-              onPress={() => switchMode(isRegister ? "login" : "register")}
-              accessibilityRole="button"
-              style={{ minHeight: 48, justifyContent: "center", paddingHorizontal: spacing[2] }}
-            >
-              <Text style={{ textAlign: "center", color: t.textSecondary, fontSize: fontSize.sm }}>
-                {isRegister ? "¿Ya tienes cuenta? " : "¿No tienes cuenta? "}
-                <Text style={{ color: t.primary, fontWeight: "700" }}>
-                  {isRegister ? "Inicia sesión" : "Crea una"}
-                </Text>
-              </Text>
-            </Pressable>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              </GlassCard>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
