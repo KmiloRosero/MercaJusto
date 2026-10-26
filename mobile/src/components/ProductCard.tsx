@@ -28,13 +28,21 @@ interface ProductCardProps {
   onPress?: () => void;
   /** Muestra el "+" que agrega sin salir de la lista (solo compradores). */
   canAdd?: boolean;
+  /** Muestra cuándo se cosechó ("Cosechado hoy"), para el riel de recién cosechado. */
+  showHarvest?: boolean;
+}
+
+/** "hoy", "ayer" o "hace 3 días" desde la fecha de cosecha. */
+export function harvestAgo(iso: string): string {
+  const days = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / (24 * 3600 * 1000)));
+  return days === 0 ? "hoy" : days === 1 ? "ayer" : `hace ${days} días`;
 }
 
 /**
  * Tarjeta de producto al estilo de las apps de domicilio: foto cuadrada con el
  * "+" encima, y debajo el precio primero, luego el nombre y quién lo cultivó.
  */
-export function ProductCard({ product, onPress, canAdd }: ProductCardProps) {
+export function ProductCard({ product, onPress, canAdd, showHarvest }: ProductCardProps) {
   const t = useTheme();
   const cardScale = useSharedValue(1);
   const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: cardScale.value }] }));
@@ -135,6 +143,14 @@ export function ProductCard({ product, onPress, canAdd }: ProductCardProps) {
             {product.unit}
             {producerFirst ? ` · ${producerFirst}, ${product.municipio}` : ` · ${product.municipio}`}
           </Text>
+          {showHarvest && product.harvestDate ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <Icon name="mci:sprout" size={14} color={t.textSecondary} />
+              <Text numberOfLines={1} style={[type.footnote, { color: t.textSecondary, fontWeight: "600" }]}>
+                Cosechado {harvestAgo(product.harvestDate)}
+              </Text>
+            </View>
+          ) : null}
           {plaza ? (
             <Text numberOfLines={2} style={[type.footnote, { color: t.success, fontWeight: "700" }]}>
               {plaza.pct}% menos que en plaza

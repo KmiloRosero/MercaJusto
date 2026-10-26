@@ -129,6 +129,7 @@ function BuyerHome() {
   const staggerIn = useFirstLoadStagger(products.length > 0);
   const surplus = surplusData?.products || [];
   const producers = producersFrom(products);
+  const fresh = freshHarvests(products);
   const topDiscount = surplus.reduce((max, p) => Math.max(max, p.discountPct), 0);
 
   const openSurplus = () => router.push("/(tabs)/search?surplus=true");
@@ -238,6 +239,25 @@ function BuyerHome() {
       ) : null}
 
       {/* El gap de la grilla (24) ya separa: el encabezado queda a 12 de la primera fila, como los rieles. */}
+      {fresh.length > 0 ? (
+        <View>
+          <SectionHeader title="Recién cosechado" />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            decelerationRate="fast"
+            snapToInterval={CAROUSEL_CARD + spacing[3]}
+            contentContainerStyle={{ paddingHorizontal: GUTTER, gap: spacing[3] }}
+          >
+            {fresh.map((p) => (
+              <View key={p.id} style={{ width: CAROUSEL_CARD }}>
+                <ProductCard product={p} canAdd={isBuyer} showHarvest onPress={() => router.push(`/producto/${p.id}`)} />
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      ) : null}
+
       <View style={{ marginBottom: -spacing[6] }}>
         <SectionHeader title="Cosechas frescas" action="Ver todo" onAction={() => router.push("/(tabs)/search")} />
       </View>
@@ -281,6 +301,15 @@ function BuyerHome() {
       <CartBar overTabs />
     </SafeAreaView>
   );
+}
+
+/** Recién cosechado: según la fecha de cosecha que registra el productor (últimos 3 días). */
+function freshHarvests(products: Product[]): Product[] {
+  const cutoff = Date.now() - 3 * 24 * 3600 * 1000;
+  return products
+    .filter((p) => p.harvestDate && new Date(p.harvestDate).getTime() >= cutoff && p.stock > 0)
+    .sort((a, b) => new Date(b.harvestDate!).getTime() - new Date(a.harvestDate!).getTime())
+    .slice(0, 8);
 }
 
 /** Productores del catálogo, para el riel "Productores cerca de ti". */
