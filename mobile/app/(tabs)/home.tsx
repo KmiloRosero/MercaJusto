@@ -5,6 +5,7 @@ import {
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +14,7 @@ import { SectionHeader } from "../../src/components/TopBar";
 import { CategoryCircles, ProducerCard, ProducerTile, Promo, PromoCarousel } from "../../src/components/HomeBlocks";
 import { CartBar } from "../../src/components/CartBar";
 import { CourierHome } from "../../src/components/CourierHome";
+import { HeroHarvest } from "../../src/components/HeroHarvest";
 import { ProductCard } from "../../src/components/ProductCard";
 import { OrderCard } from "../../src/components/OrderCard";
 import { Icon } from "../../src/components/Icon";
@@ -102,6 +104,8 @@ function GreetingRow({ placeLabel, place }: { placeLabel: string; place: string 
 function BuyerHome() {
   const router = useRouter();
   const t = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const heroWidth = Math.min(screenWidth - GUTTER * 2, 560);
   const user = useAuth((s) => s.user);
   const isBuyer = user?.role === "BUYER";
   const defaultAddress = user?.addresses?.find((a) => a.isDefault) ?? user?.addresses?.[0];
@@ -197,6 +201,11 @@ function BuyerHome() {
             ¿Qué buscas del campo hoy?
           </Text>
         </PressableScale>
+      </View>
+
+      {/* Cuadro principal: la cosecha de Nariño en 3D sobre su paisaje */}
+      <View style={{ paddingHorizontal: GUTTER, marginTop: -spacing[2] }}>
+        <HeroHarvest width={heroWidth} onPress={() => router.push("/(tabs)/search")} />
       </View>
 
       <CategoryCircles
