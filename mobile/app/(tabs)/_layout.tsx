@@ -24,6 +24,7 @@ export default function TabsLayout() {
   const fetchCart = useCart((s) => s.fetch);
   const role = useAuth((s) => s.user?.role);
   const isBuyer = role === "BUYER";
+  const isCourier = role === "COURIER";
 
   // Cargar la canasta al entrar para que el badge esté al día
   React.useEffect(() => {
@@ -49,9 +50,14 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Inicio",
+          // El repartidor arranca en su ruta, no en el catálogo.
+          title: isCourier ? "Mi ruta" : "Inicio",
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon icon={focused ? "home" : "home-outline"} color={color} focused={focused} />
+            <TabIcon
+              icon={isCourier ? (focused ? "map" : "map-outline") : focused ? "home" : "home-outline"}
+              color={color}
+              focused={focused}
+            />
           ),
         }}
       />
@@ -59,6 +65,8 @@ export default function TabsLayout() {
         name="search"
         options={{
           title: "Buscar",
+          // Buscar cosechas es del comprador y del productor; el repartidor no compra.
+          href: isCourier ? null : undefined,
           tabBarIcon: ({ color, focused }) => (
             <TabIcon icon={focused ? "search" : "search-outline"} color={color} focused={focused} />
           ),

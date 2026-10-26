@@ -14,6 +14,8 @@ export type IconName =
   | "person-outline"
   | "location"
   | "location-outline"
+  | "map"
+  | "map-outline"
   | "star"
   | "star-half"
   | "star-outline"

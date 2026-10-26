@@ -15,6 +15,7 @@ import { uploadsRouter } from "./routes/uploads";
 import { routesRouter } from "./routes/routes";
 import { metricsRouter } from "./routes/metrics";
 import { paymentsRouter } from "./routes/payments";
+import { courierRouter } from "./routes/courier";
 import { cloudinaryEnabled } from "./lib/cloudinary";
 import { wompiEnabled, wompiSandbox } from "./lib/wompi";
 import { expireUnpaidOrders } from "./lib/payments";
@@ -52,6 +53,7 @@ app.use("/api/uploads", uploadsRouter);
 app.use("/api/routes", routesRouter);
 app.use("/api/metrics", metricsRouter);
 app.use("/api/payments", paymentsRouter);
+app.use("/api/courier", courierRouter);
 
 app.use((_req, _res, next) => next(new NotFoundError()));
 app.use(errorHandler);

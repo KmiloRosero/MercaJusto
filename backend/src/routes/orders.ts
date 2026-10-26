@@ -237,6 +237,12 @@ ordersRouter.patch("/:id/status", async (req, res, next) => {
       throw new BadRequestError(`No se puede pasar de ${current} a ${status}`);
     }
 
+    // El repartidor solo dice que recogió el pedido (sale a entregar) y que lo entregó.
+    if (isCourier && !isProducer && !isBuyer) {
+      const allowed = (current === "PREPARING" && status === "IN_TRANSIT") || (current === "IN_TRANSIT" && status === "DELIVERED");
+      if (!allowed) throw new ForbiddenError("El repartidor solo marca el pedido como recogido o entregado");
+    }
+
     // Un pedido en línea sin pagar todavía no es del productor ni del repartidor
     if ((isProducer || isCourier) && !isBuyer && current === "PENDING") {
       throw new BadRequestError("El pedido todavía no está pagado");

@@ -5,7 +5,7 @@ import { useTheme } from "../theme";
 import { MAP_HEIGHT, pathPoints, type MapPreviewProps } from "./mapTypes";
 
 export default function MapPreview(props: MapPreviewProps) {
-  const { origin, destination, route } = props;
+  const { origin, destination, route, highlightLabel = "Este pedido" } = props;
   const theme = useTheme();
   const mapRef = useRef<MapView>(null);
   const points = pathPoints(props);
@@ -58,7 +58,7 @@ export default function MapPreview(props: MapPreviewProps) {
               <Marker
                 key={`${s.latitude},${s.longitude},${i}`}
                 coordinate={s}
-                title={s.mine ? `Este pedido · parada ${i + 1}` : `Parada ${i + 1}`}
+                title={s.mine ? `${highlightLabel} · parada ${i + 1}` : `Parada ${i + 1}`}
                 pinColor={s.mine ? theme.primary : theme.gray400}
               />
             ))

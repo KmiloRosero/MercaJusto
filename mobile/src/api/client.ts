@@ -9,6 +9,7 @@ import {
   CartResponse,
   Category,
   Order,
+  OrderStatus,
   PaymentMethod,
   PaymentStatus,
   Product,
@@ -478,4 +479,59 @@ export function apiErrorMessage(err: unknown): string {
   const info = describeError(err);
   // Los rechazos del backend (validación, permisos) ya traen su propio mensaje.
   return info.kind === "rejected" || info.kind === "notfound" ? info.message : `${info.title}. ${info.message}`;
+}
+
+// ═══════════════════════════════════════════
+// REPARTIDOR — su ruta, lo que debe recoger y lo disponible para tomar
+// ═══════════════════════════════════════════
+
+export interface CourierOrder {
+  id: string;
+  status: OrderStatus;
+  total: number;
+  /** Lo que cobra al entregar (contraentrega sin pagar); 0 si ya está pagado. */
+  cashToCollect: number;
+  paymentMethod: PaymentMethod;
+  items: string;
+  notes?: string | null;
+  buyer: { id: string; name: string; phone: string };
+  address: { label: string; detail?: string | null; vereda?: string | null; municipio: string; lat: number; lng: number } | null;
+  farm: {
+    municipio: string;
+    vereda?: string | null;
+    lat: number;
+    lng: number;
+    producer: { id: string; name: string; phone: string };
+  } | null;
+  /** Solo en la ruta: minutos y kilómetros desde la salida. */
+  etaMin?: number | null;
+  kmFromStart?: number | null;
+}
+
+export interface AvailableOrder {
+  id: string;
+  status: OrderStatus;
+  total: number;
+  cashToCollect: number;
+  itemsCount: number;
+  items: string;
+  from: { municipio: string; vereda?: string | null; producerName: string } | null;
+  to: { municipio: string } | null;
+  distanceKm: number | null;
+}
+
+export interface CourierBoard {
+  stats: { deliveredToday: number; inRoute: number; cashToCollect: number };
+  route: CourierOrder[];
+  toPickUp: CourierOrder[];
+  available: AvailableOrder[];
+}
+
+export async function getCourierBoard(): Promise<CourierBoard> {
+  const { data } = await api.get("/courier/board");
+  return data;
+}
+
+export async function takeOrder(id: string): Promise<void> {
+  await api.post(`/courier/orders/${id}/take`);
 }

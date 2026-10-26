@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SectionHeader } from "../../src/components/TopBar";
 import { CategoryCircles, ProducerCard, ProducerTile, Promo, PromoCarousel } from "../../src/components/HomeBlocks";
 import { CartBar } from "../../src/components/CartBar";
+import { CourierHome } from "../../src/components/CourierHome";
 import { ProductCard } from "../../src/components/ProductCard";
 import { OrderCard } from "../../src/components/OrderCard";
 import { Icon } from "../../src/components/Icon";
@@ -55,10 +56,12 @@ function placeOf(address?: Address) {
   return address ? `${address.vereda ? `${address.vereda}, ` : ""}${address.municipio}` : "Nariño";
 }
 
-/** El productor trabaja desde su propio inicio; comprador y repartidor ven el catálogo. */
+/** Cada rol tiene su inicio: el comprador el catálogo, el productor sus ventas y el repartidor su ruta. */
 export default function Home() {
-  const isProducer = useAuth((s) => s.user?.role === "PRODUCER");
-  return isProducer ? <ProducerHome /> : <BuyerHome />;
+  const role = useAuth((s) => s.user?.role);
+  if (role === "PRODUCER") return <ProducerHome />;
+  if (role === "COURIER") return <CourierHome />;
+  return <BuyerHome />;
 }
 
 /** Saludo, lugar y acceso al perfil: la primera línea de ambos inicios. */

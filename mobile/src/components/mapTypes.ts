@@ -13,6 +13,8 @@ export interface MapPreviewProps {
    * todas; si no, une la finca con la entrega.
    */
   route?: RouteStop[];
+  /** Etiqueta de la parada resaltada: "Este pedido" (seguimiento) o "Siguiente" (repartidor). */
+  highlightLabel?: string;
 }
 
 export const MAP_HEIGHT = 240;

@@ -13,7 +13,7 @@ const PAD = 52; // margen para que pines y etiquetas no se corten
  * ejes: la línea recorre de verdad la ruta optimizada.
  */
 export default function MapPreview(props: MapPreviewProps) {
-  const { origin, destination, route } = props;
+  const { origin, destination, route, highlightLabel = "Este pedido" } = props;
   const theme = useTheme();
   const [width, setWidth] = useState(0);
   const all = pathPoints(props);
@@ -100,7 +100,7 @@ export default function MapPreview(props: MapPreviewProps) {
           {multiStop
             ? route!.map((s, i) => {
                 const p = project(s);
-                return s.mine ? <Pin key={i} x={p.x} y={p.y} icon="location" label={`Este pedido · ${i + 1}`} /> : null;
+                return s.mine ? <Pin key={i} x={p.x} y={p.y} icon="location" label={`${highlightLabel} · ${i + 1}`} /> : null;
               })
             : destinationPt ? (
                 <Pin x={destinationPt.x} y={destinationPt.y} icon="location" label="Entrega" />
@@ -118,7 +118,7 @@ export default function MapPreview(props: MapPreviewProps) {
 function Pin({ x, y, icon, label }: { x: number; y: number; icon: string; label: string }) {
   const theme = useTheme();
   return (
-    <View pointerEvents="none" style={{ position: "absolute", left: x - 60, top: y - 40, width: 120, alignItems: "center" }}>
+    <View pointerEvents="none" style={{ position: "absolute", left: x - 80, top: y - 40, width: 160, alignItems: "center" }}>
       <View
         style={{
           paddingHorizontal: 8,
@@ -136,7 +136,7 @@ function Pin({ x, y, icon, label }: { x: number; y: number; icon: string; label:
         }}
       >
         <Icon name={icon} size={14} color={theme.primary} />
-        <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: "700" }}>{label}</Text>
+        <Text numberOfLines={1} style={{ color: theme.textPrimary, fontSize: 13, fontWeight: "700" }}>{label}</Text>
       </View>
     </View>
   );
