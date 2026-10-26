@@ -24,6 +24,7 @@ import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
 import { EditHarvestSheet } from "../../src/components/EditHarvestSheet";
 import { Avatar } from "../../src/components/Avatar";
 import { PressableScale } from "../../src/components/PressableScale";
+import { productUrl, shareText } from "../../src/lib/share";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -277,6 +278,37 @@ export default function ProductDetail() {
         }}
       >
         <Icon name="arrow-back" size={22} color={t.textPrimary} />
+      </PressableScale>
+
+      {/* Compartir por WhatsApp: el enlace web abre este mismo producto */}
+      <PressableScale
+        scaleTo={0.92}
+        onPress={() =>
+          shareText(
+            `${product.name} de ${product.producer?.name ?? "un productor campesino"} (${product.municipio}), a ${formatCOP(finalPrice)} por ${product.unit} en MercaJusto: ${productUrl(product.id)}`
+          )
+        }
+        accessibilityRole="button"
+        accessibilityLabel={`Compartir ${product.name}`}
+        hitSlop={4}
+        style={{
+          position: "absolute",
+          top: insets.top + spacing[2],
+          right: spacing[4],
+          width: 44,
+          height: 44,
+          borderRadius: radius.full,
+          backgroundColor: t.bgCard,
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: "#0A140E",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.16,
+          shadowRadius: 10,
+          elevation: 4,
+        }}
+      >
+        <Icon name="share-social-outline" size={21} color={t.textPrimary} />
       </PressableScale>
 
       {/* Barra de acción fija */}

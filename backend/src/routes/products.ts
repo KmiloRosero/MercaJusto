@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
+import { notifySurplusNearby } from "../lib/surplusAlerts";
 import { ForbiddenError, NotFoundError } from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
 
@@ -123,6 +124,7 @@ productsRouter.post("/", requireAuth, requireRole("PRODUCER"), async (req, res, 
         producerId: req.user!.userId,
       },
     });
+    if (product.isSurplus && product.discountPct > 0) void notifySurplusNearby(product);
     res.status(201).json(product);
   } catch (err) {
     next(err);
@@ -150,6 +152,9 @@ productsRouter.patch("/:id", requireAuth, requireRole("PRODUCER"), async (req, r
         harvestDate: data.harvestDate ? new Date(data.harvestDate) : undefined,
       },
     });
+    // Avisar solo cuando la cosecha entra a excedente o mejora el descuento, no en cada edición.
+    const becameSurplus = updated.isSurplus && updated.discountPct > 0 && (!existing.isSurplus || updated.discountPct > existing.discountPct);
+    if (becameSurplus && updated.isActive && updated.stock > 0) void notifySurplusNearby(updated);
     res.json(updated);
   } catch (err) {
     next(err);

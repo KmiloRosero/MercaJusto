@@ -73,14 +73,18 @@ export default function RootLayout() {
     };
   }, [userId, setPushToken]);
 
-  // Al tocar una notificación de pedido, abrir su seguimiento
+  // Al tocar una notificación: un pedido abre su seguimiento; un excedente, el producto
   useEffect(() => {
     if (Platform.OS === "web" || !userId) return;
     const sub = Notifications.addNotificationResponseReceivedListener((response) => {
-      const orderId = response.notification.request.content.data?.orderId;
+      const data = response.notification.request.content.data;
+      const orderId = data?.orderId;
       if (typeof orderId === "string") {
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         router.push(`/seguimiento/${orderId}`);
+      } else if (typeof data?.productId === "string") {
+        // Aviso de excedente cerca: abre la cosecha en oferta.
+        router.push(`/producto/${data.productId}`);
       }
     });
     return () => sub.remove();
