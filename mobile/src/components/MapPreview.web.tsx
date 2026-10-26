@@ -136,7 +136,7 @@ function Pin({ x, y, icon, label }: { x: number; y: number; icon: string; label:
         }}
       >
         <Icon name={icon} size={14} color={theme.primary} />
-        <Text style={{ color: theme.textPrimary, fontSize: 12, fontWeight: "700" }}>{label}</Text>
+        <Text style={{ color: theme.textPrimary, fontSize: 13, fontWeight: "700" }}>{label}</Text>
       </View>
     </View>
   );

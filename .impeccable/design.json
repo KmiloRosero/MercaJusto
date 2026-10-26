@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-17T23:04:33.985089+00:00",
+  "generatedAt": "2026-10-26T03:23:08.617105+00:00",
   "title": "Design System: MercaJusto",
   "extensions": {
     "colorMeta": {
@@ -218,9 +218,18 @@
         "role": "primary",
         "displayName": "Verde sobre superficie inversa",
         "darkCounterpart": "dark-inversePrimary"
+      },
+      "dark-primaryDark": {
+        "role": "primary",
+        "displayName": "Verde de serie (oscuro)",
+        "purpose": "Marcas de datos de las gráficas en modo oscuro; en claro la serie usa primary."
       }
     },
     "typographyMeta": {
+      "figure-hero": {
+        "displayName": "Figure hero",
+        "purpose": "La cifra principal de \"Mi impacto\" / \"Mis ventas\"; una sola por pantalla."
+      },
       "display": {
         "displayName": "Display",
         "purpose": "Titular del onboarding y de acceso."
@@ -235,7 +244,7 @@
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Título de los anuncios del carrusel."
+        "purpose": "Título de los anuncios del carrusel, título grande de Pedidos y nombre en Perfil."
       },
       "headline": {
         "displayName": "Headline",
@@ -260,6 +269,10 @@
       "label": {
         "displayName": "Label",
         "purpose": "Solo texto de pills."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Cifras de las StatTile."
       }
     },
     "shadows": [
@@ -271,7 +284,7 @@
       {
         "name": "float-control",
         "value": "0 4px 10px rgba(10,20,14,0.16)",
-        "purpose": "Botón atrás circular sobre foto o portada (elevation 4)."
+        "purpose": "Botones atrás y compartir circulares sobre foto o portada (elevation 4)."
       },
       {
         "name": "cart-bar",
@@ -291,7 +304,7 @@
       {
         "name": "md",
         "value": "0 4px 12px rgba(0,0,0,0.10)",
-        "purpose": "Tarjetas sobre el mapa en seguimiento (elevation 4)."
+        "purpose": "Hoja de estado sobre el mapa en seguimiento (elevation 4)."
       },
       {
         "name": "lg",
@@ -423,11 +436,35 @@
       "description": "Aviso breve en superficie inversa con acción opcional.",
       "html": "<div class=\"ds-snack\"><span>Quitaste Papa pastusa</span><button>Deshacer</button></div>",
       "css": ".ds-snack{display:flex;align-items:center;gap:12px;min-height:48px;padding:12px 16px;border-radius:6px;background:#26302A;color:#EEF3EC;font-family:system-ui, Roboto, sans-serif;font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-width:480px;} .ds-snack span{flex:1;} .ds-snack button{border:none;background:transparent;color:#8FD3A1;font:inherit;font-weight:800;min-height:48px;cursor:pointer;} .ds-snack button:focus-visible{outline:2px solid #8FD3A1;}"
+    },
+    {
+      "name": "Order Card",
+      "kind": "card",
+      "refersTo": "order-card",
+      "description": "Pedido con la cosecha primero, estado y total; solo la parte de arriba abre el pedido y las acciones van debajo.",
+      "html": "<article class=\"ds-order\"><button class=\"ds-order-top\"><span class=\"ds-order-thumb\"><svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" fill=\"currentColor\" aria-hidden=\"true\"><ellipse cx=\"12\" cy=\"12\" rx=\"8\" ry=\"6\"/></svg><span class=\"ds-order-badge\">+2</span></span><span class=\"ds-order-body\"><span class=\"ds-order-title\">2 kg Papa pastusa, 1 lb Queso campesino, 1 atado Cebolla</span><span class=\"ds-order-meta\">12 oct · 9:40 a. m.</span><span class=\"ds-order-row\"><span class=\"ds-order-pill\">Entregado</span><span class=\"ds-order-total\">$42.500</span></span></span></button><div class=\"ds-order-actions\"><button class=\"ds-btn-sm\">Volver a pedir</button><button class=\"ds-btn-sm ds-btn-sm-outline\">Calificar</button></div></article>",
+      "css": ".ds-order{width:340px;padding:16px;border:1px solid #E2E5DF;border-radius:16px;background:#FFFFFF;display:flex;flex-direction:column;gap:12px;font-family:system-ui, Roboto, sans-serif;color:#17211A;} .ds-order-top{display:flex;gap:12px;border:none;background:transparent;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-order-top:active{transform:scale(0.98);} .ds-order-top:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-order-thumb{position:relative;flex:none;width:56px;height:56px;border-radius:12px;background:#EFE0C8;color:#6B4A1A;display:flex;align-items:center;justify-content:center;} .ds-order-badge{position:absolute;right:-6px;bottom:-6px;min-width:24px;height:24px;padding:0 5px;box-sizing:border-box;border-radius:9999px;background:#26302A;color:#EEF3EC;border:2px solid #FFFFFF;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;} .ds-order-body{flex:1;display:flex;flex-direction:column;gap:4px;} .ds-order-title{font-size:15px;line-height:20px;font-weight:700;letter-spacing:-0.1px;} .ds-order-meta{font-size:13px;line-height:18px;color:#5F6B62;} .ds-order-row{display:flex;align-items:center;justify-content:space-between;margin-top:2px;} .ds-order-pill{padding:4px 10px;border-radius:9999px;background:#D7EBD3;color:#17703A;font-size:11px;line-height:14px;font-weight:700;} .ds-order-total{font-size:16px;font-weight:800;} .ds-order-actions{display:flex;gap:8px;} .ds-btn-sm{flex:1;height:36px;padding:0 16px;border:none;border-radius:9999px;background:#1F6B3D;color:#FFFFFF;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:transform 120ms cubic-bezier(0.23,1,0.32,1);} .ds-btn-sm:active{transform:scale(0.97);} .ds-btn-sm:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;} .ds-btn-sm-outline{background:transparent;color:#1F6B3D;box-shadow:inset 0 0 0 1.5px #1F6B3D;}"
+    },
+    {
+      "name": "Stat Tiles and Column Chart",
+      "kind": "custom",
+      "refersTo": "chart-column",
+      "description": "Cifras de apoyo en pozo gris y la serie semanal: una sola serie, la columna elegida a opacidad completa con su valor encima.",
+      "html": "<section class=\"ds-impact\"><div class=\"ds-tiles\"><div class=\"ds-tile\"><span class=\"ds-tile-v\">18 %</span><span class=\"ds-tile-l\">menos que en la plaza</span></div><div class=\"ds-tile\"><span class=\"ds-tile-v\">7</span><span class=\"ds-tile-l\">productores apoyados</span></div></div><svg class=\"ds-chart\" width=\"320\" height=\"170\" viewBox=\"0 0 320 170\" role=\"img\" aria-label=\"Ahorro por semana\"><line x1=\"40\" y1=\"144\" x2=\"320\" y2=\"144\" stroke=\"#E2E5DF\"/><line x1=\"40\" y1=\"72\" x2=\"320\" y2=\"72\" stroke=\"#E2E5DF\"/><line x1=\"40\" y1=\"1\" x2=\"320\" y2=\"1\" stroke=\"#E2E5DF\"/><g fill=\"#1F6B3D\"><path opacity=\"0.55\" d=\"M58 144V104Q58 100 62 100H78Q82 100 82 104V144Z\"/><path opacity=\"0.55\" d=\"M128 144V84Q128 80 132 80H148Q152 80 152 84V144Z\"/><path opacity=\"0.55\" d=\"M198 144V64Q198 60 202 60H218Q222 60 222 64V144Z\"/><path d=\"M268 144V44Q268 40 272 40H288Q292 40 292 44V144Z\"/></g><text x=\"280\" y=\"32\" text-anchor=\"middle\" font-size=\"13\" font-weight=\"800\" fill=\"#17211A\">$12.400</text><text x=\"280\" y=\"162\" text-anchor=\"middle\" font-size=\"13\" font-weight=\"700\" fill=\"#17211A\">13 oct</text><text x=\"140\" y=\"162\" text-anchor=\"middle\" font-size=\"13\" fill=\"#5F6B62\">29 sep</text></svg><button class=\"ds-chart-toggle\">Ver como tabla</button></section>",
+      "css": ".ds-impact{width:340px;padding:20px;background:#FFFFFF;display:flex;flex-direction:column;gap:16px;font-family:system-ui, Roboto, sans-serif;} .ds-tiles{display:flex;gap:12px;} .ds-tile{flex:1;padding:16px;border-radius:16px;background:#F1F2EF;display:flex;flex-direction:column;gap:8px;} .ds-tile-v{font-size:22px;line-height:28px;font-weight:800;letter-spacing:-0.4px;color:#17211A;} .ds-tile-l{font-size:13px;line-height:18px;font-weight:500;color:#4A564D;} .ds-chart{font-family:system-ui, Roboto, sans-serif;} .ds-chart path{cursor:pointer;transition:opacity 120ms cubic-bezier(0.23,1,0.32,1);} .ds-chart path:hover{opacity:1;} .ds-chart-toggle{align-self:flex-end;min-height:44px;border:none;background:transparent;color:#1F6B3D;font:inherit;font-size:13px;font-weight:700;cursor:pointer;} .ds-chart-toggle:active{opacity:0.6;} .ds-chart-toggle:focus-visible{outline:2px solid #1F6B3D;outline-offset:2px;}"
+    },
+    {
+      "name": "Route Card",
+      "kind": "card",
+      "refersTo": "route-card",
+      "description": "Posición del pedido en la ruta optimizada del repartidor, con la tira de paradas en orden.",
+      "html": "<div class=\"ds-route\"><div class=\"ds-route-head\"><span class=\"ds-route-ic\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"6\" cy=\"18\" r=\"2\"/><circle cx=\"18\" cy=\"6\" r=\"2\"/><path d=\"M8 18h6a4 4 0 0 0 0-8h-4a4 4 0 0 1 0-8h6\"/></svg></span><span><span class=\"ds-route-t\">Tu pedido es la parada 3 de 5</span><span class=\"ds-route-s\">Llega en ~25 min</span></span></div><div class=\"ds-route-strip\" aria-hidden=\"true\"><i class=\"done\"></i><i class=\"done\"></i><i class=\"mine\"></i><i></i><i></i></div><span class=\"ds-route-n\">Antes hay 2 entregas. Ruta optimizada de 14,2 km (Pasto).</span></div>",
+      "css": ".ds-route{width:340px;padding:16px;border-radius:16px;background:#D7EBD3;color:#0F3D21;display:flex;flex-direction:column;gap:12px;font-family:system-ui, Roboto, sans-serif;} .ds-route-head{display:flex;align-items:center;gap:12px;} .ds-route-head>span:last-child{display:flex;flex-direction:column;gap:2px;} .ds-route-ic{flex:none;width:44px;height:44px;border-radius:9999px;background:#1F6B3D;color:#FFFFFF;display:flex;align-items:center;justify-content:center;} .ds-route-t{font-size:18px;line-height:24px;font-weight:700;letter-spacing:-0.2px;} .ds-route-s{font-size:13px;line-height:18px;font-weight:500;} .ds-route-strip{display:flex;align-items:center;gap:4px;} .ds-route-strip i{flex:1;height:6px;border-radius:4px;background:#FFFFFF;} .ds-route-strip i.done{background:#BCC5B8;} .ds-route-strip i.mine{height:8px;background:#1F6B3D;} .ds-route-n{font-size:13px;line-height:18px;}"
     }
   ],
   "narrative": {
     "northStar": "La plaza en el bolsillo",
-    "overview": "El flujo del comprador habla el idioma que el usuario ya conoce de las apps de domicilio (con Rappi como vara de oficio): dirección arriba, búsqueda grande, círculos de categorías, anuncios que se deslizan, rieles de \"tiendas\", tarjetas con el precio primero cuyo \"+\" se convierte en contador sin salir de la lista, y una barra flotante \"Ver canasta\". Lo propio de MercaJusto viaja dentro de ese canon: productores con nombre y municipio, la comparación con la plaza y el excedente.\n\nEl suelo es blanco puro con pozos grises casi neutros; un único verde campo carga todo lo que se toca para comprar (el \"+\" sólido, el contador, la barra de la canasta, el chip elegido, la pestaña activa). La arcilla aparece solo cuando el tema es una oportunidad de precio, y los colores de campo de cada categoría sobreviven en la fila de círculos y en los productos sin foto: la colcha de retazos quedó como la fila de categorías. Letra del sistema en negrita, precio más pesado que el nombre, tarjetas planas y sombra solo en lo que flota.\n\nLas pantallas de productor, repartidor, acceso y seguimiento conservan su tratamiento anterior (barra superior Material, tarjetas tonales) pero comparten los mismos tokens. Claro y oscuro son igual de normativos; el oscuro es negro neutro con el verde más vivo.",
+    "overview": "El flujo del comprador habla el idioma que el usuario ya conoce de las apps de domicilio (con Rappi como vara de oficio): dirección arriba, búsqueda grande, círculos de categorías, anuncios que se deslizan, rieles de \"tiendas\", tarjetas con el precio primero cuyo \"+\" se convierte en contador sin salir de la lista, y una barra flotante \"Ver canasta\". Lo propio de MercaJusto viaja dentro de ese canon: productores con nombre y municipio, la comparación con la plaza y el excedente.\n\nEl suelo es blanco puro con pozos grises casi neutros; un único verde campo carga todo lo que se toca para comprar (el \"+\" sólido, el contador, la barra de la canasta, el chip elegido, la pestaña activa). La arcilla aparece solo cuando el tema es una oportunidad de precio, y los colores de campo de cada categoría sobreviven en la fila de círculos y en los productos sin foto: la colcha de retazos quedó como la fila de categorías. Letra del sistema en negrita, precio más pesado que el nombre, tarjetas planas y sombra solo en lo que flota.\n\nPedidos, Perfil, \"Mi impacto\" / \"Mis ventas\" y seguimiento ya hablan el mismo canon: título grande, secciones blancas planas separadas por franjas grises de 8px, filas planas de ajustes y la tarjeta de estado como hoja sobre el mapa. Las demás pantallas de productor, repartidor y acceso conservan su tratamiento anterior (barra superior Material, tarjetas tonales) pero comparten los mismos tokens. Claro y oscuro son igual de normativos; el oscuro es negro neutro con el verde más vivo.",
     "keyCharacteristics": [
       "Gramática de app de domicilios en el flujo del comprador; Material 3 estándar en el resto.",
       "Un solo verde (`primary`) para toda acción y selección; sin segundo color de acción.",
@@ -454,6 +491,11 @@
         "section": "colors"
       },
       {
+        "name": "The One Series Rule",
+        "body": "Una gráfica muestra una sola serie en el verde de serie; el título dice qué se grafica, no una leyenda. Si hay que comparar, se ordena (barras de mayor a menor), no se colorea.",
+        "section": "colors"
+      },
+      {
         "name": "The Paired Roles Rule",
         "body": "Cada fondo va con su rol `on*` o con la tinta de su campo; todo par cumple 4,5:1 en ambos temas.",
         "section": "colors"
@@ -466,6 +508,11 @@
       {
         "name": "The Footnote Floor Rule",
         "body": "Ninguna información va por debajo de Footnote (13px); 11-12px es solo para pills, etiquetas sobre foto y pestañas. La app se usa al sol y con letra del sistema agrandada.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Figure Rule",
+        "body": "Una pantalla de cifras tiene una sola cifra en Figure hero; las demás bajan a Figure en StatTile y los valores de las gráficas a Footnote 700-800.",
         "section": "typography"
       },
       {
@@ -487,6 +534,8 @@
       "**Do** usar la arcilla (`accent`, `accentLight`) solo para descuentos y excedentes.",
       "**Do** rellenar búsqueda, chips en reposo y selectores con `bgInput` sobre el suelo blanco.",
       "**Do** emparejar cada fondo con su rol `on*` y verificar claro y oscuro.",
+      "**Do** graficar una sola serie en el verde de serie, con columnas de máximo 24dp, punta de 4 y base recta, una etiqueta directa y la opción \"Ver como tabla\".",
+      "**Do** separar las secciones planas con franjas `bgSecondary` de 8px en lugar de tarjetas con sombra.",
       "**Do** responder al toque con hundimiento corto (0.97-0.98, 120ms, easeOut) y regreso con resorte; los chips responden solo con color."
     ],
     "donts": [
@@ -494,6 +543,7 @@
       "**Don't** usar `accent` para acciones generales, navegación, estados o decoración.",
       "**Don't** poner sombra a las tarjetas que descansan en una grilla o un riel; la sombra es para lo que flota.",
       "**Don't** escribir información por debajo de 13px.",
+      "**Don't** hacer de una tarjeta de pedido entera un botón: las acciones van fuera de la zona que abre el pedido.",
       "**Don't** escribir colores sueltos en pantalla: usar los roles de `colors`, `fields` y `BRAND` (la sombra `#0A140E` es la única excepción establecida)."
     ]
   }
