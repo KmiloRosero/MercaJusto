@@ -30,6 +30,7 @@ import { DEFAULT_COORDS, municipioCoords } from "../src/lib/municipios";
 import { toast } from "../src/store/toast";
 
 import { clearPublishDraft, draftHasContent, loadPublishDraft, PublishDraft, savePublishDraft } from "../src/lib/publishDraft";
+import { usePublishQueue } from "../src/store/publishQueue";
 import { SlowActionHint } from "../src/components/QueryState";
 const UNITS = ["Kilo", "Libra", "Atado", "Docena", "Unidad", "Litro"];
 const DISCOUNTS = [10, 20, 30];
@@ -53,6 +54,7 @@ export default function PublicarCosecha() {
   const router = useRouter();
   const t = useTheme();
   const queryClient = useQueryClient();
+  const enqueuePublication = usePublishQueue((s) => s.enqueue);
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const user = useAuth((s) => s.user);
@@ -318,6 +320,28 @@ export default function PublicarCosecha() {
     const numStock = Math.floor(Number(stock));
     const numTraditional = traditionalPrice ? Math.round(Number(traditionalPrice)) : undefined;
 
+    // Sin GPS: cabecera del municipio escrito (o Pasto si no lo conocemos)
+    const farmCoords =
+      farm && farm.municipio.trim().toLowerCase() === municipio.trim().toLowerCase()
+        ? { lat: farm.latitude, lng: farm.longitude }
+        : null;
+    const defaultCoords = coords ?? farmCoords ?? municipioCoords(municipio) ?? DEFAULT_COORDS;
+    const input = {
+      categoryId: categoryId!, // validado en validateStep(0)
+      name: name.trim(),
+      description: description.trim() || undefined,
+      price: numPrice,
+      traditionalPrice: numTraditional,
+      unit,
+      stock: numStock,
+      isSurplus,
+      discountPct: isSurplus ? discountPct : 0,
+      municipio: municipio.trim(),
+      vereda: vereda.trim() || undefined,
+      latitude: defaultCoords.lat,
+      longitude: defaultCoords.lng,
+    };
+
     setSaving(true);
     try {
       let serverPhotoUrl: string | undefined = undefined;
@@ -327,28 +351,7 @@ export default function PublicarCosecha() {
         serverPhotoUrl = photoUri;
       }
 
-      // Sin GPS: cabecera del municipio escrito (o Pasto si no lo conocemos)
-      const farmCoords =
-        farm && farm.municipio.trim().toLowerCase() === municipio.trim().toLowerCase()
-          ? { lat: farm.latitude, lng: farm.longitude }
-          : null;
-      const defaultCoords = coords ?? farmCoords ?? municipioCoords(municipio) ?? DEFAULT_COORDS;
-      await createProduct({
-        categoryId: categoryId!, // validado en validateStep(0)
-        name: name.trim(),
-        description: description.trim() || undefined,
-        price: numPrice,
-        traditionalPrice: numTraditional,
-        unit,
-        stock: numStock,
-        photoUrl: serverPhotoUrl,
-        isSurplus,
-        discountPct: isSurplus ? discountPct : 0,
-        municipio: municipio.trim(),
-        vereda: vereda.trim() || undefined,
-        latitude: defaultCoords.lat,
-        longitude: defaultCoords.lng,
-      });
+      await createProduct({ ...input, photoUrl: serverPhotoUrl });
 
       await clearPublishDraft();
       await queryClient.invalidateQueries({ queryKey: ["products"] });
@@ -356,10 +359,11 @@ export default function PublicarCosecha() {
       router.replace("/(tabs)/home");
     } catch (err) {
       if (isRetryableError(err)) {
-        showAlert(
-          "No se pudo publicar",
-          "Parece que no hay señal. Tu cosecha quedó guardada en este celular: vuelve a tocar \"Publicar cosecha\" cuando tengas conexión."
-        );
+        // Sin señal: la cosecha pasa a la cola y se publica sola al volver la conexión.
+        await enqueuePublication({ input, photoUri, photoMime });
+        await clearPublishDraft();
+        toast.info("Sin señal: tu cosecha se publicará sola cuando vuelva la conexión");
+        router.replace("/(tabs)/home");
       } else {
         showAlert("No se pudo publicar", apiErrorMessage(err));
       }

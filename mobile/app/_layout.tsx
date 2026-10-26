@@ -14,6 +14,7 @@ import { registerForPushNotifications } from "../src/lib/notifications";
 import { useTheme, useThemeScheme } from "../src/theme";
 import { Toast } from "../src/components/Toast";
 import { AnimatedSplash } from "../src/components/AnimatedSplash";
+import { usePublishQueueRunner } from "../src/store/publishQueue";
 
 // El splash nativo se mantiene hasta que el splash animado tome el relevo.
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -32,6 +33,9 @@ export default function RootLayout() {
   const bootstrap = useAuth((s) => s.bootstrap);
   const hydrated = useAuth((s) => s.hydrated);
   const userId = useAuth((s) => s.user?.id);
+  const isProducer = useAuth((s) => s.user?.role === "PRODUCER");
+  // Publicaciones hechas sin señal: se envían solas cuando vuelve la conexión.
+  usePublishQueueRunner(isProducer);
   const setPushToken = useAuth((s) => s.setPushToken);
   const themeScheme = useThemeScheme();
   const t = useTheme();

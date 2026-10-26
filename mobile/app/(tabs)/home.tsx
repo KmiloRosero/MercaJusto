@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SectionHeader } from "../../src/components/TopBar";
 import { CategoryCircles, ProducerCard, ProducerTile, Promo, PromoCarousel } from "../../src/components/HomeBlocks";
 import { CartBar } from "../../src/components/CartBar";
@@ -22,6 +22,8 @@ import { getCategories, getImpactMetrics, getMyOrders, getProducts } from "../..
 import type { Address, Product } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
+import { usePublishQueue } from "../../src/store/publishQueue";
+import { toast } from "../../src/store/toast";
 
 import { ErrorState, LoadingState, ProductGridSkeleton } from "../../src/components/QueryState";
 import { PressableScale } from "../../src/components/PressableScale";
@@ -360,6 +362,8 @@ function ProducerHome() {
         <View style={{ paddingHorizontal: GUTTER, gap: spacing[6] }}>
           <GreetingRow placeLabel="Vendiendo desde" place={placeOf(farm)} />
 
+          <QueuedPublications />
+
           {/* Acción principal: publicar */}
           <View style={{ gap: spacing[3] }}>
             <View style={{ gap: spacing[1] }}>
@@ -505,6 +509,59 @@ function HomeNote({ icon, title, body }: { icon: "receipt-outline" | "leaf-outli
         <Text style={[type.callout, { color: t.textPrimary }]}>{title}</Text>
         <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>{body}</Text>
       </View>
+    </View>
+  );
+}
+
+/**
+ * Cosechas publicadas sin señal que esperan en la cola. Se envían solas; aquí
+ * se ven, se puede reintentar ya, y las que el servidor rechazó muestran por qué.
+ */
+function QueuedPublications() {
+  const t = useTheme();
+  const queryClient = useQueryClient();
+  const items = usePublishQueue((s) => s.items);
+  const flushing = usePublishQueue((s) => s.flushing);
+  const flush = usePublishQueue((s) => s.flush);
+  const remove = usePublishQueue((s) => s.remove);
+  if (items.length === 0) return null;
+
+  const waiting = items.filter((it) => !it.error);
+  const failed = items.filter((it) => it.error);
+
+  const retry = async () => {
+    const published = await flush();
+    if (published > 0) queryClient.invalidateQueries({ queryKey: ["products"] });
+    else if (usePublishQueue.getState().items.some((it) => !it.error)) toast.info("Todavía no hay señal. Lo intentamos solos cada 30 segundos.");
+  };
+
+  return (
+    <View style={{ gap: spacing[2] }}>
+      {waiting.length > 0 ? (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{ flexDirection: "row", alignItems: "center", gap: spacing[3], padding: spacing[4], borderRadius: radius.lg, backgroundColor: t.warningLight }}
+        >
+          <Icon name="cloud-offline-outline" size={22} color={t.warning} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[type.callout, { color: t.textPrimary }]}>
+              {waiting.length === 1 ? `${waiting[0].input.name} espera señal` : `${waiting.length} cosechas esperan señal`}
+            </Text>
+            <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>Se publican solas cuando vuelva la conexión.</Text>
+          </View>
+          <Button title="Reintentar" size="sm" variant="outline" loading={flushing} onPress={retry} />
+        </View>
+      ) : null}
+      {failed.map((it) => (
+        <View key={it.id} style={{ flexDirection: "row", alignItems: "center", gap: spacing[3], padding: spacing[4], borderRadius: radius.lg, backgroundColor: t.dangerLight }}>
+          <Icon name="alert-circle-outline" size={22} color={t.danger} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={[type.callout, { color: t.textPrimary }]}>No se pudo publicar {it.input.name}</Text>
+            <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>{it.error}</Text>
+          </View>
+          <Button title="Descartar" size="sm" variant="ghost" onPress={() => remove(it.id)} />
+        </View>
+      ))}
     </View>
   );
 }
