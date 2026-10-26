@@ -373,11 +373,11 @@ export default function PublicarCosecha() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
       <TopBar showBack onBack={goBack} title="Publicar cosecha" />
 
       {/* Progreso: tres pasos cortos */}
-      <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[3], gap: spacing[2], backgroundColor: t.bgSecondary }}>
+      <View style={{ paddingHorizontal: spacing[5], paddingTop: spacing[3], gap: spacing[2], backgroundColor: t.bgPrimary }}>
         <View style={{ flexDirection: "row", gap: spacing[1] }}>
           {STEPS.map((s, i) => (
             <View
@@ -394,7 +394,7 @@ export default function PublicarCosecha() {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           ref={scrollRef}
-          contentContainerStyle={{ padding: spacing[4], gap: spacing[4], paddingBottom: spacing[10] }}
+          contentContainerStyle={{ paddingHorizontal: spacing[5], paddingTop: spacing[4], gap: spacing[6], paddingBottom: spacing[10] }}
           keyboardShouldPersistTaps="handled"
         >
           {draftRestored ? (
@@ -771,22 +771,9 @@ export default function PublicarCosecha() {
   );
 }
 
+/** Grupo de campos de un paso: plano sobre el fondo blanco, sin tarjeta dentro de la pantalla. */
 function Card({ children }: { children: React.ReactNode }) {
-  const t = useTheme();
-  return (
-    <View
-      style={{
-        backgroundColor: t.bgCard,
-        borderRadius: radius.lg,
-        padding: spacing[4],
-        gap: spacing[3],
-        borderWidth: 1,
-        borderColor: t.border,
-      }}
-    >
-      {children}
-    </View>
-  );
+  return <View style={{ gap: spacing[4] }}>{children}</View>;
 }
 
 function Title({ icon, children }: { icon?: IconName; children: React.ReactNode }) {
@@ -794,7 +781,7 @@ function Title({ icon, children }: { icon?: IconName; children: React.ReactNode 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
       {icon ? <Icon name={icon} size={18} color={t.primary} /> : null}
-      <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>
+      <Text style={[type.headline, { color: t.textPrimary }]} accessibilityRole="header">
         {children}
       </Text>
     </View>

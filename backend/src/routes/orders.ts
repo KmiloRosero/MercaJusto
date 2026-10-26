@@ -53,6 +53,8 @@ ordersRouter.get("/mine", async (req, res, next) => {
         buyer: { select: { id: true, name: true, avatarUrl: true, phone: true } },
         courier: { select: { id: true, name: true, avatarUrl: true, phone: true } },
         deliveryAddress: true,
+        // Para saber si el comprador ya calificó (botón "Calificar" en la lista)
+        reviews: { select: { fromUserId: true } },
       },
       orderBy: { createdAt: "desc" },
     });
