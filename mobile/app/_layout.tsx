@@ -105,6 +105,7 @@ export default function RootLayout() {
             <Stack.Screen name="seguimiento/[id]" />
             <Stack.Screen name="calificacion/[id]" />
             <Stack.Screen name="cambiar-contrasena" />
+            <Stack.Screen name="impacto" />
           </Stack>
           ) : null}
           <Toast />

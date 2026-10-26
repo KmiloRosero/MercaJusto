@@ -400,6 +400,31 @@ export async function getFairPriceMetrics(): Promise<FairPriceMetrics> {
   return data;
 }
 
+/** "Mi impacto" (comprador) o "Mis ventas" (productor): 8 semanas y totales reales. */
+export interface ImpactMetrics {
+  role: "BUYER" | "PRODUCER" | "COURIER";
+  /** Comprador: ahorro frente a la plaza por semana. Productor: lo recibido por semana. */
+  weeks: { start: string; value: number }[];
+  totals: {
+    ordersCount: number;
+    /** Gastado (comprador) o recibido (productor). */
+    total: number;
+    savings: number;
+    savingsPct: number;
+    surplusUnits: number;
+    unitsSold: number;
+    /** Productores apoyados (comprador) o compradores atendidos (productor). */
+    people: number;
+  } | null;
+  byCategory: { name: string; value: number }[];
+  topProducts: { name: string; unit: string; value: number; units: number }[];
+}
+
+export async function getImpactMetrics(): Promise<ImpactMetrics> {
+  const { data } = await api.get("/metrics/impact");
+  return data;
+}
+
 // ═══════════════════════════════════════════
 // ERRORS
 // ═══════════════════════════════════════════

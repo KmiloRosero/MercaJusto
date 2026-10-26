@@ -18,7 +18,7 @@ import { Icon } from "../../src/components/Icon";
 import { Button } from "../../src/components/Button";
 import { formatCOP, radius, spacing, type, useTheme } from "../../src/theme";
 import { BASE_DELIVERY_FEE } from "../../src/lib/pricing";
-import { getCategories, getMyOrders, getProducts } from "../../src/api/client";
+import { getCategories, getImpactMetrics, getMyOrders, getProducts } from "../../src/api/client";
 import type { Address, Product } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
@@ -330,6 +330,13 @@ function ProducerHome() {
     enabled: !!user?.id,
   });
 
+  const impact = useQuery({
+    queryKey: ["orders", "impact", user?.id],
+    queryFn: getImpactMetrics,
+    enabled: !!user?.id,
+  });
+  const thisWeek = impact.data?.weeks.at(-1)?.value ?? 0;
+
   const pending = (orders.data ?? []).filter((o) => o.status !== "DELIVERED" && o.status !== "CANCELLED");
   const listed = products.data?.products ?? [];
   const refreshing = orders.isRefetching || products.isRefetching;
@@ -371,6 +378,31 @@ function ProducerHome() {
               onPress={() => router.push("/publicar-cosecha")}
             />
           </View>
+
+          {/* Acceso a "Mis ventas" con lo recibido esta semana */}
+          {impact.data?.totals && impact.data.totals.ordersCount > 0 ? (
+            <PressableScale
+              onPress={() => router.push("/impacto")}
+              accessibilityRole="button"
+              accessibilityLabel={`Esta semana recibiste ${formatCOP(thisWeek)}. Ver mis ventas`}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing[3],
+                padding: spacing[4],
+                borderRadius: radius.lg,
+                backgroundColor: t.primaryLight,
+              }}
+            >
+              <Icon name="trending-up" size={22} color={t.onPrimaryLight} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={[type.footnote, { color: t.onPrimaryLight, fontWeight: "500" }]}>Esta semana recibiste</Text>
+                <Text style={[type.title, { color: t.onPrimaryLight }]}>{formatCOP(thisWeek)}</Text>
+              </View>
+              <Text style={[type.footnote, { color: t.onPrimaryLight, fontWeight: "700" }]}>Mis ventas</Text>
+              <Icon name="chevron-forward" size={16} color={t.onPrimaryLight} />
+            </PressableScale>
+          ) : null}
         </View>
 
         {/* Pedidos por atender */}

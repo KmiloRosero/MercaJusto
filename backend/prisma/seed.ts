@@ -629,6 +629,52 @@ async function main() {
     });
   }
 
+  console.log("📈 Creando historial de compras de María (últimas semanas)...");
+
+  // Pedidos entregados en las últimas 7 semanas, con los precios del catálogo
+  // demo, para que "Mi impacto" (María) y "Mis ventas" (Don José) tengan serie.
+  const history: Array<{ daysAgo: number; items: Array<[string, number]> }> = [
+    { daysAgo: 47, items: [["Papa criolla", 3], ["Zanahoria", 2]] },
+    { daysAgo: 41, items: [["Papa pastusa", 4], ["Huevos de campo", 1]] },
+    { daysAgo: 36, items: [["Oca roja", 2], ["Lulo andino", 1]] },
+    { daysAgo: 29, items: [["Papa criolla", 2], ["Queso campesino", 1], ["Cilantro", 2]] },
+    { daysAgo: 24, items: [["Mashua", 1], ["Plátano hartón", 4]] },
+    { daysAgo: 17, items: [["Papa pastusa", 5], ["Leche cruda", 3]] },
+    { daysAgo: 12, items: [["Papa criolla", 4], ["Maracuyá", 1], ["Huevos de campo", 2]] },
+    { daysAgo: 6, items: [["Oca roja", 3], ["Café molido artesanal", 1]] },
+    { daysAgo: 2, items: [["Papa pastusa", 3], ["Zanahoria", 3]] },
+  ];
+  for (const h of history) {
+    const lines: Array<{ productId: string; quantity: number; unitPrice: number; subtotal: number }> = [];
+    for (const [name, quantity] of h.items) {
+      const p = await prisma.product.findFirst({ where: { name } });
+      if (!p) continue;
+      const unitPrice = p.isSurplus ? Math.round(p.price * (1 - p.discountPct / 100)) : p.price;
+      lines.push({ productId: p.id, quantity, unitPrice, subtotal: unitPrice * quantity });
+    }
+    if (lines.length === 0) continue;
+    const subtotal = lines.reduce((acc, l) => acc + l.subtotal, 0);
+    const platformFee = Math.round(subtotal * 0.05);
+    const createdAt = new Date(Date.now() - h.daysAgo * 24 * 3600 * 1000);
+    await prisma.order.create({
+      data: {
+        buyerId: buyer.id,
+        courierId: courier.id,
+        status: "DELIVERED",
+        subtotal,
+        deliveryFee: 3500,
+        platformFee,
+        total: subtotal + 3500 + platformFee,
+        paymentMethod: "CASH",
+        paymentStatus: "PAID",
+        deliveryAddressId: buyerAddr.id,
+        createdAt,
+        deliveredAt: new Date(createdAt.getTime() + 5 * 3600 * 1000),
+        items: { create: lines },
+      },
+    });
+  }
+
   console.log("🛵 Creando entregas en camino para la ruta de Wilson...");
 
   // Dos compradores demo más con pedidos ya despachados a Wilson. Cuando Don José

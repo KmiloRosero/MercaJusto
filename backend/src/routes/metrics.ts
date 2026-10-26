@@ -183,3 +183,110 @@ metricsRouter.get("/fair-price", async (req, res, next) => {
     next(err);
   }
 });
+
+// ═══════════════════════════════════════════
+// GET /api/metrics/impact — "Mi impacto" (comprador) y "Mis ventas" (productor)
+// Series semanales de las últimas 8 semanas y totales, solo con pedidos
+// reales (sin cancelados ni pagos en línea pendientes). El ahorro, igual que
+// arriba, solo cuenta líneas con precio de plaza reportado.
+// ═══════════════════════════════════════════
+const WEEKS = 8;
+const DAY_MS = 24 * 3600 * 1000;
+
+/** Lunes 00:00 (hora local del servidor) de la semana de `d`. */
+function weekStart(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  const dow = (x.getDay() + 6) % 7; // lunes = 0
+  x.setTime(x.getTime() - dow * DAY_MS);
+  return x;
+}
+
+metricsRouter.get("/impact", async (req, res, next) => {
+  try {
+    const me = req.user!;
+    if (me.role !== "BUYER" && me.role !== "PRODUCER") {
+      res.json({ role: me.role, weeks: [], totals: null });
+      return;
+    }
+    const isBuyer = me.role === "BUYER";
+    const firstWeek = weekStart(new Date(Date.now() - (WEEKS - 1) * 7 * DAY_MS));
+
+    const orders = await prisma.order.findMany({
+      where: {
+        status: { not: "CANCELLED" },
+        NOT: { paymentMethod: "WOMPI", paymentStatus: { not: "PAID" } },
+        ...(isBuyer ? { buyerId: me.userId } : { items: { some: { product: { producerId: me.userId } } } }),
+      },
+      include: { items: { include: { product: { include: { category: true } } } } },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const weeks = Array.from({ length: WEEKS }, (_, i) => ({
+      start: new Date(firstWeek.getTime() + i * 7 * DAY_MS).toISOString(),
+      // Comprador: ahorro frente a la plaza. Productor: lo que recibió.
+      value: 0,
+    }));
+
+    let total = 0; // gastado (comprador) o recibido (productor)
+    let savings = 0;
+    let traditional = 0;
+    let compared = 0;
+    let surplusUnits = 0;
+    let unitsSold = 0;
+    const people = new Set<string>(); // productores apoyados o compradores atendidos
+    const byCategory = new Map<string, { name: string; value: number }>();
+    const byProduct = new Map<string, { name: string; unit: string; value: number; units: number }>();
+
+    for (const o of orders) {
+      const lines = isBuyer ? o.items : o.items.filter((it) => it.product.producerId === me.userId);
+      if (lines.length === 0) continue;
+      if (!isBuyer) people.add(o.buyerId);
+      const w = Math.floor((weekStart(o.createdAt).getTime() - firstWeek.getTime()) / (7 * DAY_MS));
+
+      for (const it of lines) {
+        const p = it.product;
+        if (isBuyer) people.add(p.producerId);
+        const hasRef = !!p.traditionalPrice && p.traditionalPrice > 0;
+        const lineSavings = hasRef ? Math.max(0, p.traditionalPrice! * it.quantity - it.subtotal) : 0;
+        total += it.subtotal;
+        unitsSold += it.quantity;
+        if (p.isSurplus) surplusUnits += it.quantity;
+        if (hasRef) {
+          traditional += p.traditionalPrice! * it.quantity;
+          compared += it.subtotal;
+          savings += lineSavings;
+        }
+        const weekValue = isBuyer ? lineSavings : it.subtotal;
+        if (w >= 0 && w < WEEKS) weeks[w].value += weekValue;
+
+        const cat = byCategory.get(p.categoryId) ?? { name: p.category.name, value: 0 };
+        cat.value += isBuyer ? lineSavings : it.subtotal;
+        byCategory.set(p.categoryId, cat);
+
+        const prod = byProduct.get(p.id) ?? { name: p.name, unit: p.unit, value: 0, units: 0 };
+        prod.value += it.subtotal;
+        prod.units += it.quantity;
+        byProduct.set(p.id, prod);
+      }
+    }
+
+    res.json({
+      role: me.role,
+      weeks,
+      totals: {
+        ordersCount: orders.length,
+        total,
+        savings,
+        savingsPct: traditional > 0 ? round1(((traditional - compared) / traditional) * 100) : 0,
+        surplusUnits,
+        unitsSold,
+        people: people.size,
+      },
+      byCategory: [...byCategory.values()].filter((c) => c.value > 0).sort((a, b) => b.value - a.value).slice(0, 6),
+      topProducts: [...byProduct.values()].sort((a, b) => b.value - a.value).slice(0, 5),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
