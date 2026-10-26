@@ -1,83 +1,110 @@
 import React, { useState } from "react";
 import { Text, View } from "react-native";
-import Svg, { Circle, Line, Path } from "react-native-svg";
+import Svg, { Circle, Line, Polyline } from "react-native-svg";
 import { Icon } from "./Icon";
 import { useTheme } from "../theme";
+import { MAP_HEIGHT, pathPoints, type Coordinate, type MapPreviewProps } from "./mapTypes";
 
-type Coordinate = { latitude: number; longitude: number };
-
-interface MapPreviewProps {
-  origin: Coordinate | null;
-  destination: Coordinate | null;
-}
-
-const HEIGHT = 220;
-const PAD = 48; // margen para que pines y etiquetas no se corten
+const PAD = 52; // margen para que pines y etiquetas no se corten
 
 /**
  * Vista esquemática para la web (react-native-maps solo existe en el celular).
- * Proyecta las coordenadas reales en el recuadro: la ruta une de verdad la
- * finca del productor con el punto de entrega.
+ * Proyecta las coordenadas reales en el recuadro, con la misma escala en ambos
+ * ejes: la línea recorre de verdad la ruta optimizada.
  */
-export default function MapPreview({ origin, destination }: MapPreviewProps) {
+export default function MapPreview(props: MapPreviewProps) {
+  const { origin, destination, route } = props;
   const theme = useTheme();
   const [width, setWidth] = useState(0);
+  const all = pathPoints(props);
+  const multiStop = !!route && route.length > 1;
 
-  const points = (() => {
-    if (!origin || !destination || !width) return null;
-    const minLat = Math.min(origin.latitude, destination.latitude);
-    const maxLat = Math.max(origin.latitude, destination.latitude);
-    const minLng = Math.min(origin.longitude, destination.longitude);
-    const maxLng = Math.max(origin.longitude, destination.longitude);
-    // Misma escala en ambos ejes para no deformar la geografía.
+  const project = (() => {
+    if (all.length < 2 || !width) return null;
+    const lats = all.map((c) => c.latitude);
+    const lngs = all.map((c) => c.longitude);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
     const spanLat = Math.max(maxLat - minLat, 1e-4);
     const spanLng = Math.max(maxLng - minLng, 1e-4);
-    const scale = Math.min((width - PAD * 2) / spanLng, (HEIGHT - PAD * 2) / spanLat);
+    // Abajo se deja más aire: ahí se monta la tarjeta de estado.
+    const scale = Math.min((width - PAD * 2) / spanLng, (MAP_HEIGHT - PAD * 2 - 24) / spanLat);
     const offX = (width - spanLng * scale) / 2;
-    const offY = (HEIGHT - spanLat * scale) / 2;
-    const project = (c: Coordinate) => ({
-      x: offX + (c.longitude - minLng) * scale,
-      y: offY + (maxLat - c.latitude) * scale,
-    });
-    return { a: project(origin), b: project(destination) };
+    const offY = (MAP_HEIGHT - 24 - spanLat * scale) / 2;
+    return (c: Coordinate) => ({ x: offX + (c.longitude - minLng) * scale, y: offY + (maxLat - c.latitude) * scale });
   })();
+
+  const projected = project ? all.map(project) : [];
+  const originPt = project && origin ? project(origin) : null;
+  const destinationPt = project && destination ? project(destination) : null;
 
   return (
     <View
       onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-      accessibilityLabel={points ? "Ruta desde la finca del productor hasta tu dirección" : undefined}
-      style={{ width: "100%", height: HEIGHT, backgroundColor: theme.bgSecondary, overflow: "hidden" }}
+      accessibilityLabel={
+        multiStop
+          ? `Ruta optimizada con ${route!.length} entregas desde la finca del productor`
+          : project
+            ? "Ruta desde la finca del productor hasta tu dirección"
+            : undefined
+      }
+      style={{ width: "100%", height: MAP_HEIGHT, backgroundColor: theme.bgSecondary, overflow: "hidden" }}
     >
       {width ? (
-        <Svg width={width} height={HEIGHT} style={{ position: "absolute" }}>
-          {/* Cuadrícula tenue de referencia */}
+        <Svg width={width} height={MAP_HEIGHT} style={{ position: "absolute" }}>
           {[0.25, 0.5, 0.75].map((f) => (
-            <Line key={`h${f}`} x1={0} y1={HEIGHT * f} x2={width} y2={HEIGHT * f} stroke={theme.border} strokeWidth={1} />
+            <Line key={`h${f}`} x1={0} y1={MAP_HEIGHT * f} x2={width} y2={MAP_HEIGHT * f} stroke={theme.border} strokeWidth={1} />
           ))}
           {[0.25, 0.5, 0.75].map((f) => (
-            <Line key={`v${f}`} x1={width * f} y1={0} x2={width * f} y2={HEIGHT} stroke={theme.border} strokeWidth={1} />
+            <Line key={`v${f}`} x1={width * f} y1={0} x2={width * f} y2={MAP_HEIGHT} stroke={theme.border} strokeWidth={1} />
           ))}
-          {points ? (
-            <>
-              <Path
-                d={`M ${points.a.x} ${points.a.y} Q ${(points.a.x + points.b.x) / 2} ${Math.min(points.a.y, points.b.y) - 24} ${points.b.x} ${points.b.y}`}
-                stroke={theme.primary}
-                strokeWidth={3}
-                strokeDasharray="8 6"
-                strokeLinecap="round"
-                fill="none"
-              />
-              <Circle cx={points.a.x} cy={points.a.y} r={6} fill={theme.primary} />
-              <Circle cx={points.b.x} cy={points.b.y} r={6} fill={theme.primary} />
-            </>
+          {projected.length > 1 ? (
+            <Polyline
+              points={projected.map((p) => `${p.x},${p.y}`).join(" ")}
+              stroke={theme.primary}
+              strokeWidth={4}
+              strokeDasharray={multiStop ? undefined : "8 6"}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          ) : null}
+          {multiStop && project
+            ? route!.map((s, i) => {
+                const p = project(s);
+                return (
+                  <Circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={s.mine ? 8 : 6}
+                    fill={s.mine ? theme.primary : theme.bgCard}
+                    stroke={s.mine ? theme.bgCard : theme.gray400}
+                    strokeWidth={2}
+                  />
+                );
+              })
+            : null}
+          {originPt ? <Circle cx={originPt.x} cy={originPt.y} r={7} fill={theme.success} stroke={theme.bgCard} strokeWidth={2} /> : null}
+          {!multiStop && destinationPt ? (
+            <Circle cx={destinationPt.x} cy={destinationPt.y} r={7} fill={theme.primary} stroke={theme.bgCard} strokeWidth={2} />
           ) : null}
         </Svg>
       ) : null}
 
-      {points ? (
+      {project ? (
         <>
-          <Pin x={points.a.x} y={points.a.y} icon="leaf" label="Productor" />
-          <Pin x={points.b.x} y={points.b.y} icon="location" label="Entrega" />
+          {originPt ? <Pin x={originPt.x} y={originPt.y} icon="leaf" label="Finca" /> : null}
+          {multiStop
+            ? route!.map((s, i) => {
+                const p = project(s);
+                return s.mine ? <Pin key={i} x={p.x} y={p.y} icon="location" label={`Este pedido · ${i + 1}`} /> : null;
+              })
+            : destinationPt ? (
+                <Pin x={destinationPt.x} y={destinationPt.y} icon="location" label="Entrega" />
+              ) : null}
         </>
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -91,7 +118,7 @@ export default function MapPreview({ origin, destination }: MapPreviewProps) {
 function Pin({ x, y, icon, label }: { x: number; y: number; icon: string; label: string }) {
   const theme = useTheme();
   return (
-    <View style={{ position: "absolute", left: x - 40, top: y - 42, width: 80, alignItems: "center" }}>
+    <View pointerEvents="none" style={{ position: "absolute", left: x - 60, top: y - 40, width: 120, alignItems: "center" }}>
       <View
         style={{
           paddingHorizontal: 8,
@@ -101,6 +128,11 @@ function Pin({ x, y, icon, label }: { x: number; y: number; icon: string; label:
           flexDirection: "row",
           alignItems: "center",
           gap: 4,
+          shadowColor: "#0A140E",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.12,
+          shadowRadius: 4,
+          elevation: 2,
         }}
       >
         <Icon name={icon} size={14} color={theme.primary} />

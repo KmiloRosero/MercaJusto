@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
-import { optimizeRoutes, haversineKm, type DeliveryStop } from "../lib/routing";
+import { optimizeRoutes, type DeliveryStop } from "../lib/routing";
+import { buildSequence, type SequenceEntry } from "../lib/courierRoute";
 import { BadRequestError, NotFoundError } from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
 
@@ -10,22 +11,8 @@ routesRouter.use(requireAuth);
 // La planeación logística es para repartidores y productores
 routesRouter.use(requireRole("COURIER", "PRODUCER"));
 
-// Velocidad promedio rural y tiempo de atención por parada (para ETAs)
-const AVG_SPEED_KMH = 30;
-const SERVICE_MIN_PER_STOP = 5;
-
 // Estados de pedido que aún pueden entrar a una ruta de entrega
 const ROUTABLE_STATUSES = ["CONFIRMED", "PREPARING"];
-
-interface SequenceEntry {
-  orderId: string;
-  lat: number;
-  lng: number;
-  municipio?: string;
-  legKm: number;
-  cumulativeKm: number;
-  etaMin: number;
-}
 
 function depotFromEnv(): { lat: number; lng: number } | undefined {
   const lat = Number(process.env.DEPOT_LAT);
@@ -36,30 +23,6 @@ function depotFromEnv(): { lat: number; lng: number } | undefined {
   return undefined;
 }
 
-/** Construye las entradas de secuencia con distancia por tramo y ETA acumulada. */
-function buildSequence(
-  depot: { lat: number; lng: number },
-  stops: DeliveryStop[]
-): SequenceEntry[] {
-  const entries: SequenceEntry[] = [];
-  let prev = depot;
-  let cumulativeKm = 0;
-  stops.forEach((s, i) => {
-    const legKm = haversineKm(prev, s);
-    cumulativeKm += legKm;
-    entries.push({
-      orderId: s.orderId,
-      lat: s.lat,
-      lng: s.lng,
-      municipio: s.municipio,
-      legKm: Math.round(legKm * 100) / 100,
-      cumulativeKm: Math.round(cumulativeKm * 100) / 100,
-      etaMin: Math.round((cumulativeKm / AVG_SPEED_KMH) * 60 + i * SERVICE_MIN_PER_STOP),
-    });
-    prev = s;
-  });
-  return entries;
-}
 
 // ═══════════════════════════════════════════
 // POST /api/routes/optimize — genera rutas optimizadas (VRP)

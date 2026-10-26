@@ -12,6 +12,7 @@ import {
 import { requireAuth, requireRole } from "../middleware/auth";
 import { notifyProducersOfNewOrder } from "../lib/payments";
 import { wompiEnabled } from "../lib/wompi";
+import { deliveryViewFor, planCourierRoute } from "../lib/courierRoute";
 
 export const ordersRouter = Router();
 ordersRouter.use(requireAuth);
@@ -90,9 +91,15 @@ ordersRouter.get("/:id", async (req, res, next) => {
         },
         deliveryAddress: true,
         reviews: true,
+        route: { select: { zoneLabel: true, totalDistanceKm: true, sequenceJson: true } },
       },
     });
-    res.json(order);
+    if (!order) throw new NotFoundError("Pedido no encontrado");
+    // La ruta completa es para el repartidor y los productores; el comprador ve su parada.
+    const { route, ...rest } = order;
+    const delivery =
+      order.status === "IN_TRANSIT" ? deliveryViewFor(order.id, route, p.isCourier || p.isProducer) : null;
+    res.json({ ...rest, delivery });
   } catch (err) {
     next(err);
   }
@@ -273,6 +280,20 @@ ordersRouter.patch("/:id/status", async (req, res, next) => {
         },
       });
     });
+
+    // Al despachar, el VRP reordena todas las entregas en camino del repartidor
+    // saliendo desde la finca de este pedido. Si falla, el despacho sigue igual.
+    if (status === "IN_TRANSIT" && updated.courierId) {
+      const farm = await prisma.product.findFirst({
+        where: { id: { in: order.items.map((it) => it.productId) } },
+        select: { latitude: true, longitude: true },
+      });
+      if (farm && Number.isFinite(farm.latitude) && Number.isFinite(farm.longitude)) {
+        await planCourierRoute(updated.courierId, { lat: farm.latitude, lng: farm.longitude }).catch((err) =>
+          console.error("No se pudo planear la ruta del repartidor", err)
+        );
+      }
+    }
 
     if (status === "CANCELLED" && order.paymentMethod === "WOMPI" && order.paymentStatus === "PAID") {
       // Wompi no reembolsa solo: se hace desde su panel con este número de transacción.

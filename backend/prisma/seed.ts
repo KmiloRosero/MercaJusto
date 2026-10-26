@@ -2,6 +2,7 @@
 // Ejecutar: npm run db:seed
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/lib/password";
+import { planCourierRoute } from "../src/lib/courierRoute";
 
 const prisma = new PrismaClient();
 
@@ -10,8 +11,8 @@ async function main() {
   // Orden importa por foreign keys
   await prisma.review.deleteMany();
   await prisma.orderItem.deleteMany();
-  await prisma.deliveryRoute.deleteMany();
   await prisma.order.deleteMany();
+  await prisma.deliveryRoute.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
@@ -627,6 +628,59 @@ async function main() {
       data: { stock: { decrement: qty } },
     });
   }
+
+  console.log("🛵 Creando entregas en camino para la ruta de Wilson...");
+
+  // Dos compradores demo más con pedidos ya despachados a Wilson. Cuando Don José
+  // despacha el pedido de María, el VRP reordena las tres entregas y María ve
+  // en qué parada va su pedido. Las cuentas existen solo como datos de demostración.
+  const oca = await prisma.product.findFirst({ where: { name: "Oca roja" } });
+  const mashua = await prisma.product.findFirst({ where: { name: "Mashua" } });
+  const routeBuyers = [
+    {
+      name: "Ana Lucía Benavides",
+      email: "ana@example.com",
+      phone: "+573013334444",
+      address: { municipio: "Pasto", detail: "Carrera 27 #12-30, Barrio San Ignacio", latitude: 1.224, longitude: -77.29 },
+      product: oca,
+    },
+    {
+      name: "Carlos Andrés Erazo",
+      email: "carlos@example.com",
+      phone: "+573015556666",
+      address: { municipio: "Yacuanquer", detail: "Calle 5 #4-18, centro", latitude: 1.115, longitude: -77.402 },
+      product: mashua,
+    },
+  ];
+  for (const rb of routeBuyers) {
+    if (!rb.product) continue;
+    const user = await prisma.user.create({
+      data: { phone: rb.phone, passwordHash: demoPassword, name: rb.name, email: rb.email, role: "BUYER" },
+    });
+    const addr = await prisma.address.create({
+      data: { userId: user.id, label: "Casa", departamento: "Nariño", isDefault: true, ...rb.address },
+    });
+    const unitPrice = rb.product.price;
+    const platformFee = Math.round(unitPrice * 0.05);
+    await prisma.order.create({
+      data: {
+        buyerId: user.id,
+        courierId: courier.id,
+        status: "IN_TRANSIT",
+        subtotal: unitPrice,
+        deliveryFee: 3500,
+        platformFee,
+        total: unitPrice + 3500 + platformFee,
+        paymentMethod: "CASH",
+        paymentStatus: "PENDING",
+        deliveryAddressId: addr.id,
+        createdAt: new Date(Date.now() - 90 * 60 * 1000),
+        items: { create: [{ productId: rb.product.id, quantity: 1, unitPrice, subtotal: unitPrice }] },
+      },
+    });
+  }
+  // Ruta inicial de Wilson saliendo de la finca de Don José.
+  await planCourierRoute(courier.id, { lat: addrProducer1.latitude, lng: addrProducer1.longitude });
 
   console.log("✅ Seed completado");
   console.log("");

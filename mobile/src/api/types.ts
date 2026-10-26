@@ -121,6 +121,21 @@ export interface Order {
   buyer?: ProducerSummary;
   courier?: ProducerSummary;
   reviews?: Review[];
+  /** Ruta optimizada del repartidor; solo mientras el pedido va en camino. */
+  delivery?: DeliveryView | null;
+}
+
+export interface DeliveryView {
+  /** Posición de este pedido en la ruta (1 = la primera entrega). */
+  position: number;
+  stopCount: number;
+  /** Minutos estimados desde la salida hasta esta entrega. */
+  etaMin: number;
+  kmToStop: number;
+  zoneLabel: string;
+  totalDistanceKm: number;
+  /** El comprador solo recibe su parada; repartidor y productor, la ruta completa. */
+  stops: { lat: number; lng: number; municipio?: string; mine: boolean }[];
 }
 
 export interface Review {

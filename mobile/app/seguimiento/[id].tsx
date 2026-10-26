@@ -31,6 +31,8 @@ import { useAuth } from "../../src/store/auth";
 import { BUYER_CAN_CANCEL, NEXT_ACTION } from "../../src/lib/orderStatus";
 import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import MapPreview from "../../src/components/MapPreview";
+import type { RouteStop } from "../../src/components/mapTypes";
+import type { DeliveryView } from "../../src/api/types";
 
 import { FieldTile } from "../../src/components/FieldTile";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
@@ -145,6 +147,13 @@ export default function Seguimiento() {
       }
     }
     return { origin: orig, destination: dest };
+  }, [order]);
+
+  // Ruta del VRP: con más de una parada, la línea las recorre todas en orden.
+  const routeStops = useMemo<RouteStop[] | undefined>(() => {
+    const stops = order?.delivery?.stops;
+    if (!stops || stops.length < 2) return undefined;
+    return stops.map((st) => ({ latitude: st.lat, longitude: st.lng, mine: st.mine }));
   }, [order]);
 
   const changeStatus = async (status: OrderStatus) => {
@@ -291,14 +300,14 @@ export default function Seguimiento() {
         ) : null}
 
         {/* ═══ Mapa en vivo ═══ */}
-        <MapPreview origin={origin} destination={destination} />
+        <MapPreview origin={origin} destination={destination} route={routeStops} />
 
         {/* ═══ Status card ═══ */}
         <View
           style={{
             backgroundColor: t.bgPrimary,
-            borderRadius: radius.xl,
-            marginHorizontal: spacing[4],
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
             marginTop: -spacing[6],
             padding: spacing[5],
             ...shadow.md }}
@@ -333,6 +342,8 @@ export default function Seguimiento() {
           <Text style={[type.footnote, { fontWeight: "400", color: t.textSecondary, marginBottom: spacing[4] }]}>
             {currentDesc}
           </Text>
+
+          {order.delivery && !isCancelled ? <RouteCard delivery={order.delivery} isBuyer={isBuyerView} /> : null}
 
           {primaryAction ? (
             <View style={{ marginBottom: order.courier && !isCancelled ? spacing[4] : 0 }}>{primaryAction}</View>
@@ -402,11 +413,9 @@ export default function Seguimiento() {
           <View
             style={{
               backgroundColor: t.bgPrimary,
-              borderRadius: radius.lg,
-              marginHorizontal: spacing[4],
-              marginTop: spacing[4],
-              padding: spacing[4],
-              ...shadow.sm }}
+              marginTop: spacing[2],
+              paddingHorizontal: spacing[5],
+              paddingVertical: spacing[5] }}
           >
             <Text style={[type.callout, { color: t.textPrimary, marginBottom: spacing[4] }]} accessibilityRole="header">
               Línea de tiempo
@@ -480,11 +489,9 @@ export default function Seguimiento() {
         <View
           style={{
             backgroundColor: t.bgPrimary,
-            borderRadius: radius.lg,
-            marginHorizontal: spacing[4],
-            marginTop: spacing[4],
-            padding: spacing[4],
-            ...shadow.sm }}
+            marginTop: spacing[2],
+            paddingHorizontal: spacing[5],
+            paddingVertical: spacing[5] }}
         >
           <View
             style={{
@@ -572,11 +579,9 @@ export default function Seguimiento() {
           <View
             style={{
               backgroundColor: t.bgPrimary,
-              borderRadius: radius.lg,
-              marginHorizontal: spacing[4],
-              marginTop: spacing[4],
-              padding: spacing[4],
-              ...shadow.sm }}
+              marginTop: spacing[2],
+              paddingHorizontal: spacing[5],
+              paddingVertical: spacing[5] }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: spacing[2] }}>
               <Icon name="location" size={16} color={t.primary} />
@@ -601,7 +606,7 @@ export default function Seguimiento() {
         ) : null}
 
         {/* ═══ Acciones secundarias ═══ */}
-        <View style={{ marginHorizontal: spacing[4], marginTop: spacing[5], gap: spacing[2] }}>
+        <View style={{ backgroundColor: t.bgPrimary, marginTop: spacing[2], padding: spacing[5], gap: spacing[2] }}>
           {isDelivered && isBuyerView && reviewed ? (
             <Text style={[type.footnote, { color: t.textSecondary, textAlign: "center", fontWeight: "400" }]}>
               Ya calificaste este pedido. ¡Gracias!
@@ -627,6 +632,79 @@ function Row({ label, value, color }: { label: string; value: string; color: str
     <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 2 }}>
       <Text style={[type.footnote, { fontWeight: "400", color }]}>{label}</Text>
       <Text style={[type.footnote, { fontWeight: "600", color }]}>{value}</Text>
+    </View>
+  );
+}
+
+/**
+ * Dónde va el pedido dentro de la ruta optimizada del repartidor: parada N de M,
+ * llegada estimada y una tira con las entregas. El repartidor y el productor
+ * ven además el orden de los municipios.
+ */
+function RouteCard({ delivery, isBuyer }: { delivery: DeliveryView; isBuyer: boolean }) {
+  const t = useTheme();
+  const { position, stopCount, etaMin, kmToStop, zoneLabel, totalDistanceKm, stops } = delivery;
+  const before = position - 1;
+  const km = (n: number) => n.toLocaleString("es-CO", { maximumFractionDigits: 1 });
+  return (
+    <View
+      accessible
+      accessibilityLabel={`Parada ${position} de ${stopCount}. Llega en unos ${etaMin} minutos.`}
+      style={{ padding: spacing[4], borderRadius: radius.lg, backgroundColor: t.primaryLight, gap: spacing[3], marginBottom: spacing[4] }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+        <View
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: radius.full,
+            backgroundColor: t.primary,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon name="mci:map-marker-path" size={22} color={t.onPrimary} />
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={[type.headline, { color: t.onPrimaryLight }]}>
+            {isBuyer ? `Tu pedido es la parada ${position} de ${stopCount}` : `Parada ${position} de ${stopCount}`}
+          </Text>
+          <Text style={[type.footnote, { color: t.onPrimaryLight, fontWeight: "500" }]}>
+            Llega en ~{etaMin} min · {km(kmToStop)} km desde la finca
+          </Text>
+        </View>
+      </View>
+
+      {/* Tira de entregas en orden: la de este pedido resaltada */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }} importantForAccessibility="no-hide-descendants">
+        {Array.from({ length: stopCount }).map((_, i) => (
+          <View
+            key={i}
+            style={{
+              flex: 1,
+              height: i === before ? 8 : 6,
+              borderRadius: 4,
+              // Las entregas antes de la tuya en gris, la tuya en verde, las siguientes vacías.
+              backgroundColor: i < before ? t.gray300 : i === before ? t.primary : t.bgCard,
+            }}
+          />
+        ))}
+      </View>
+      <Text style={[type.footnote, { color: t.onPrimaryLight, fontWeight: "400" }]}>
+        {before === 0 ? "Es la primera entrega de la ruta." : `Antes hay ${before} entrega${before !== 1 ? "s" : ""}.`} Ruta
+        optimizada de {km(totalDistanceKm)} km ({zoneLabel}).
+      </Text>
+
+      {!isBuyer && stops.length > 1 ? (
+        <View style={{ gap: 4 }}>
+          {stops.map((st, i) => (
+            <Text key={i} style={[type.footnote, { color: t.onPrimaryLight, fontWeight: st.mine ? "800" : "400" }]}>
+              {i + 1}. {st.municipio ?? "Entrega"}
+              {st.mine ? " · este pedido" : ""}
+            </Text>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
