@@ -2,8 +2,8 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { ConflictError, NotFoundError } from "../middleware/errorHandler";
-import { haversineKm } from "../lib/routing";
-import { type SequenceEntry } from "../lib/courierRoute";
+import { haversineKm, optimizeRoutes, type DeliveryStop } from "../lib/routing";
+import { AVG_SPEED_KMH, SERVICE_MIN_PER_STOP, type SequenceEntry } from "../lib/courierRoute";
 import { sendPushToUser } from "../lib/push";
 
 // Apartado del repartidor. Solo ve los pedidos que puede hacer:
@@ -119,6 +119,10 @@ courierRouter.get("/board", async (req, res, next) => {
         return { ...ownOrder(o), etaMin: entry?.etaMin ?? null, kmFromStart: entry?.cumulativeKm ?? null };
       });
 
+    const currentStops: DeliveryStop[] = route
+      .filter((o) => o.address)
+      .map((o) => ({ orderId: o.id, lat: o.address!.lat, lng: o.address!.lng }));
+
     res.json({
       stats: {
         deliveredToday: deliveredToday.length,
@@ -131,8 +135,19 @@ courierRouter.get("/board", async (req, res, next) => {
         const farm = farmOf(o);
         const a = o.deliveryAddress;
         const km = farm && a ? haversineKm({ lat: farm.lat, lng: farm.lng }, { lat: a.latitude, lng: a.longitude }) : null;
-        // Sin dirección exacta ni teléfono hasta que lo tome.
+        // Sin dirección exacta ni teléfono hasta que lo tome: el punto de entrega va
+        // redondeado a ~1 km (dos decimales), suficiente para ver la ruta.
+        const approxTo = a ? { lat: Math.round(a.latitude * 100) / 100, lng: Math.round(a.longitude * 100) / 100 } : null;
         return {
+          preview:
+            farm && approxTo && km !== null
+              ? {
+                  from: { lat: farm.lat, lng: farm.lng },
+                  to: approxTo,
+                  etaMin: Math.round((km / AVG_SPEED_KMH) * 60 + SERVICE_MIN_PER_STOP),
+                  extraKm: extraKmIfAdded(currentStops, { lat: farm.lat, lng: farm.lng }, { orderId: o.id, lat: a!.latitude, lng: a!.longitude }),
+                }
+              : null,
           id: o.id,
           status: o.status,
           total: o.total,
@@ -183,3 +198,15 @@ courierRouter.post("/orders/:id/take", async (req, res, next) => {
     next(err);
   }
 });
+
+/**
+ * Cuántos kilómetros suma un pedido a la ruta actual del repartidor: la ruta
+ * optimizada con el pedido menos la ruta optimizada sin él, ambas saliendo de
+ * la finca del pedido. Sin ruta actual, no hay nada que comparar.
+ */
+function extraKmIfAdded(current: DeliveryStop[], farm: { lat: number; lng: number }, candidate: DeliveryStop): number | null {
+  if (current.length === 0) return null;
+  const without = optimizeRoutes(current, { depot: farm, vehicles: 1 }).totalDistanceKm;
+  const withIt = optimizeRoutes([...current, candidate], { depot: farm, vehicles: 1 }).totalDistanceKm;
+  return Math.max(0, Math.round((withIt - without) * 10) / 10);
+}

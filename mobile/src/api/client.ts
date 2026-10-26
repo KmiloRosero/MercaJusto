@@ -518,6 +518,14 @@ export interface AvailableOrder {
   from: { municipio: string; vereda?: string | null; producerName: string } | null;
   to: { municipio: string } | null;
   distanceKm: number | null;
+  /** Vista previa de la ruta: finca y punto de entrega aproximado (~1 km) hasta que lo tome. */
+  preview: {
+    from: { lat: number; lng: number };
+    to: { lat: number; lng: number };
+    etaMin: number;
+    /** Kilómetros que suma a su ruta actual; null si no tiene ruta. */
+    extraKm: number | null;
+  } | null;
 }
 
 export interface CourierBoard {

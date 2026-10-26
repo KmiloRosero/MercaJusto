@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Linking, RefreshControl, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -45,6 +46,7 @@ export function CourierHome() {
   const queryClient = useQueryClient();
   const user = useAuth((s) => s.user);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { dismissed, dismiss, restoreDismissed } = useDismissedOrders(user?.id);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery({
     queryKey: ["orders", "courier-board"],
@@ -85,7 +87,7 @@ export function CourierHome() {
     setBusyId(order.id);
     try {
       await takeOrder(order.id);
-      toast.success("Pedido tomado: aparece en 'Por recoger'");
+      toast.success("Aceptaste el pedido: está en 'Por recoger'");
       await refresh();
     } catch (err) {
       showAlert("No se pudo tomar", apiErrorMessage(err));
@@ -111,6 +113,8 @@ export function CourierHome() {
   }
 
   const { stats, route, toPickUp, available } = data;
+  const visibleAvailable = available.filter((o) => !dismissed.includes(o.id));
+  const hiddenCount = available.length - visibleAvailable.length;
   const next = route[0];
   const routeStops = route
     .filter((o) => o.address)
@@ -220,40 +224,154 @@ export function CourierHome() {
           </Section>
         ) : null}
 
-        {/* Pedidos listos que nadie ha tomado */}
-        <Section title="Disponibles para tomar" count={available.length}>
-          {available.length === 0 ? (
-            <Empty icon="mci:basket-outline" text="No hay pedidos disponibles por ahora. Esta lista se actualiza sola." />
+        {/* Pedidos comprados que nadie ha tomado: el repartidor ve la ruta y decide */}
+        <Section title="Pedidos disponibles" count={visibleAvailable.length}>
+          {visibleAvailable.length === 0 ? (
+            <Empty
+              icon="mci:basket-outline"
+              text="No hay pedidos disponibles por ahora. Cuando alguien compre, aparecerá aquí y te avisaremos."
+            />
           ) : (
-            available.map((o) => (
-              <View key={o.id} style={{ padding: spacing[4], borderRadius: radius.lg, borderWidth: 1, borderColor: t.border, backgroundColor: t.bgCard, gap: spacing[3] }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-                  <Text style={[type.headline, { flex: 1, color: t.textPrimary }]}>
-                    {o.from?.municipio ?? "Finca"} → {o.to?.municipio ?? "Entrega"}
-                  </Text>
-                  {o.distanceKm !== null ? (
-                    <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "700" }]}>
-                      {o.distanceKm.toLocaleString("es-CO", { maximumFractionDigits: 1 })} km
-                    </Text>
-                  ) : null}
-                </View>
-                <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
-                  Recoger donde {o.from?.producerName.split(" ")[0] ?? "el productor"}
-                  {o.from?.vereda ? ` (${o.from.vereda})` : ""} · {o.items}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
-                  <Pill variant={o.cashToCollect > 0 ? "warning" : "success"} icon={o.cashToCollect > 0 ? "cash-outline" : "checkmark-circle"}>
-                    {o.cashToCollect > 0 ? `Cobrar ${formatCOP(o.cashToCollect)}` : "Pagado en línea"}
-                  </Pill>
-                  <View style={{ flex: 1 }} />
-                  <Button title="Tomar pedido" size="sm" loading={busyId === o.id} onPress={() => take(o)} />
-                </View>
-              </View>
+            visibleAvailable.map((o) => (
+              <AvailableCard
+                key={o.id}
+                order={o}
+                busy={busyId === o.id}
+                onAccept={() => take(o)}
+                onDismiss={() => dismiss(o.id)}
+              />
             ))
           )}
+          {hiddenCount > 0 ? (
+            <Button title={`Mostrar los que ocultaste (${hiddenCount})`} size="sm" variant="ghost" onPress={restoreDismissed} />
+          ) : null}
         </Section>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+/**
+ * Pedidos que el repartidor rechazó ("No me interesa"): se guardan en el
+ * celular, por cuenta, para que no le vuelvan a aparecer. Se pueden mostrar otra vez.
+ */
+function useDismissedOrders(userId?: string) {
+  const key = `mercajusto.courierDismissed.${userId ?? "anon"}`;
+  const [dismissed, setDismissed] = useState<string[]>([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem(key)
+      .then((raw) => setDismissed(raw ? (JSON.parse(raw) as string[]) : []))
+      .catch(() => {});
+  }, [key]);
+
+  const save = (ids: string[]) => {
+    setDismissed(ids);
+    AsyncStorage.setItem(key, JSON.stringify(ids.slice(-100))).catch(() => {});
+  };
+
+  return {
+    dismissed,
+    dismiss: (id: string) => save([...dismissed, id]),
+    restoreDismissed: () => save([]),
+  };
+}
+
+/**
+ * Pedido disponible: de dónde a dónde, cuánto cobra y, al abrirlo, la ruta del
+ * envío en el mapa con su tiempo y cuánto suma a la ruta que ya lleva.
+ * Él decide: aceptarlo o "No me interesa".
+ */
+function AvailableCard({
+  order,
+  busy,
+  onAccept,
+  onDismiss,
+}: {
+  order: AvailableOrder;
+  busy: boolean;
+  onAccept: () => void;
+  onDismiss: () => void;
+}) {
+  const t = useTheme();
+  const [open, setOpen] = useState(false);
+  const km = (n: number) => n.toLocaleString("es-CO", { maximumFractionDigits: 1 });
+  const p = order.preview;
+
+  return (
+    <View style={{ borderRadius: radius.lg, borderWidth: 1, borderColor: t.border, backgroundColor: t.bgCard, overflow: "hidden" }}>
+      {open && p ? (
+        <MapPreview
+          origin={{ latitude: p.from.lat, longitude: p.from.lng }}
+          destination={{ latitude: p.to.lat, longitude: p.to.lng }}
+        />
+      ) : null}
+      <View style={{ padding: spacing[4], gap: spacing[3] }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+          <Text style={[type.headline, { flex: 1, color: t.textPrimary }]}>
+            {order.from?.municipio ?? "Finca"} → {order.to?.municipio ?? "Entrega"}
+          </Text>
+          {order.distanceKm !== null ? (
+            <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "700" }]}>{km(order.distanceKm)} km</Text>
+          ) : null}
+        </View>
+        <Text style={[type.footnote, { color: t.textSecondary, fontWeight: "400" }]}>
+          Recoger donde {order.from?.producerName.split(" ")[0] ?? "el productor"}
+          {order.from?.vereda ? ` (${order.from.vereda})` : ""} · {order.items}
+        </Text>
+
+        {open && p ? (
+          <View style={{ gap: spacing[2], padding: spacing[3], borderRadius: radius.md, backgroundColor: t.bgInput }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+              <Icon name="time-outline" size={18} color={t.textSecondary} />
+              <Text style={[type.footnote, { flex: 1, color: t.textPrimary, fontWeight: "500" }]}>
+                Unos {p.etaMin} min de la finca a la entrega
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+              <Icon name="mci:map-marker-path" size={18} color={t.textSecondary} />
+              <Text style={[type.footnote, { flex: 1, color: t.textPrimary, fontWeight: "500" }]}>
+                {p.extraKm === null
+                  ? "Sería tu primera entrega de la ruta."
+                  : p.extraKm < 1
+                    ? "Casi no suma kilómetros: queda de camino en tu ruta."
+                    : `Si lo aceptas, tu ruta suma ${km(p.extraKm)} km.`}
+              </Text>
+            </View>
+            <Text style={[type.footnote, { color: t.textTertiary, fontWeight: "400" }]}>
+              La dirección exacta y el teléfono del cliente aparecen cuando aceptas.
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+          <Pill variant={order.cashToCollect > 0 ? "warning" : "success"} icon={order.cashToCollect > 0 ? "cash-outline" : "checkmark-circle"}>
+            {order.cashToCollect > 0 ? `Cobrar ${formatCOP(order.cashToCollect)}` : "Pagado en línea"}
+          </Pill>
+          <View style={{ flex: 1 }} />
+          {p ? (
+            <Button
+              title={open ? "Ocultar ruta" : "Ver la ruta"}
+              size="sm"
+              variant="ghost"
+              icon={<Icon name="map-outline" size={16} color={t.primary} />}
+              onPress={() => setOpen((v) => !v)}
+            />
+          ) : null}
+        </View>
+        <View style={{ flexDirection: "row", gap: spacing[2] }}>
+          <Button title="No me interesa" size="sm" variant="outline" onPress={onDismiss} style={{ flex: 1 }} />
+          <Button
+            title="Aceptar pedido"
+            size="sm"
+            icon={<Icon name="checkmark-circle" size={16} color={t.onPrimary} />}
+            loading={busy}
+            onPress={onAccept}
+            style={{ flex: 1 }}
+          />
+        </View>
+      </View>
+    </View>
   );
 }
 

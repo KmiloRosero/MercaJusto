@@ -86,6 +86,10 @@ export default function RootLayout() {
       if (typeof orderId === "string") {
         queryClient.invalidateQueries({ queryKey: ["orders"] });
         router.push(`/seguimiento/${orderId}`);
+      } else if (data?.courierBoard) {
+        // Pedido disponible para el repartidor: abre su inicio con la lista.
+        queryClient.invalidateQueries({ queryKey: ["orders"] });
+        router.push("/(tabs)/home");
       } else if (typeof data?.productId === "string") {
         // Aviso de excedente cerca: abre la cosecha en oferta.
         router.push(`/producto/${data.productId}`);

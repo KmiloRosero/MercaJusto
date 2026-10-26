@@ -18,6 +18,35 @@ export async function notifyProducersOfNewOrder(orderId: string) {
       data: { orderId },
     });
   }
+  void notifyCouriersOfAvailableOrder(orderId);
+}
+
+/**
+ * El pedido ya está pagado (o es contraentrega): queda disponible para los
+ * repartidores, que lo ven en su inicio con la ruta y deciden si lo toman.
+ */
+async function notifyCouriersOfAvailableOrder(orderId: string) {
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        deliveryAddress: { select: { municipio: true } },
+        items: { take: 1, select: { product: { select: { municipio: true } } } },
+      },
+    });
+    const from = order?.items[0]?.product.municipio ?? "una finca";
+    const to = order?.deliveryAddress?.municipio ?? "su destino";
+    const couriers = await prisma.user.findMany({ where: { role: "COURIER" }, select: { id: true } });
+    for (const c of couriers) {
+      void sendPushToUser(c.id, {
+        title: `🛵 Pedido disponible: ${from} → ${to}`,
+        body: "Mira la ruta en tu inicio y decide si lo tomas.",
+        data: { courierBoard: true },
+      });
+    }
+  } catch (err) {
+    console.warn("⚠️ Aviso a repartidores falló (ignorado):", err);
+  }
 }
 
 /**
