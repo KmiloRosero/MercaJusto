@@ -15,13 +15,14 @@ import { CategoryCircles, ProducerCard, ProducerTile, Promo, PromoCarousel } fro
 import { CartBar } from "../../src/components/CartBar";
 import { CourierHome } from "../../src/components/CourierHome";
 import { HeroHarvest } from "../../src/components/HeroHarvest";
+import { RescueHero } from "../../src/components/RescueHero";
 import { ProductCard } from "../../src/components/ProductCard";
 import { OrderCard } from "../../src/components/OrderCard";
 import { Icon } from "../../src/components/Icon";
 import { Button } from "../../src/components/Button";
 import { formatCOP, radius, spacing, type, useTheme } from "../../src/theme";
 import { BASE_DELIVERY_FEE } from "../../src/lib/pricing";
-import { getCategories, getImpactMetrics, getMyOrders, getProducts } from "../../src/api/client";
+import { getCategories, getImpactMetrics, getMyOrders, getProducts, getRescueProducts } from "../../src/api/client";
 import type { Address, Product } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
@@ -132,6 +133,13 @@ function BuyerHome() {
     queryFn: () => getProducts({ surplus: true, limit: 8 }),
   });
 
+  // Lo que se pierde primero. Se refresca seguido: otros compradores también rescatan.
+  const { data: rescue = [] } = useQuery({
+    queryKey: ["products", "rescue"],
+    queryFn: getRescueProducts,
+    refetchInterval: 30_000,
+  });
+
   const products = productsData?.products || [];
   const staggerIn = useFirstLoadStagger(products.length > 0);
   const surplus = surplusData?.products || [];
@@ -203,9 +211,13 @@ function BuyerHome() {
         </PressableScale>
       </View>
 
-      {/* Cuadro principal: la cosecha de Nariño en 3D sobre su paisaje */}
-      <View style={{ paddingHorizontal: GUTTER, marginTop: -spacing[2] }}>
-        <HeroHarvest width={heroWidth} onPress={() => router.push("/(tabs)/search")} />
+      {/* Cuadro principal: el excedente que se pierde primero; si no hay, la cosecha de Nariño en 3D */}
+      <View style={{ paddingHorizontal: GUTTER, marginTop: -spacing[2], alignSelf: "center", width: heroWidth + GUTTER * 2 }}>
+        {rescue.length > 0 ? (
+          <RescueHero products={rescue} canAdd={isBuyer} onOpen={(id) => router.push(`/producto/${id}`)} />
+        ) : (
+          <HeroHarvest width={heroWidth} onPress={() => router.push("/(tabs)/search")} />
+        )}
       </View>
 
       <CategoryCircles

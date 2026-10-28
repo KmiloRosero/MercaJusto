@@ -55,6 +55,14 @@ export interface Product {
   producer?: ProducerSummary;
 }
 
+/** Excedente para el cuadro "Rescátalo" del inicio. */
+export interface RescueProduct extends Product {
+  /** Cuándo deja de estar bueno para la venta (fecha de cosecha + vida útil de su categoría). */
+  losesAt: string | null;
+  /** Unidades que otros compradores ya rescataron hoy. */
+  rescuedToday: number;
+}
+
 export interface CartItem {
   id: string;
   productId: string;

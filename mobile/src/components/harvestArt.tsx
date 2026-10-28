@@ -311,3 +311,133 @@ export function HierbasArt() {
     </Svg>
   );
 }
+
+/** Zanahoria con su copete, centrada en el origen (arriba = hombro). */
+function Carrot({ x, y, r }: { x: number; y: number; r: number }) {
+  return (
+    <G transform={`translate(${x} ${y}) rotate(${r})`}>
+      <Path d="M-2 -2 C-14 -18 -20 -30 -16 -44 C-8 -32 -4 -18 -2 -2 Z" fill="#5BAE48" {...line} strokeWidth={2} />
+      <Path d="M2 -2 C14 -18 22 -28 20 -42 C10 -30 4 -18 2 -2 Z" fill="#4E9E3E" {...line} strokeWidth={2} />
+      <Path d="M0 -2 C-2 -20 0 -36 4 -50 C8 -34 6 -18 0 -2 Z" fill="#62B54C" {...line} strokeWidth={2} />
+      <Path d="M-13 0 C-13 30 -5 62 0 82 C5 62 13 30 13 0 Q0 -6 -13 0 Z" fill="#F08A24" {...line} />
+      <Path d="M6 2 C10 30 6 58 1 78 C8 58 12 30 12 2 Z" fill="#D46F12" />
+      <Path d="M-8 18 L-2 18 M2 34 L8 34 M-6 50 L-1 50 M1 64 L5 64" stroke="#B85A0C" strokeWidth={2} strokeLinecap="round" />
+      <Ellipse cx={-6} cy={14} rx={2.5} ry={9} fill="#FFFFFF" opacity={0.35} />
+    </G>
+  );
+}
+
+export function ZanahoriaArt() {
+  return (
+    <Svg viewBox="0 0 160 160" width="100%" height="100%">
+      <Carrot x={70} y={60} r={24} />
+      <Carrot x={92} y={60} r={-24} />
+      <Carrot x={81} y={62} r={0} />
+      <Rect x={67} y={58} width={28} height={9} rx={3} fill="#E8B54A" {...line} strokeWidth={2} />
+    </Svg>
+  );
+}
+
+/** Maracuyá entero: amarillo con pintas, centrado en el origen. */
+function Passion({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <G transform={`translate(${x} ${y}) scale(${s})`}>
+      <Circle cx={0} cy={0} r={24} fill="#F2C230" {...line} />
+      <Path d="M14 -18 C26 -6 24 12 10 22 C24 16 30 -4 14 -18 Z" fill="#D9A21C" />
+      {[
+        [-10, -8],
+        [6, -12],
+        [-4, 6],
+        [10, 4],
+        [-14, 10],
+        [2, 16],
+      ].map(([cx, cy]) => (
+        <Circle key={`${cx}${cy}`} cx={cx} cy={cy} r={1.4} fill="#B8861A" />
+      ))}
+      <Ellipse cx={-9} cy={-11} rx={5} ry={8} fill="#FFFFFF" opacity={0.35} transform="rotate(-35 -9 -11)" />
+      <Path d="M0 -24 C1 -30 4 -33 8 -34" stroke="#6E8B2E" strokeWidth={3.5} fill="none" strokeLinecap="round" />
+    </G>
+  );
+}
+
+export function MaracuyaArt() {
+  const seeds = [
+    [-8, -6],
+    [2, -9],
+    [9, -2],
+    [-3, 2],
+    [6, 7],
+    [-9, 6],
+    [0, 11],
+  ];
+  return (
+    <Svg viewBox="0 0 160 160" width="100%" height="100%">
+      <Passion x={58} y={86} />
+      <Passion x={102} y={84} s={0.95} />
+      <Passion x={80} y={60} s={0.9} />
+      <G transform="translate(84 126)">
+        <Circle cx={0} cy={0} r={25} fill="#F2C230" {...line} />
+        <Circle cx={0} cy={0} r={20} fill="#F7F0D2" />
+        <Circle cx={0} cy={0} r={17} fill="#F4B43A" />
+        {seeds.map(([cx, cy]) => (
+          <G key={`${cx}${cy}`}>
+            <Circle cx={cx} cy={cy} r={2.6} fill="#2E2014" />
+            <Circle cx={cx} cy={cy} r={4} fill="#F9D27A" opacity={0.45} />
+          </G>
+        ))}
+      </G>
+    </Svg>
+  );
+}
+
+type ArtKey = "papa" | "zanahoria" | "maracuya" | "platano" | "fresa" | "aguacate" | "maiz" | "cafe" | "rabano" | "hierbas";
+
+const BY_NAME: [RegExp, ArtKey][] = [
+  [/papa|mashua|olluco|ulluco/, "papa"],
+  [/zanahoria/, "zanahoria"],
+  [/maracuy|granadilla|gulupa/, "maracuya"],
+  [/pl[aá]tano|banano|guineo/, "platano"],
+  [/fresa|mora/, "fresa"],
+  [/aguacate/, "aguacate"],
+  [/ma[ií]z|choclo|mazorca/, "maiz"],
+  [/caf[eé]|cacao/, "cafe"],
+  [/r[aá]bano|remolacha/, "rabano"],
+  [/cilantro|perejil|hierba|albahaca|menta|cebolla/, "hierbas"],
+];
+
+const BY_CATEGORY: Record<string, ArtKey> = {
+  tuberculos: "papa",
+  verduras: "zanahoria",
+  frutas: "maracuya",
+  granos: "maiz",
+  "cafe-cacao": "cafe",
+  hierbas: "hierbas",
+};
+
+/** La ilustración que mejor representa un producto: por nombre y, si no, por categoría. */
+export function ProductArt({ name, categorySlug }: { name: string; categorySlug?: string | null }) {
+  const n = name.toLowerCase();
+  const key = BY_NAME.find(([re]) => re.test(n))?.[1] ?? BY_CATEGORY[categorySlug ?? ""] ?? "papa";
+  switch (key) {
+    case "zanahoria":
+      return <ZanahoriaArt />;
+    case "maracuya":
+      return <MaracuyaArt />;
+    case "platano":
+      return <PlatanoArt />;
+    case "fresa":
+      return <FresaArt />;
+    case "aguacate":
+      return <AguacateArt />;
+    case "maiz":
+      return <MaizArt />;
+    case "cafe":
+      return <CafeArt />;
+    case "rabano":
+      return <RabanoArt />;
+    case "hierbas":
+      return <HierbasArt />;
+    default:
+      return <PapaArt />;
+  }
+}

@@ -298,7 +298,7 @@ async function main() {
         stock: 90,
         isSurplus: true,
         discountPct: 15,
-        harvestDate: new Date(Date.now() - 2 * 24 * 3600 * 1000),
+        harvestDate: new Date(Date.now() - (4 * 24 - 7) * 3600 * 1000), // se pierde en ~7 h
         vereda: "El Rosal",
         municipio: "Guaitarilla",
         latitude: 0.9836,
@@ -499,7 +499,7 @@ async function main() {
         stock: 25,
         isSurplus: true,
         discountPct: 25,
-        harvestDate: new Date(Date.now() - 2 * 24 * 3600 * 1000),
+        harvestDate: new Date(Date.now() - (5 * 24 - 11) * 3600 * 1000), // se pierde en ~11 h
         vereda: "San Ignacio",
         municipio: "Buesaco",
         latitude: 1.2000,

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { notifySurplusNearby } from "../lib/surplusAlerts";
+import { losesAt } from "../lib/shelfLife";
 import { ForbiddenError, NotFoundError } from "../middleware/errorHandler";
 import { requireAuth, requireRole } from "../middleware/auth";
 
@@ -61,6 +62,47 @@ productsRouter.get("/", async (req, res, next) => {
     });
 
     res.json({ count: products.length, products });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ═══════════════════════════════════════════
+// GET /api/products/rescue — excedentes que se pierden primero
+// Para el cuadro "Rescátalo" del inicio: cuándo se pierde cada uno, cuánto
+// queda y cuánto rescataron hoy otros compradores.
+// ═══════════════════════════════════════════
+productsRouter.get("/rescue", async (_req, res, next) => {
+  try {
+    const now = new Date();
+    const products = await prisma.product.findMany({
+      where: { isActive: true, isSurplus: true, discountPct: { gt: 0 }, stock: { gt: 0 } },
+      include: {
+        category: true,
+        producer: { select: { id: true, name: true, rating: true, ratingCount: true, avatarUrl: true } },
+      },
+    });
+
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const sold = await prisma.orderItem.groupBy({
+      by: ["productId"],
+      where: {
+        productId: { in: products.map((p) => p.id) },
+        order: { createdAt: { gte: startOfDay }, status: { not: "CANCELLED" } },
+      },
+      _sum: { quantity: true },
+    });
+    const rescuedToday = new Map(sold.map((s) => [s.productId, s._sum.quantity ?? 0]));
+
+    const items = products
+      .map((p) => ({ ...p, losesAt: losesAt(p.harvestDate, p.category?.slug), rescuedToday: rescuedToday.get(p.id) ?? 0 }))
+      // Lo que ya se perdió no se ofrece; lo que no tiene fecha de cosecha va al final.
+      .filter((p) => !p.losesAt || p.losesAt > now)
+      .sort((a, b) => (a.losesAt?.getTime() ?? Infinity) - (b.losesAt?.getTime() ?? Infinity))
+      .slice(0, 6);
+
+    res.json({ products: items });
   } catch (err) {
     next(err);
   }

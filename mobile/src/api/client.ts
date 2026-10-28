@@ -13,6 +13,7 @@ import {
   PaymentMethod,
   PaymentStatus,
   Product,
+  RescueProduct,
   Role,
   User,
 } from "./types";
@@ -225,6 +226,12 @@ export async function getProducts(filters: ProductFilters = {}): Promise<{
   if (filters.surplus !== undefined) params.surplus = String(filters.surplus);
   const { data } = await api.get("/products", { params });
   return data;
+}
+
+/** Excedentes que se pierden primero, con su plazo y lo rescatado hoy. */
+export async function getRescueProducts(): Promise<RescueProduct[]> {
+  const { data } = await api.get<{ products: RescueProduct[] }>("/products/rescue");
+  return data.products;
 }
 
 export async function getProduct(id: string): Promise<Product & { reviews?: unknown[] }> {
