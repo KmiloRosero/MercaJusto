@@ -15,9 +15,9 @@ import type { RescueProduct } from "../api/types";
 import { formatCOP, motion, radius, spacing, type } from "../theme";
 import { effectivePrice } from "../lib/pricing";
 import { plazaComparison } from "../lib/savings";
-import { countdownLabel, msUntil, unitCount } from "../lib/rescue";
+import { ageLabel, countdownLabel, msUntil, unitCount } from "../lib/rescue";
 import { useAddToCart } from "../lib/useAddToCart";
-import { ProductArt } from "./harvestArt";
+import { CafeArt, FresaArt, PapaArt, ProductArt } from "./harvestArt";
 import { Icon } from "./Icon";
 import { PressableScale } from "./PressableScale";
 
@@ -41,6 +41,7 @@ const INK = "#FFFFFF";
 const INK_SOFT = "#C9DCCB";
 const AMBER = "#FFC86B";
 const HOT = "#FF8A5B";
+const LEAF = "#8FD694";
 
 const ROTATE_MS = 6000;
 const URGENT_MS = 6 * 3600 * 1000;
@@ -48,15 +49,25 @@ const ART = 132;
 
 const easeOut = Easing.bezier(...motion.easeOut);
 
-export function RescueHero({
-  products,
-  canAdd,
-  onOpen,
-}: {
+export type HeroMode = "rescue" | "fresh";
+
+interface HeroProps {
   products: RescueProduct[];
+  /** "rescue": excedentes con cuenta regresiva. "fresh": lo recién cosechado, cuando no hay excedentes. */
+  mode: HeroMode;
   canAdd: boolean;
   onOpen: (id: string) => void;
-}) {
+  onExplore: () => void;
+}
+
+/** Cuadro del inicio. Sin productos que mostrar, invita a ver las cosechas. */
+export function RescueHero(props: HeroProps) {
+  if (props.products.length === 0) return <EmptyHero onExplore={props.onExplore} />;
+  return <SpotlightCard {...props} />;
+}
+
+function SpotlightCard({ products, mode, canAdd, onOpen }: HeroProps) {
+  const rescue = mode === "rescue";
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const show = useSharedValue(0);
@@ -133,15 +144,18 @@ export function RescueHero({
       <PressableScale
         onPress={() => onOpen(product.id)}
         accessibilityRole="button"
-        accessibilityLabel={`${product.name} de ${producer ?? "un productor"}, ${formatCOP(price)} por ${product.unit}, ${product.discountPct}% menos. Ver producto`}
+        accessibilityLabel={`${product.name} de ${producer ?? "un productor"}, ${formatCOP(price)} por ${product.unit}${product.discountPct > 0 ? `, ${product.discountPct}% menos` : ""}. Ver producto`}
         style={{ flexDirection: "row", paddingHorizontal: spacing[5], paddingTop: spacing[5], gap: spacing[2] }}
       >
         <Animated.View style={[{ flex: 1, gap: spacing[1], minHeight: 140 }, contentStyle]}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[2], marginBottom: spacing[1] }}>
-            <UrgencyDot product={product} />
-            <Text style={[type.overline, { color: AMBER }]}>RESCÁTALO HOY</Text>
+            {rescue ? <UrgencyDot product={product} /> : <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: LEAF }} />}
+            <Text style={[type.overline, { color: rescue ? AMBER : LEAF }]}>{rescue ? "RESCÁTALO HOY" : "RECIÉN COSECHADO"}</Text>
           </View>
-          <Text style={[type.title, { color: INK, fontSize: 26, lineHeight: 30, letterSpacing: -0.6 }]} numberOfLines={1}>
+          <Text
+            style={[type.title, { color: INK, fontSize: product.name.length > 13 ? 21 : 26, lineHeight: 30, letterSpacing: -0.6 }]}
+            numberOfLines={1}
+          >
             {product.name}
           </Text>
           <Text style={[type.footnote, { color: INK_SOFT }]} numberOfLines={1}>
@@ -169,6 +183,7 @@ export function RescueHero({
             <ProductArt name={product.name} categorySlug={product.category?.slug} />
           )}
           {/* Descuento como sello pegado al producto */}
+          {product.discountPct > 0 ? (
           <View
             style={{
               position: "absolute",
@@ -187,22 +202,23 @@ export function RescueHero({
           >
             <Text style={{ color: "#3A2304", fontSize: 15, lineHeight: 17, fontWeight: "900", letterSpacing: -0.4 }}>-{product.discountPct}%</Text>
           </View>
+          ) : null}
         </Animated.View>
       </PressableScale>
 
       {/* Parte inferior: plazo, lo que queda y el botón */}
       <Animated.View style={[{ paddingHorizontal: spacing[5], paddingTop: spacing[4], paddingBottom: spacing[5], gap: spacing[3] }, contentStyle]}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
-          <Countdown product={product} />
+          {rescue ? <Countdown product={product} /> : <HarvestAge product={product} />}
           {count > 1 ? <Dots count={count} active={index % count} onPick={goTo} /> : null}
         </View>
-        <StockBar product={product} reduceMotion={reduceMotion} />
+        {rescue ? <StockBar product={product} reduceMotion={reduceMotion} /> : null}
         <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
           <Text style={[type.footnote, { flex: 1, color: INK_SOFT }]} numberOfLines={2}>
             Quedan <Text style={{ color: INK, fontWeight: "700" }}>{unitCount(product.stock, product.unit)}</Text>
-            {product.rescuedToday > 0 ? ` · ${unitCount(product.rescuedToday, product.unit)} rescatados hoy` : " · sé el primero en rescatarlo"}
+            {!rescue ? "" : product.rescuedToday > 0 ? ` · ${unitCount(product.rescuedToday, product.unit)} rescatados hoy` : " · sé el primero en rescatarlo"}
           </Text>
-          {canAdd ? <RescueButton product={product} /> : null}
+          {canAdd ? <RescueButton product={product} label={rescue ? "Rescatar" : "Agregar"} /> : null}
         </View>
       </Animated.View>
     </View>
@@ -333,7 +349,7 @@ function Dots({ count, active, onPick }: { count: number; active: number; onPick
 }
 
 /** Agrega una unidad a la canasta y lo confirma en el mismo botón. */
-function RescueButton({ product }: { product: RescueProduct }) {
+function RescueButton({ product, label }: { product: RescueProduct; label: string }) {
   const addToCart = useAddToCart();
   const [state, setState] = useState<"idle" | "busy" | "done">("idle");
 
@@ -354,7 +370,7 @@ function RescueButton({ product }: { product: RescueProduct }) {
         setState(ok ? "done" : "idle");
       }}
       accessibilityRole="button"
-      accessibilityLabel={done ? `${product.name} en tu canasta` : `Rescatar ${product.name}, agregar 1 ${product.unit} a la canasta`}
+      accessibilityLabel={done ? `${product.name} en tu canasta` : `${label} ${product.name}, agregar 1 ${product.unit} a la canasta`}
       style={{
         minHeight: 44,
         flexDirection: "row",
@@ -367,7 +383,66 @@ function RescueButton({ product }: { product: RescueProduct }) {
       }}
     >
       <Icon name={done ? "checkmark" : "leaf"} size={16} color="#163020" />
-      <Text style={[type.callout, { color: "#163020", fontWeight: "800" }]}>{done ? "En tu canasta" : "Rescatar"}</Text>
+      <Text style={[type.callout, { color: "#163020", fontWeight: "800" }]}>{done ? "En tu canasta" : label}</Text>
     </PressableScale>
+  );
+}
+
+/** "Cosechado hace 2 días" (o cuándo se publicó, si no hay fecha de cosecha). */
+function HarvestAge({ product }: { product: RescueProduct }) {
+  const harvested = !!product.harvestDate;
+  return (
+    <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: spacing[2] }}>
+      <Icon name="leaf-outline" size={18} color={LEAF} />
+      <Text style={[type.callout, { color: INK }]} numberOfLines={1}>
+        {harvested ? "Cosechado" : "Publicado"} {ageLabel(product.harvestDate ?? product.createdAt)}
+      </Text>
+    </View>
+  );
+}
+
+/** Sin productos publicados todavía: el cuadro invita a explorar en vez de quedar vacío. */
+function EmptyHero({ onExplore }: { onExplore: () => void }) {
+  return (
+    <View style={{ borderRadius: radius.xl + 4, overflow: "hidden", backgroundColor: BG[1] }}>
+      <LinearGradient colors={BG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", inset: 0 }} />
+      <View pointerEvents="none" style={{ position: "absolute", right: -40, top: -20, width: 220, height: 220, borderRadius: 110, backgroundColor: AMBER, opacity: 0.08 }} />
+      <View style={{ flexDirection: "row", alignItems: "flex-end", height: 92, justifyContent: "flex-end", paddingRight: spacing[3] }}>
+        <View style={{ width: 70, height: 70, marginBottom: -6 }}>
+          <FresaArt />
+        </View>
+        <View style={{ width: 96, height: 96 }}>
+          <PapaArt />
+        </View>
+        <View style={{ width: 70, height: 70, marginBottom: -4 }}>
+          <CafeArt />
+        </View>
+      </View>
+      <View style={{ padding: spacing[5], paddingTop: spacing[2], gap: spacing[2] }}>
+        <Text style={[type.title, { color: INK, fontSize: 24, lineHeight: 28, letterSpacing: -0.5 }]}>Hoy no se pierde nada</Text>
+        <Text style={[type.footnote, { color: INK_SOFT, fontWeight: "400" }]}>
+          Cuando un productor publique un excedente, aparecerá aquí con su descuento y cuánto tiempo queda para rescatarlo.
+        </Text>
+        <PressableScale
+          scaleTo={0.96}
+          onPress={onExplore}
+          accessibilityRole="button"
+          style={{
+            alignSelf: "flex-start",
+            minHeight: 44,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+            marginTop: spacing[2],
+            paddingHorizontal: spacing[4],
+            borderRadius: radius.full,
+            backgroundColor: INK,
+          }}
+        >
+          <Text style={[type.callout, { color: "#163020", fontWeight: "800" }]}>Ver cosechas</Text>
+          <Icon name="arrow-forward" size={16} color="#163020" />
+        </PressableScale>
+      </View>
+    </View>
   );
 }

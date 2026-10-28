@@ -23,3 +23,12 @@ export function unitCount(n: number, unit: string): string {
   const plural = /[aeiouáéó]$/i.test(first) ? `${first}s` : `${first}es`;
   return [n, plural, ...rest].join(" ");
 }
+
+/** "hoy", "hace 3 h", "ayer", "hace 4 días". */
+export function ageLabel(iso: string): string {
+  const h = Math.max(0, (Date.now() - new Date(iso).getTime()) / 3600000);
+  if (h < 1) return "hoy";
+  if (h < 24) return `hace ${Math.floor(h)} h`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? "ayer" : `hace ${d} días`;
+}

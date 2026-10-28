@@ -390,9 +390,34 @@ export function MaracuyaArt() {
   );
 }
 
-type ArtKey = "papa" | "zanahoria" | "maracuya" | "platano" | "fresa" | "aguacate" | "maiz" | "cafe" | "rabano" | "hierbas";
+export function HuevosArt() {
+  const eggs = [
+    [52, 84, -8],
+    [80, 80, 4],
+    [108, 84, 10],
+    [64, 70, -4],
+    [96, 70, 6],
+  ];
+  return (
+    <Svg viewBox="0 0 160 160" width="100%" height="100%">
+      {eggs.map(([x, y, r]) => (
+        <G key={`${x}${y}`} transform={`translate(${x} ${y}) rotate(${r})`}>
+          <Path d="M0 -22 C11 -22 17 -4 17 6 C17 17 9 23 0 23 C-9 23 -17 17 -17 6 C-17 -4 -11 -22 0 -22 Z" fill="#F3E2C7" {...line} />
+          <Path d="M8 -12 C14 -2 15 10 8 18 C14 14 17 6 16 -2 C15 -8 12 -12 8 -12 Z" fill="#DCC3A0" />
+          <Ellipse cx={-6} cy={-6} rx={3.5} ry={6} fill="#FFFFFF" opacity={0.55} transform="rotate(-20 -6 -6)" />
+        </G>
+      ))}
+      <Path d="M24 96 L136 96 L128 140 Q80 148 32 140 Z" fill="#B9A58A" {...line} />
+      <Path d="M24 96 Q38 112 52 96 Q66 112 80 96 Q94 112 108 96 Q122 112 136 96" fill="#CDBB9F" {...line} />
+      <Path d="M44 120 L44 140 M80 118 L80 145 M116 120 L116 140" stroke="#9E8B70" strokeWidth={2.5} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+type ArtKey = "huevos" | "papa" | "zanahoria" | "maracuya" | "platano" | "fresa" | "aguacate" | "maiz" | "cafe" | "rabano" | "hierbas";
 
 const BY_NAME: [RegExp, ArtKey][] = [
+  [/huevo|gallina/, "huevos"],
   [/papa|mashua|olluco|ulluco/, "papa"],
   [/zanahoria/, "zanahoria"],
   [/maracuy|granadilla|gulupa/, "maracuya"],
@@ -407,6 +432,7 @@ const BY_NAME: [RegExp, ArtKey][] = [
 
 const BY_CATEGORY: Record<string, ArtKey> = {
   tuberculos: "papa",
+  "lacteos-huevos": "huevos",
   verduras: "zanahoria",
   frutas: "maracuya",
   granos: "maiz",
@@ -419,6 +445,8 @@ export function ProductArt({ name, categorySlug }: { name: string; categorySlug?
   const n = name.toLowerCase();
   const key = BY_NAME.find(([re]) => re.test(n))?.[1] ?? BY_CATEGORY[categorySlug ?? ""] ?? "papa";
   switch (key) {
+    case "huevos":
+      return <HuevosArt />;
     case "zanahoria":
       return <ZanahoriaArt />;
     case "maracuya":

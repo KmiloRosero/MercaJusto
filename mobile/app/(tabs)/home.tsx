@@ -14,7 +14,6 @@ import { SectionHeader } from "../../src/components/TopBar";
 import { CategoryCircles, ProducerCard, ProducerTile, Promo, PromoCarousel } from "../../src/components/HomeBlocks";
 import { CartBar } from "../../src/components/CartBar";
 import { CourierHome } from "../../src/components/CourierHome";
-import { HeroHarvest } from "../../src/components/HeroHarvest";
 import { RescueHero } from "../../src/components/RescueHero";
 import { ProductCard } from "../../src/components/ProductCard";
 import { OrderCard } from "../../src/components/OrderCard";
@@ -23,7 +22,7 @@ import { Button } from "../../src/components/Button";
 import { formatCOP, radius, spacing, type, useTheme } from "../../src/theme";
 import { BASE_DELIVERY_FEE } from "../../src/lib/pricing";
 import { getCategories, getImpactMetrics, getMyOrders, getProducts, getRescueProducts } from "../../src/api/client";
-import type { Address, Product } from "../../src/api/types";
+import type { Address, Product, RescueProduct } from "../../src/api/types";
 import { useAuth } from "../../src/store/auth";
 import { useAdvanceOrder } from "../../src/lib/useAdvanceOrder";
 import { usePublishQueue } from "../../src/store/publishQueue";
@@ -145,6 +144,7 @@ function BuyerHome() {
   const surplus = surplusData?.products || [];
   const producers = producersFrom(products);
   const fresh = freshHarvests(products);
+  const latest = latestHarvests(products);
   const topDiscount = surplus.reduce((max, p) => Math.max(max, p.discountPct), 0);
 
   const openSurplus = () => router.push("/(tabs)/search?surplus=true");
@@ -211,13 +211,15 @@ function BuyerHome() {
         </PressableScale>
       </View>
 
-      {/* Cuadro principal: el excedente que se pierde primero; si no hay, la cosecha de Nariño en 3D */}
+      {/* Cuadro principal: el excedente que se pierde primero; si no hay, lo recién cosechado */}
       <View style={{ paddingHorizontal: GUTTER, marginTop: -spacing[2], alignSelf: "center", width: heroWidth + GUTTER * 2 }}>
-        {rescue.length > 0 ? (
-          <RescueHero products={rescue} canAdd={isBuyer} onOpen={(id) => router.push(`/producto/${id}`)} />
-        ) : (
-          <HeroHarvest width={heroWidth} onPress={() => router.push("/(tabs)/search")} />
-        )}
+        <RescueHero
+          products={rescue.length > 0 ? rescue : latest}
+          mode={rescue.length > 0 ? "rescue" : "fresh"}
+          canAdd={isBuyer}
+          onOpen={(id) => router.push(`/producto/${id}`)}
+          onExplore={() => router.push("/(tabs)/search")}
+        />
       </View>
 
       <CategoryCircles
@@ -334,6 +336,16 @@ function freshHarvests(products: Product[]): Product[] {
     .filter((p) => p.harvestDate && new Date(p.harvestDate).getTime() >= cutoff && p.stock > 0)
     .sort((a, b) => new Date(b.harvestDate!).getTime() - new Date(a.harvestDate!).getTime())
     .slice(0, 8);
+}
+
+/** Para el cuadro del inicio cuando no hay excedentes: lo más reciente con existencias. */
+function latestHarvests(products: Product[]): RescueProduct[] {
+  const when = (p: Product) => new Date(p.harvestDate ?? p.createdAt).getTime();
+  return products
+    .filter((p) => p.stock > 0)
+    .sort((a, b) => when(b) - when(a))
+    .slice(0, 5)
+    .map((p) => ({ ...p, losesAt: null, rescuedToday: 0 }));
 }
 
 /** Productores del catálogo, para el riel "Productores cerca de ti". */
