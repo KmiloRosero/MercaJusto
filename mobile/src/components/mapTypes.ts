@@ -15,9 +15,20 @@ export interface MapPreviewProps {
   route?: RouteStop[];
   /** Etiqueta de la parada resaltada: "Este pedido" (seguimiento) o "Siguiente" (repartidor). */
   highlightLabel?: string;
+  /** Dónde va el repartidor ahora (seguimiento en vivo). */
+  courier?: Coordinate | null;
+  /** Nombre del repartidor para su marcador. */
+  courierName?: string;
+  /** Alto del mapa; por defecto MAP_HEIGHT. */
+  height?: number;
 }
 
 export const MAP_HEIGHT = 240;
+
+/** Todos los puntos que el mapa debe encuadrar: la ruta y el repartidor. */
+export function boundsPoints(props: MapPreviewProps): Coordinate[] {
+  return [...pathPoints(props), ...(props.courier ? [props.courier] : [])];
+}
 
 /** Puntos de la línea: finca → paradas de la ruta (o la entrega). */
 export function pathPoints({ origin, destination, route }: MapPreviewProps): Coordinate[] {

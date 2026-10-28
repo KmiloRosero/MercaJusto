@@ -12,7 +12,7 @@ import {
 import { requireAuth, requireRole } from "../middleware/auth";
 import { notifyProducersOfNewOrder } from "../lib/payments";
 import { wompiEnabled } from "../lib/wompi";
-import { deliveryViewFor, planCourierRoute } from "../lib/courierRoute";
+import { deliveryViewFor, liveTrackingFor, planCourierRoute } from "../lib/courierRoute";
 
 export const ordersRouter = Router();
 ordersRouter.use(requireAuth);
@@ -101,7 +101,9 @@ ordersRouter.get("/:id", async (req, res, next) => {
     const { route, ...rest } = order;
     const delivery =
       order.status === "IN_TRANSIT" ? deliveryViewFor(order.id, route, p.isCourier || p.isProducer) : null;
-    res.json({ ...rest, delivery });
+    // En camino: dónde va el repartidor ahora y cuánto le falta hasta esta entrega.
+    const live = order.status === "IN_TRANSIT" ? await liveTrackingFor(order) : null;
+    res.json({ ...rest, delivery, live });
   } catch (err) {
     next(err);
   }

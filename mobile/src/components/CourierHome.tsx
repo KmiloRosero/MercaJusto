@@ -24,6 +24,9 @@ import { Pill } from "./Pill";
 import { StatTile } from "./Charts";
 import { ErrorState, LoadingState } from "./QueryState";
 import MapPreview from "./MapPreview";
+import { useShareLocation, type ShareStatus } from "../lib/useShareLocation";
+import { fetchRoadRoute } from "../lib/roadRoute";
+import { sinceLabel } from "../lib/geo";
 
 const GUTTER = spacing[5];
 
@@ -54,6 +57,8 @@ export function CourierHome() {
     // Los productores despachan y otros repartidores toman pedidos desde el otro lado.
     refetchInterval: 15_000,
   });
+  // Con entregas en camino, su celular comparte la ubicación en vivo con los compradores.
+  const share = useShareLocation((data?.route.length ?? 0) > 0);
 
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ["orders"] });
@@ -151,6 +156,25 @@ export function CourierHome() {
             </View>
           ) : null}
         </View>
+
+        {route.length > 0 ? (
+          <View style={{ backgroundColor: t.bgPrimary, paddingHorizontal: GUTTER, paddingBottom: GUTTER }}>
+            <LiveShareCard
+              status={share.status}
+              lastSentAt={share.lastSentAt}
+              onSimulate={async () => {
+                // Recorrido de demo por la carretera real: de la finca a cada entrega, en orden.
+                const pts = [
+                  ...(route[0]?.farm ? [{ latitude: route[0].farm.lat, longitude: route[0].farm.lng }] : []),
+                  ...route.filter((o) => o.address).map((o) => ({ latitude: o.address!.lat, longitude: o.address!.lng })),
+                ];
+                const road = await fetchRoadRoute(pts);
+                share.simulate(road.path);
+              }}
+              onStop={share.stopSimulation}
+            />
+          </View>
+        ) : null}
 
         {/* Ruta en el orden del VRP */}
         <Section title="Tu ruta" count={route.length}>
@@ -476,6 +500,61 @@ function StopCard({
         onPress={onDeliver}
       />
       <Button title="Ver detalle del pedido" size="sm" variant="ghost" onPress={onOpen} />
+    </View>
+  );
+}
+
+/**
+ * Estado de la ubicación en vivo del repartidor y el botón de recorrido
+ * simulado para la demo (avanza por la carretera real sin moverse de la silla).
+ */
+function LiveShareCard({
+  status,
+  lastSentAt,
+  onSimulate,
+  onStop,
+}: {
+  status: ShareStatus;
+  lastSentAt: number | null;
+  onSimulate: () => void;
+  onStop: () => void;
+}) {
+  const t = useTheme();
+  const [, force] = useState(0);
+  // Refresca el "hace N s" cada 5 s.
+  useEffect(() => {
+    const id = setInterval(() => force((n) => n + 1), 5000);
+    return () => clearInterval(id);
+  }, []);
+  const text =
+    status === "simulating"
+      ? "Recorrido de demostración en curso: los compradores te ven avanzar por la ruta."
+      : status === "sharing"
+        ? "Compartiendo tu ubicación en vivo con tus clientes."
+        : status === "denied"
+          ? "Sin permiso de ubicación: tus clientes no te ven en el mapa. Actívalo en los ajustes del celular."
+          : "Activando tu ubicación…";
+  const live = status === "sharing" || status === "simulating";
+  return (
+    <View style={{ padding: spacing[4], borderRadius: radius.lg, backgroundColor: live ? t.primaryLight : t.warningLight, gap: spacing[3] }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+        <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: live ? t.primary : t.warning }} />
+        <Text style={[type.footnote, { flex: 1, color: live ? t.onPrimaryLight : t.textPrimary, fontWeight: "600" }]}>
+          {text}
+          {lastSentAt ? ` Última vez ${sinceLabel(lastSentAt)}.` : ""}
+        </Text>
+      </View>
+      {status === "simulating" ? (
+        <Button title="Detener recorrido de demostración" size="sm" variant="outline" onPress={onStop} />
+      ) : (
+        <Button
+          title="Simular recorrido (demo)"
+          size="sm"
+          variant="outline"
+          icon={<Icon name="mci:moped" size={16} color={t.primary} />}
+          onPress={onSimulate}
+        />
+      )}
     </View>
   );
 }

@@ -543,3 +543,8 @@ export async function getCourierBoard(): Promise<CourierBoard> {
 export async function takeOrder(id: string): Promise<void> {
   await api.post(`/courier/orders/${id}/take`);
 }
+
+/** El celular del repartidor envía dónde va (seguimiento en vivo). */
+export async function sendCourierLocation(lat: number, lng: number): Promise<void> {
+  await api.post("/courier/location", { lat, lng });
+}

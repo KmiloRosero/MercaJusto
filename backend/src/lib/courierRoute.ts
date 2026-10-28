@@ -133,3 +133,63 @@ export function deliveryViewFor(
     })),
   };
 }
+
+export interface LiveTracking {
+  /** Última posición del repartidor y cuándo la envió. */
+  courier: { lat: number; lng: number; at: string };
+  /** Kilómetros que le faltan hasta esta entrega (pasando por las paradas que tiene antes). */
+  remainingKm: number;
+  etaMin: number;
+  /** Entregas pendientes antes de esta. */
+  stopsBefore: number;
+}
+
+/** Posición del repartidor tan vieja ya no se muestra como "en vivo". */
+const LIVE_MAX_AGE_MS = 10 * 60 * 1000;
+
+/**
+ * Seguimiento en vivo de un pedido en camino: dónde va el repartidor y cuánto
+ * le falta hasta esta dirección, contando las entregas que hace antes.
+ */
+export async function liveTrackingFor(order: {
+  id: string;
+  courierId: string | null;
+  deliveryAddress: { latitude: number; longitude: number } | null;
+  route: { sequenceJson: string } | null;
+}): Promise<LiveTracking | null> {
+  if (!order.courierId || !order.deliveryAddress) return null;
+  const courier = await prisma.user.findUnique({
+    where: { id: order.courierId },
+    select: { lastLat: true, lastLng: true, lastLocationAt: true },
+  });
+  if (!courier?.lastLat || !courier.lastLng || !courier.lastLocationAt) return null;
+  if (Date.now() - courier.lastLocationAt.getTime() > LIVE_MAX_AGE_MS) return null;
+
+  // Paradas que el repartidor todavía tiene antes de esta, en el orden de la ruta.
+  let before: { lat: number; lng: number }[] = [];
+  if (order.route) {
+    try {
+      const sequence = JSON.parse(order.route.sequenceJson) as SequenceEntry[];
+      const mine = sequence.findIndex((s) => s.orderId === order.id);
+      const earlier = mine > 0 ? sequence.slice(0, mine) : [];
+      const pending = await prisma.order.findMany({
+        where: { id: { in: earlier.map((s) => s.orderId) }, status: "IN_TRANSIT" },
+        select: { id: true },
+      });
+      const pendingIds = new Set(pending.map((p) => p.id));
+      before = earlier.filter((s) => pendingIds.has(s.orderId));
+    } catch {
+      before = [];
+    }
+  }
+
+  const path = [{ lat: courier.lastLat, lng: courier.lastLng }, ...before, { lat: order.deliveryAddress.latitude, lng: order.deliveryAddress.longitude }];
+  let km = 0;
+  for (let i = 1; i < path.length; i++) km += haversineKm(path[i - 1], path[i]);
+  return {
+    courier: { lat: courier.lastLat, lng: courier.lastLng, at: courier.lastLocationAt.toISOString() },
+    remainingKm: Math.round(km * 10) / 10,
+    etaMin: Math.max(1, Math.round((km / AVG_SPEED_KMH) * 60 + before.length * SERVICE_MIN_PER_STOP)),
+    stopsBefore: before.length,
+  };
+}

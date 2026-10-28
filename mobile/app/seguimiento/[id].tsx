@@ -15,6 +15,8 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withDelay,
+  withRepeat,
+  withSequence,
   withSpring,
   withTiming,
 } from "react-native-reanimated";
@@ -32,7 +34,8 @@ import { BUYER_CAN_CANCEL, NEXT_ACTION } from "../../src/lib/orderStatus";
 import { confirmDialog, showAlert } from "../../src/lib/dialog";
 import MapPreview from "../../src/components/MapPreview";
 import type { RouteStop } from "../../src/components/mapTypes";
-import type { DeliveryView } from "../../src/api/types";
+import type { DeliveryView, Order } from "../../src/api/types";
+import { sinceLabel } from "../../src/lib/geo";
 
 import { FieldTile } from "../../src/components/FieldTile";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
@@ -95,7 +98,8 @@ export default function Seguimiento() {
     queryKey: ["order", id],
     queryFn: () => getOrder(id!),
     enabled: !!id,
-    refetchInterval: 15000, // actualiza cada 15s para simular tiempo real
+    // En camino se actualiza cada 8 s para ver al repartidor moverse; si no, cada 15 s.
+    refetchInterval: (query) => (query.state.data?.status === "IN_TRANSIT" ? 8000 : 15000),
   });
 
   // Pedido en línea que todavía no se paga (o cuyo pago fue rechazado)
@@ -300,7 +304,14 @@ export default function Seguimiento() {
         ) : null}
 
         {/* ═══ Mapa en vivo ═══ */}
-        <MapPreview origin={origin} destination={destination} route={routeStops} />
+        <MapPreview
+          origin={origin}
+          destination={destination}
+          route={routeStops}
+          courier={order.live ? { latitude: order.live.courier.lat, longitude: order.live.courier.lng } : null}
+          courierName={order.courier?.name.split(" ")[0]}
+          height={300}
+        />
 
         {/* ═══ Status card ═══ */}
         <View
@@ -343,6 +354,7 @@ export default function Seguimiento() {
             {currentDesc}
           </Text>
 
+          {order.status === "IN_TRANSIT" ? <LiveCard order={order} /> : null}
           {order.delivery && !isCancelled ? <RouteCard delivery={order.delivery} isBuyer={isBuyerView} /> : null}
 
           {primaryAction ? (
@@ -705,6 +717,58 @@ function RouteCard({ delivery, isBuyer }: { delivery: DeliveryView; isBuyer: boo
           ))}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/**
+ * Seguimiento en vivo: dónde va el repartidor, cuánto le falta y cuándo se
+ * actualizó. Sin ubicación reciente, lo dice en vez de inventar una posición.
+ */
+function LiveCard({ order }: { order: Order }) {
+  const t = useTheme();
+  const live = order.live;
+  const name = order.courier?.name.split(" ")[0] ?? "El repartidor";
+  const pulse = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
+  useEffect(() => {
+    if (reduceMotion || !live) return;
+    pulse.set(withRepeat(withSequence(withTiming(1.8, { duration: 900 }), withTiming(1, { duration: 0 })), -1));
+  }, [reduceMotion, live, pulse]);
+  const ring = useAnimatedStyle(() => ({ opacity: 2 - pulse.value, transform: [{ scale: pulse.value }] }));
+
+  if (!live) {
+    return (
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3], padding: spacing[4], borderRadius: radius.lg, backgroundColor: t.bgInput, marginBottom: spacing[4] }}>
+        <Icon name="navigate-outline" size={20} color={t.textSecondary} />
+        <Text style={[type.footnote, { flex: 1, color: t.textSecondary, fontWeight: "400" }]}>
+          {name} aún no comparte su ubicación. Te mostramos la ruta estimada; cuando la active, lo verás moverse en el mapa.
+        </Text>
+      </View>
+    );
+  }
+  const km = live.remainingKm.toLocaleString("es-CO", { maximumFractionDigits: 1 });
+  return (
+    <View
+      accessible
+      accessibilityLabel={`${name} está a ${km} kilómetros. Llega en unos ${live.etaMin} minutos.`}
+      style={{ padding: spacing[4], borderRadius: radius.lg, backgroundColor: t.accentLight, gap: spacing[2], marginBottom: spacing[4] }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
+        <View style={{ width: 14, height: 14, alignItems: "center", justifyContent: "center" }}>
+          <Animated.View style={[{ position: "absolute", width: 14, height: 14, borderRadius: 7, backgroundColor: t.accent }, ring]} />
+          <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: t.accent }} />
+        </View>
+        <Text style={[type.headline, { flex: 1, color: t.onAccentLight }]}>
+          {name} está a {km} km · llega en ~{live.etaMin} min
+        </Text>
+      </View>
+      <Text style={[type.footnote, { color: t.onAccentLight, fontWeight: "400" }]}>
+        {live.stopsBefore > 0
+          ? `Antes entrega a ${live.stopsBefore} cliente${live.stopsBefore !== 1 ? "s" : ""} más. `
+          : "Va directo hacia ti. "}
+        Ubicación en vivo, actualizada {sinceLabel(new Date(live.courier.at).getTime())}.
+      </Text>
     </View>
   );
 }

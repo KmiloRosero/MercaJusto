@@ -1,143 +1,134 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { Text, View } from "react-native";
-import Svg, { Circle, Line, Polyline } from "react-native-svg";
-import { Icon } from "./Icon";
+import type * as Leaflet from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { useTheme } from "../theme";
-import { MAP_HEIGHT, pathPoints, type Coordinate, type MapPreviewProps } from "./mapTypes";
+import { useRoadRoute } from "../lib/roadRoute";
+import { MAP_HEIGHT, boundsPoints, pathPoints, type Coordinate, type MapPreviewProps } from "./mapTypes";
 
-const PAD = 52; // margen para que pines y etiquetas no se corten
+// Mapa real en la web: OpenStreetMap con Leaflet (react-native-maps solo existe
+// en el celular). La línea sigue la carretera (OSRM) y el repartidor aparece en
+// vivo como un marcador que se mueve.
 
-/**
- * Vista esquemática para la web (react-native-maps solo existe en el celular).
- * Proyecta las coordenadas reales en el recuadro, con la misma escala en ambos
- * ejes: la línea recorre de verdad la ruta optimizada.
- */
+// Leaflet usa `window` al cargarse: solo se carga en el navegador, no en el
+// render del servidor.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const L: typeof Leaflet = typeof window !== "undefined" ? require("leaflet") : (null as unknown as typeof Leaflet);
+
+const toLatLng = (c: Coordinate): Leaflet.LatLngTuple => [c.latitude, c.longitude];
+
+/** Marcador redondo hecho con HTML (sin imágenes que descargar). */
+function pin(color: string, label: string, opts: { size?: number; ring?: string; inner?: string } = {}) {
+  const size = opts.size ?? 30;
+  return L.divIcon({
+    className: "",
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+    html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:3px solid ${opts.ring ?? "#fff"};
+      box-shadow:0 3px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;
+      color:#fff;font:800 13px system-ui,sans-serif" aria-label="${label}">${opts.inner ?? ""}</div>`,
+  });
+}
+
+const BIKE_SVG =
+  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h2l3 7.5M5.5 17.5 9 10h6l3.5 7.5M9 10 7.5 6H5"/></svg>';
+const LEAF_SVG =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M17 8C8 10 5.9 16.2 3.8 21.3l1.9.7.9-2.3c.5.2 1 .3 1.4.3C19 20 22 3 22 3c-1 2-8 2.3-13 3.3S2 11.5 2 13.5s1.8 3.8 1.8 3.8C7 8 17 8 17 8z"/></svg>';
+const HOME_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="#fff"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>';
+
 export default function MapPreview(props: MapPreviewProps) {
-  const { origin, destination, route, highlightLabel = "Este pedido" } = props;
+  const { origin, destination, route, courier, courierName, height = MAP_HEIGHT, highlightLabel = "Este pedido" } = props;
   const theme = useTheme();
-  const [width, setWidth] = useState(0);
-  const all = pathPoints(props);
+  const hostRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const layerRef = useRef<Leaflet.LayerGroup | null>(null);
+  const courierRef = useRef<Leaflet.Marker | null>(null);
+  const fittedKmRef = useRef<number | null | undefined>(undefined);
+
+  const points = pathPoints(props);
+  const road = useRoadRoute(points);
   const multiStop = !!route && route.length > 1;
+  const hasPoints = points.length > 0;
 
-  const project = (() => {
-    if (all.length < 2 || !width) return null;
-    const lats = all.map((c) => c.latitude);
-    const lngs = all.map((c) => c.longitude);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-    const spanLat = Math.max(maxLat - minLat, 1e-4);
-    const spanLng = Math.max(maxLng - minLng, 1e-4);
-    // Abajo se deja más aire: ahí se monta la tarjeta de estado.
-    const scale = Math.min((width - PAD * 2) / spanLng, (MAP_HEIGHT - PAD * 2 - 24) / spanLat);
-    const offX = (width - spanLng * scale) / 2;
-    const offY = (MAP_HEIGHT - 24 - spanLat * scale) / 2;
-    return (c: Coordinate) => ({ x: offX + (c.longitude - minLng) * scale, y: offY + (maxLat - c.latitude) * scale });
-  })();
+  // Crear el mapa una vez.
+  useEffect(() => {
+    if (!hostRef.current || mapRef.current) return;
+    const map = L.map(hostRef.current, { zoomControl: false, scrollWheelZoom: false });
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: "© OpenStreetMap" }).addTo(map);
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+    layerRef.current = L.layerGroup().addTo(map);
+    mapRef.current = map;
+    map.setView([1.2136, -77.2811], 10);
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      courierRef.current = null;
+    };
+  }, [hasPoints]);
 
-  const projected = project ? all.map(project) : [];
-  const originPt = project && origin ? project(origin) : null;
-  const destinationPt = project && destination ? project(destination) : null;
+  // Ruta por carretera, finca y entregas.
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = layerRef.current;
+    if (!map || !layer) return;
+    layer.clearLayers();
+    if (road.path.length > 1) {
+      L.polyline(road.path.map(toLatLng), { color: "#ffffff", weight: 8, opacity: 0.9 }).addTo(layer);
+      L.polyline(road.path.map(toLatLng), { color: theme.primary, weight: 5, opacity: 0.95, dashArray: road.km === null ? "8 8" : undefined }).addTo(layer);
+    }
+    if (origin) L.marker(toLatLng(origin), { icon: pin(theme.success, "Finca", { inner: LEAF_SVG }) }).bindTooltip("Finca del productor").addTo(layer);
+    if (multiStop) {
+      route!.forEach((s, i) => {
+        L.marker(toLatLng(s), {
+          icon: s.mine ? pin(theme.primary, highlightLabel, { inner: HOME_SVG, size: 34 }) : pin("#8F8F8F", `Parada ${i + 1}`, { inner: String(i + 1), size: 26 }),
+        })
+          .bindTooltip(s.mine ? `${highlightLabel} · parada ${i + 1}` : `Parada ${i + 1}`)
+          .addTo(layer);
+      });
+    } else if (destination) {
+      L.marker(toLatLng(destination), { icon: pin(theme.primary, "Entrega", { inner: HOME_SVG, size: 34 }) }).bindTooltip("Dirección de entrega").addTo(layer);
+    }
+    // Encuadra al cargar y cuando llega la ruta por carretera; no en cada movimiento del repartidor.
+    if (fittedKmRef.current !== road.km) {
+      const all = boundsPoints(props);
+      if (all.length > 0) map.fitBounds(L.latLngBounds(all.map(toLatLng)), { padding: [36, 36], maxZoom: 15 });
+      fittedKmRef.current = road.km;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [road, hasPoints, multiStop, theme.primary, theme.success, highlightLabel]);
+
+  // Repartidor en vivo: el marcador se mueve sin redibujar el resto.
+  const courierLat = courier?.latitude;
+  const courierLng = courier?.longitude;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (courierLat == null || courierLng == null) {
+      courierRef.current?.remove();
+      courierRef.current = null;
+      return;
+    }
+    if (!courierRef.current) {
+      courierRef.current = L.marker([courierLat, courierLng], { icon: pin("#A8501C", "Repartidor", { inner: BIKE_SVG, size: 38 }), zIndexOffset: 1000 })
+        .bindTooltip(courierName ? `${courierName} va en camino` : "Repartidor")
+        .addTo(map);
+    } else {
+      courierRef.current.setLatLng([courierLat, courierLng]);
+    }
+  }, [courierLat, courierLng, courierName, hasPoints]);
 
   return (
     <View
-      onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
-      accessibilityLabel={
-        multiStop
-          ? `Ruta optimizada con ${route!.length} entregas desde la finca del productor`
-          : project
-            ? "Ruta desde la finca del productor hasta tu dirección"
-            : undefined
-      }
-      style={{ width: "100%", height: MAP_HEIGHT, backgroundColor: theme.bgSecondary, overflow: "hidden" }}
+      accessibilityLabel={courier ? "Mapa con la ruta y la ubicación en vivo del repartidor" : "Mapa con la ruta del pedido"}
+      style={{ width: "100%", height, backgroundColor: theme.bgSecondary, overflow: "hidden" }}
     >
-      {width ? (
-        <Svg width={width} height={MAP_HEIGHT} style={{ position: "absolute" }}>
-          {[0.25, 0.5, 0.75].map((f) => (
-            <Line key={`h${f}`} x1={0} y1={MAP_HEIGHT * f} x2={width} y2={MAP_HEIGHT * f} stroke={theme.border} strokeWidth={1} />
-          ))}
-          {[0.25, 0.5, 0.75].map((f) => (
-            <Line key={`v${f}`} x1={width * f} y1={0} x2={width * f} y2={MAP_HEIGHT} stroke={theme.border} strokeWidth={1} />
-          ))}
-          {projected.length > 1 ? (
-            <Polyline
-              points={projected.map((p) => `${p.x},${p.y}`).join(" ")}
-              stroke={theme.primary}
-              strokeWidth={4}
-              strokeDasharray={multiStop ? undefined : "8 6"}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          ) : null}
-          {multiStop && project
-            ? route!.map((s, i) => {
-                const p = project(s);
-                return (
-                  <Circle
-                    key={i}
-                    cx={p.x}
-                    cy={p.y}
-                    r={s.mine ? 8 : 6}
-                    fill={s.mine ? theme.primary : theme.bgCard}
-                    stroke={s.mine ? theme.bgCard : theme.gray400}
-                    strokeWidth={2}
-                  />
-                );
-              })
-            : null}
-          {originPt ? <Circle cx={originPt.x} cy={originPt.y} r={7} fill={theme.success} stroke={theme.bgCard} strokeWidth={2} /> : null}
-          {!multiStop && destinationPt ? (
-            <Circle cx={destinationPt.x} cy={destinationPt.y} r={7} fill={theme.primary} stroke={theme.bgCard} strokeWidth={2} />
-          ) : null}
-        </Svg>
-      ) : null}
-
-      {project ? (
-        <>
-          {originPt ? <Pin x={originPt.x} y={originPt.y} icon="leaf" label="Finca" /> : null}
-          {multiStop
-            ? route!.map((s, i) => {
-                const p = project(s);
-                return s.mine ? <Pin key={i} x={p.x} y={p.y} icon="location" label={`${highlightLabel} · ${i + 1}`} /> : null;
-              })
-            : destinationPt ? (
-                <Pin x={destinationPt.x} y={destinationPt.y} icon="location" label="Entrega" />
-              ) : null}
-        </>
+      {hasPoints ? (
+        <div ref={hostRef} style={{ position: "absolute", inset: 0 }} />
       ) : (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text style={{ color: theme.textSecondary, fontSize: 13 }}>Sin coordenadas disponibles para este pedido</Text>
         </View>
       )}
-    </View>
-  );
-}
-
-function Pin({ x, y, icon, label }: { x: number; y: number; icon: string; label: string }) {
-  const theme = useTheme();
-  return (
-    <View pointerEvents="none" style={{ position: "absolute", left: x - 80, top: y - 40, width: 160, alignItems: "center" }}>
-      <View
-        style={{
-          paddingHorizontal: 8,
-          paddingVertical: 3,
-          borderRadius: 999,
-          backgroundColor: theme.bgCard,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 4,
-          shadowColor: "#0A140E",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.12,
-          shadowRadius: 4,
-          elevation: 2,
-        }}
-      >
-        <Icon name={icon} size={14} color={theme.primary} />
-        <Text numberOfLines={1} style={{ color: theme.textPrimary, fontSize: 13, fontWeight: "700" }}>{label}</Text>
-      </View>
     </View>
   );
 }

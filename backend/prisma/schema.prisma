@@ -34,6 +34,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Última ubicación que compartió el repartidor desde su celular (seguimiento en vivo).
+  lastLat        Float?
+  lastLng        Float?
+  lastLocationAt DateTime?
+
   addresses    Address[]
   products     Product[]   @relation("ProducerProducts")
   ordersAsBuyer   Order[]  @relation("BuyerOrders")

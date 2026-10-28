@@ -123,6 +123,15 @@ export interface Order {
   reviews?: Review[];
   /** Ruta optimizada del repartidor; solo mientras el pedido va en camino. */
   delivery?: DeliveryView | null;
+  /** Seguimiento en vivo: dónde va el repartidor y cuánto le falta. */
+  live?: LiveTracking | null;
+}
+
+export interface LiveTracking {
+  courier: { lat: number; lng: number; at: string };
+  remainingKm: number;
+  etaMin: number;
+  stopsBefore: number;
 }
 
 export interface DeliveryView {

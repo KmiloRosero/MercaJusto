@@ -1,7 +1,8 @@
 import { Router } from "express";
+import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { requireAuth, requireRole } from "../middleware/auth";
-import { ConflictError, NotFoundError } from "../middleware/errorHandler";
+import { BadRequestError, ConflictError, NotFoundError } from "../middleware/errorHandler";
 import { haversineKm, optimizeRoutes, type DeliveryStop } from "../lib/routing";
 import { AVG_SPEED_KMH, SERVICE_MIN_PER_STOP, type SequenceEntry } from "../lib/courierRoute";
 import { sendPushToUser } from "../lib/push";
@@ -210,3 +211,25 @@ function extraKmIfAdded(current: DeliveryStop[], farm: { lat: number; lng: numbe
   const withIt = optimizeRoutes([...current, candidate], { depot: farm, vehicles: 1 }).totalDistanceKm;
   return Math.max(0, Math.round((withIt - without) * 10) / 10);
 }
+
+// ═══════════════════════════════════════════
+// POST /api/courier/location — el celular del repartidor envía dónde va
+// ═══════════════════════════════════════════
+const locationSchema = z.object({
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+
+courierRouter.post("/location", async (req, res, next) => {
+  try {
+    const parsed = locationSchema.safeParse(req.body);
+    if (!parsed.success) throw new BadRequestError("Ubicación inválida");
+    await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { lastLat: parsed.data.lat, lastLng: parsed.data.lng, lastLocationAt: new Date() },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
