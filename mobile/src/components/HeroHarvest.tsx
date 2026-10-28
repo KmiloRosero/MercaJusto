@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Image, Platform, Text, View, type ImageSourcePropType, type PointerEvent } from "react-native";
+import { Image, Platform, Text, View, type PointerEvent } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   Easing,
@@ -19,39 +19,40 @@ import { scheduleOnRN } from "react-native-worklets";
 import { radius, spacing, type } from "../theme";
 import { Icon } from "./Icon";
 import { PressableScale } from "./PressableScale";
+import { AguacateArt, CafeArt, FresaArt, HierbasArt, MaizArt, PapaArt, PlatanoArt, RabanoArt } from "./harvestArt";
 
 // Cuadro principal del inicio: la cosecha de Nariño en 3D.
 // - Fondo: foto de cultivos en ladera (la entregó el dueño del proyecto), con
 //   un acercamiento lento y una neblina que cruza.
 // - Carrusel 3D: los productos giran como en un carrusel de portadas; el del
 //   centro de frente y flotando, los vecinos girados y más pequeños a los lados.
-// Imágenes: aguacates, papa y maíz salen de la foto del dueño; rábanos, café y
-// fresas son fotos de Unsplash (licencia libre). Todas con el fondo recortado.
+// Productos: ilustraciones animadas propias (harvestArt.tsx), todas del mismo
+// tamaño para que el carrusel se vea parejo.
 
 const PAISAJE = require("../../assets/hero/paisaje.jpg");
 
 interface Product {
   name: string;
   category: string;
-  source: ImageSourcePropType;
-  /** Ancho / alto de la imagen (todas miden 360 de alto). */
-  ratio: number;
+  Art: () => React.ReactElement;
 }
 
 const PRODUCTS: Product[] = [
-  { name: "Papa", category: "Tubérculos", source: require("../../assets/hero/papa.png"), ratio: 285 / 360 },
-  { name: "Fresas", category: "Frutas", source: require("../../assets/hero/fresas.png"), ratio: 529 / 360 },
-  { name: "Maíz", category: "Granos", source: require("../../assets/hero/maiz.png"), ratio: 371 / 360 },
-  { name: "Rábanos", category: "Verduras", source: require("../../assets/hero/rabanos.png"), ratio: 530 / 360 },
-  { name: "Aguacates", category: "Frutas", source: require("../../assets/hero/aguacates.png"), ratio: 390 / 360 },
-  { name: "Café", category: "Café y cacao", source: require("../../assets/hero/cafe.png"), ratio: 686 / 360 },
+  { name: "Bulto de papa", category: "Tubérculos", Art: PapaArt },
+  { name: "Fresas", category: "Frutas", Art: FresaArt },
+  { name: "Maíz", category: "Granos", Art: MaizArt },
+  { name: "Aguacates", category: "Frutas", Art: AguacateArt },
+  { name: "Hierbas aromáticas", category: "Hierbas", Art: HierbasArt },
+  { name: "Café", category: "Café y cacao", Art: CafeArt },
+  { name: "Plátano", category: "Frutas", Art: PlatanoArt },
+  { name: "Rábanos", category: "Verduras", Art: RabanoArt },
 ];
 
 const HEIGHT = 268;
 /** Cada cuánto pasa el siguiente producto. */
 const STEP_MS = 3200;
-/** Caja donde vive cada producto (el del centro), en dp. */
-const ITEM_H = 132;
+/** Lado de la caja cuadrada de cada ilustración (la del centro), en dp. */
+const ITEM_H = 140;
 
 /** Distancia circular entre el producto i y la posición p del carrusel. */
 function offsetOf(i: number, p: number, n: number) {
@@ -77,8 +78,9 @@ function CarouselItem({
   float: SharedValue<number>;
   width: number;
 }) {
-  const itemW = Math.min(ITEM_H * product.ratio, width * 0.62);
-  const itemH = itemW / product.ratio;
+  const itemW = Math.min(ITEM_H, width * 0.5);
+  const itemH = itemW;
+  const { Art } = product;
 
   const style = useAnimatedStyle(() => {
     const d = offsetOf(index, position.value, count);
@@ -92,7 +94,9 @@ function CarouselItem({
         { translateX: d * width * 0.36 },
         { translateY: interpolate(ad, [0, 1], [0, 10], "clamp") + (isFront ? (float.value - 0.5) * -7 : 0) },
         { rotateY: `${interpolate(d, [-1.5, 0, 1.5], [52, 0, -52], "clamp")}deg` },
-        { scale: interpolate(ad, [0, 1, 1.6], [1, 0.62, 0.45], "clamp") },
+        { scale: interpolate(ad, [0, 1, 1.6], [1, 0.66, 0.45], "clamp") },
+        // El del frente se mece un poco, como si lo movieran al ofrecerlo.
+        { rotateZ: `${isFront ? (float.value - 0.5) * 5 : 0}deg` },
       ],
     };
   });
@@ -117,10 +121,10 @@ function CarouselItem({
         style={[
           {
             position: "absolute",
-            bottom: 10,
-            left: width / 2 - itemW * 0.42,
-            width: itemW * 0.84,
-            height: 16,
+            bottom: 12,
+            left: width / 2 - itemW * 0.38,
+            width: itemW * 0.76,
+            height: 14,
             borderRadius: 999,
             backgroundColor: "#0B1A0E",
           },
@@ -129,9 +133,9 @@ function CarouselItem({
       />
       <Animated.View
         pointerEvents="none"
-        style={[{ position: "absolute", bottom: 18, left: width / 2 - itemW / 2, width: itemW, height: itemH }, style]}
+        style={[{ position: "absolute", bottom: 14, left: width / 2 - itemW / 2, width: itemW, height: itemH }, style]}
       >
-        <Image source={product.source} style={{ width: "100%", height: "100%" }} resizeMode="contain" accessibilityIgnoresInvertColors />
+        <Art />
       </Animated.View>
     </>
   );
