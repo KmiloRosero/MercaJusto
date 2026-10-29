@@ -12,12 +12,15 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import type { RescueProduct } from "../api/types";
-import { formatCOP, motion, radius, spacing, type } from "../theme";
+import { formatCOP, motion, radius, spacing, type, useThemeScheme } from "../theme";
+import { useIsFocused } from "expo-router";
 import { effectivePrice } from "../lib/pricing";
 import { plazaComparison } from "../lib/savings";
 import { ageLabel, countdownLabel, msUntil, unitCount } from "../lib/rescue";
 import { useAddToCart } from "../lib/useAddToCart";
 import { CafeArt, FresaArt, PapaArt, ProductArt } from "./harvestArt";
+import { LiquidMetalShader } from "./LiquidMetalShader";
+import { LIQUID_METAL_GREEN } from "./liquidMetal";
 import { Icon } from "./Icon";
 import { PressableScale } from "./PressableScale";
 
@@ -135,16 +138,22 @@ function SpotlightCard({ products, mode, canAdd, onOpen }: HeroProps) {
         elevation: 10,
       }}
     >
-      <LinearGradient colors={BG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", inset: 0 }} />
-      {/* Sol de la tarde detrás del producto */}
-      <View pointerEvents="none" style={{ position: "absolute", right: -46, top: -10, width: 230, height: 230, borderRadius: 115, backgroundColor: AMBER, opacity: 0.08 }} />
-      <View pointerEvents="none" style={{ position: "absolute", right: -6, top: 30, width: 150, height: 150, borderRadius: 75, backgroundColor: AMBER, opacity: 0.1 }} />
+      {rescue ? (
+        <>
+          <LinearGradient colors={BG} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{ position: "absolute", inset: 0 }} />
+          {/* Sol de la tarde detrás del producto */}
+          <View pointerEvents="none" style={{ position: "absolute", right: -46, top: -10, width: 230, height: 230, borderRadius: 115, backgroundColor: AMBER, opacity: 0.08 }} />
+          <View pointerEvents="none" style={{ position: "absolute", right: -6, top: 30, width: 150, height: 150, borderRadius: 75, backgroundColor: AMBER, opacity: 0.1 }} />
+        </>
+      ) : (
+        <FreshBackground />
+      )}
 
       {/* Parte superior: abre el producto */}
       <PressableScale
         onPress={() => onOpen(product.id)}
         accessibilityRole="button"
-        accessibilityLabel={`${product.name} de ${producer ?? "un productor"}, ${formatCOP(price)} por ${product.unit}${product.discountPct > 0 ? `, ${product.discountPct}% menos` : ""}. Ver producto`}
+        accessibilityLabel={`${product.name} de ${producer ?? "un productor"}, ${formatCOP(price)} por ${product.unit}${product.isSurplus && product.discountPct > 0 ? `, ${product.discountPct}% menos` : ""}. Ver producto`}
         style={{ flexDirection: "row", paddingHorizontal: spacing[5], paddingTop: spacing[5], gap: spacing[2] }}
       >
         <Animated.View style={[{ flex: 1, gap: spacing[1], minHeight: 140 }, contentStyle]}>
@@ -183,7 +192,7 @@ function SpotlightCard({ products, mode, canAdd, onOpen }: HeroProps) {
             <ProductArt name={product.name} categorySlug={product.category?.slug} />
           )}
           {/* Descuento como sello pegado al producto */}
-          {product.discountPct > 0 ? (
+          {product.isSurplus && product.discountPct > 0 ? (
           <View
             style={{
               position: "absolute",
@@ -222,6 +231,41 @@ function SpotlightCard({ products, mode, canAdd, onOpen }: HeroProps) {
         </View>
       </Animated.View>
     </View>
+  );
+}
+
+/**
+ * Fondo de "Recién cosechado": metal líquido en los verdes de la marca. Solo
+ * anima con el inicio a la vista; un velo oscuro a la izquierda deja el texto
+ * blanco legible sobre las partes claras del metal.
+ */
+function FreshBackground() {
+  const scheme = useThemeScheme();
+  const focused = useIsFocused();
+  return (
+    <>
+      <LiquidMetalShader
+        {...LIQUID_METAL_GREEN[scheme]}
+        speed={focused ? 0.45 : 0}
+        distortion={0.85}
+        scale={1.1}
+        pixelRatio={1}
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(6,22,12,0.82)", "rgba(6,22,12,0.55)", "rgba(6,22,12,0.05)"]}
+        locations={[0, 0.5, 0.85]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+      />
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(6,22,12,0)", "rgba(6,22,12,0.6)"]}
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 96 }}
+      />
+    </>
   );
 }
 
