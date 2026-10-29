@@ -18,6 +18,7 @@ import { producerUrl, shareText } from "../../src/lib/share";
 import { FieldTile } from "../../src/components/FieldTile";
 import { PressableScale } from "../../src/components/PressableScale";
 import { Avatar } from "../../src/components/Avatar";
+import { PageShader } from "../../src/components/PageShader";
 
 /**
  * Perfil al estilo de las apps de domicilio: encabezado con la persona, su
@@ -65,6 +66,7 @@ export default function Profile() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
+      <PageShader surface={t.bgSecondary} />
       <ScrollView contentContainerStyle={{ paddingBottom: spacing[10] }}>
         {/* Encabezado */}
         <View style={[section, { marginTop: 0, flexDirection: "row", alignItems: "center", gap: spacing[4] }]}>

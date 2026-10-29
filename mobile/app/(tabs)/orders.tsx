@@ -15,6 +15,7 @@ import { ErrorState, LoadingState } from "../../src/components/QueryState";
 import { PressableScale } from "../../src/components/PressableScale";
 import Animated from "react-native-reanimated";
 import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
+import { PageShader } from "../../src/components/PageShader";
 
 const isActive = (o: Order) => o.status !== "DELIVERED" && o.status !== "CANCELLED";
 
@@ -54,6 +55,7 @@ export default function Orders() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
+      <PageShader />
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}

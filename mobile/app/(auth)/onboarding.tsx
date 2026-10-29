@@ -22,6 +22,7 @@ import { LIQUID_METAL_GREEN } from "../../src/components/liquidMetal";
 import { useQuery } from "@tanstack/react-query";
 import { getProducts } from "../../src/api/client";
 import { plazaComparison } from "../../src/lib/savings";
+import { PageShader } from "../../src/components/PageShader";
 
 type Role = "BUYER" | "PRODUCER";
 
@@ -92,6 +93,7 @@ export default function Onboarding() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }}>
+      <PageShader />
       {/* Encabezado: marca + omitir */}
       <View
         style={{

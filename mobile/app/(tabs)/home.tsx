@@ -33,6 +33,7 @@ import { PressableScale } from "../../src/components/PressableScale";
 import Animated from "react-native-reanimated";
 import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
 import { Avatar } from "../../src/components/Avatar";
+import { PageShader } from "../../src/components/PageShader";
 const GUTTER = spacing[5];
 const CAROUSEL_CARD = 152;
 /** Espacio al final de las listas para que la barra "Ver canasta" no tape nada. */
@@ -292,6 +293,7 @@ function BuyerHome() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
+      <PageShader />
       <FlatList
         data={products}
         keyExtractor={(item) => item.id}
@@ -410,6 +412,7 @@ function ProducerHome() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
+      <PageShader />
       <ScrollView
         contentContainerStyle={{ gap: spacing[8], paddingTop: spacing[2], paddingBottom: spacing[12] }}
         showsVerticalScrollIndicator={false}

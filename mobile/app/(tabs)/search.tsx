@@ -12,6 +12,7 @@ import { getCategories, getProducts } from "../../src/api/client";
 import { useAuth } from "../../src/store/auth";
 
 import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
+import { PageShader } from "../../src/components/PageShader";
 export default function Search() {
   const router = useRouter();
   const t = useTheme();
@@ -67,6 +68,7 @@ export default function Search() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
+      <PageShader />
       <View style={{ paddingTop: spacing[3], paddingBottom: spacing[3], gap: spacing[3] }}>
         <Text accessibilityRole="header" style={[type.title, { color: t.textPrimary, paddingHorizontal: spacing[4] }]}>
           Buscar

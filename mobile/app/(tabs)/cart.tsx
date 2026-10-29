@@ -17,6 +17,7 @@ import { showAlert } from "../../src/lib/dialog";
 import { ErrorState, LoadingState } from "../../src/components/QueryState";
 
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
+import { PageShader } from "../../src/components/PageShader";
 
 export default function Cart() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function Cart() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
+      <PageShader />
       <View style={{ paddingHorizontal: spacing[5], paddingTop: spacing[3], paddingBottom: spacing[2] }}>
         <Text accessibilityRole="header" style={[type.title, { color: t.textPrimary }]}>
           Mi canasta

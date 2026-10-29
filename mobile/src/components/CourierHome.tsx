@@ -27,6 +27,7 @@ import MapPreview from "./MapPreview";
 import { useShareLocation, type ShareStatus } from "../lib/useShareLocation";
 import { fetchRoadRoute } from "../lib/roadRoute";
 import { sinceLabel } from "../lib/geo";
+import { PageShader } from "./PageShader";
 
 const GUTTER = spacing[5];
 
@@ -128,6 +129,7 @@ export function CourierHome() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
+      <PageShader surface={t.bgSecondary} />
       <ScrollView
         contentContainerStyle={{ paddingBottom: spacing[10] }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.primary} />}
