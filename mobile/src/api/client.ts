@@ -250,6 +250,8 @@ export interface CreateProductInput {
   photoUrl?: string;
   isSurplus?: boolean;
   discountPct?: number;
+  /** Fecha límite si se daña pronto; null la quita. */
+  expiresAt?: string | null;
   vereda?: string;
   municipio: string;
   latitude: number;
@@ -261,10 +263,10 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
   return data;
 }
 
-/** Lo que el productor cambia después de publicar: precio, cantidad y excedente. */
+/** Lo que el productor cambia después de publicar: precio, cantidad, excedente y si se daña pronto. */
 export async function updateProduct(
   id: string,
-  input: Pick<CreateProductInput, "price" | "stock" | "isSurplus" | "discountPct">
+  input: Pick<CreateProductInput, "price" | "stock" | "isSurplus" | "discountPct" | "expiresAt">
 ): Promise<Product> {
   const { data } = await api.patch(`/products/${id}`, input);
   return data;

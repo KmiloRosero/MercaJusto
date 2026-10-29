@@ -1,16 +1,16 @@
 import React, { useState } from "react";
-import { Pressable, Switch, Text, TextInput, View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { BottomSheet } from "./BottomSheet";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
-import { fontSize, formatCOP, radius, spacing, type, useTheme } from "../theme";
+import { FreshnessOffer } from "./FreshnessOffer";
+import { expiresAtFor, spoilDaysFrom } from "../lib/freshness";
+import { fontSize, radius, spacing, type, useTheme } from "../theme";
 import { apiErrorMessage, updateProduct } from "../api/client";
 import type { Product } from "../api/types";
 import { toast } from "../store/toast";
 import { useAuth } from "../store/auth";
-
-const DISCOUNTS = [10, 20, 30];
 
 interface Props {
   product: Product;
@@ -19,8 +19,8 @@ interface Props {
 }
 
 /**
- * Lo que cambia día a día en una cosecha publicada: precio, cantidad y modo
- * excedente. Nombre, categoría y foto se quedan como se publicaron.
+ * Lo que cambia día a día en una cosecha publicada: precio, cantidad, si se
+ * daña pronto (con su oferta) y modo excedente. Nombre, categoría y foto se quedan como se publicaron.
  */
 export function EditHarvestSheet({ product, visible, onClose }: Props) {
   const t = useTheme();
@@ -31,13 +31,12 @@ export function EditHarvestSheet({ product, visible, onClose }: Props) {
   const [stock, setStock] = useState(String(product.stock));
   const [isSurplus, setIsSurplus] = useState(product.isSurplus);
   const [discountPct, setDiscountPct] = useState(product.discountPct || 20);
+  const [spoilsIn, setSpoilsIn] = useState<number | null>(spoilDaysFrom(product.expiresAt));
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const unit = product.unit.toLowerCase();
   const numPrice = Number(price);
-  const finalPrice = isSurplus ? Math.round(numPrice * (1 - discountPct / 100)) : numPrice;
-  const discounts = DISCOUNTS.includes(discountPct) ? DISCOUNTS : [...DISCOUNTS, discountPct].sort((a, b) => a - b);
 
   const inputStyle = {
     height: 48,
@@ -62,6 +61,7 @@ export function EditHarvestSheet({ product, visible, onClose }: Props) {
         stock: Math.floor(Number(stock)),
         isSurplus,
         discountPct: isSurplus ? discountPct : 0,
+        expiresAt: spoilsIn !== null ? expiresAtFor(spoilsIn) : null,
       });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["product", product.id] }),
@@ -110,65 +110,16 @@ export function EditHarvestSheet({ product, visible, onClose }: Props) {
           </Text>
         </View>
 
-        <View style={{ gap: spacing[3] }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Icon name="leaf" size={18} color={t.accent} />
-                <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>Modo excedente</Text>
-              </View>
-              <Text style={[type.footnote, { color: t.textSecondary, marginTop: 2, fontWeight: "400" }]}>
-                Un descuento para vender lo que te sobró antes de que se pierda.
-              </Text>
-            </View>
-            <Switch
-              value={isSurplus}
-              onValueChange={setIsSurplus}
-              trackColor={{ true: t.accent, false: t.gray300 }}
-              thumbColor={isSurplus ? t.onAccent : t.bgCard}
-              accessibilityLabel="Modo excedente"
-            />
-          </View>
-
-          {isSurplus ? (
-            <View style={{ flexDirection: "row", gap: spacing[2] }}>
-              {discounts.map((d) => {
-                const selected = d === discountPct;
-                return (
-                  <Pressable
-                    key={d}
-                    onPress={() => setDiscountPct(d)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: selected }}
-                    style={{
-                      flex: 1,
-                      minHeight: 48,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      borderRadius: radius.md,
-                      borderWidth: 1.5,
-                      borderColor: selected ? t.accent : t.border,
-                      backgroundColor: selected ? t.accentLight : t.bgPrimary,
-                    }}
-                  >
-                    <Text
-                      style={{ fontSize: fontSize.base, fontWeight: "800", color: selected ? t.onAccentLight : t.textSecondary }}
-                    >
-                      -{d} %
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          ) : null}
-
-          {numPrice > 0 ? (
-            <Text style={[type.callout, { color: t.textPrimary }]}>
-              El comprador paga {formatCOP(finalPrice)} por {unit}
-              {isSurplus ? <Text style={{ color: t.textTertiary, fontWeight: "400" }}> · antes {formatCOP(numPrice)}</Text> : null}
-            </Text>
-          ) : null}
-        </View>
+        <FreshnessOffer
+          spoilsIn={spoilsIn}
+          onSpoilsIn={setSpoilsIn}
+          isSurplus={isSurplus}
+          onSurplus={setIsSurplus}
+          discountPct={discountPct}
+          onDiscount={setDiscountPct}
+          price={numPrice || 0}
+          unit={unit}
+        />
 
         {error ? (
           <View style={{ flexDirection: "row", gap: spacing[2], alignItems: "flex-start" }}>

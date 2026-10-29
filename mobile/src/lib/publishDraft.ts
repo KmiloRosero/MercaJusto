@@ -15,6 +15,8 @@ export interface PublishDraft {
   description: string;
   isSurplus: boolean;
   discountPct: number;
+  /** En cuántos días se daña (null = aguanta). Falta en borradores viejos. */
+  spoilsIn?: number | null;
   municipio: string;
   vereda: string;
   coords: { lat: number; lng: number } | null;

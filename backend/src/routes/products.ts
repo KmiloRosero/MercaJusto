@@ -76,7 +76,15 @@ productsRouter.get("/rescue", async (_req, res, next) => {
   try {
     const now = new Date();
     const products = await prisma.product.findMany({
-      where: { isActive: true, isSurplus: true, discountPct: { gt: 0 }, stock: { gt: 0 } },
+      // Excedentes con descuento y todo lo que el productor marcó que se daña en los próximos 3 días.
+      where: {
+        isActive: true,
+        stock: { gt: 0 },
+        OR: [
+          { isSurplus: true, discountPct: { gt: 0 } },
+          { expiresAt: { gt: now, lte: new Date(now.getTime() + 3 * 24 * 3600 * 1000) } },
+        ],
+      },
       include: {
         category: true,
         producer: { select: { id: true, name: true, rating: true, ratingCount: true, avatarUrl: true } },
@@ -96,7 +104,8 @@ productsRouter.get("/rescue", async (_req, res, next) => {
     const rescuedToday = new Map(sold.map((s) => [s.productId, s._sum.quantity ?? 0]));
 
     const items = products
-      .map((p) => ({ ...p, losesAt: losesAt(p.harvestDate, p.category?.slug), rescuedToday: rescuedToday.get(p.id) ?? 0 }))
+      // La fecha que puso el productor manda; si no hay, se estima por la vida útil de su categoría.
+      .map((p) => ({ ...p, losesAt: p.expiresAt ?? losesAt(p.harvestDate, p.category?.slug), rescuedToday: rescuedToday.get(p.id) ?? 0 }))
       // Lo que ya se perdió no se ofrece; lo que no tiene fecha de cosecha va al final.
       .filter((p) => !p.losesAt || p.losesAt > now)
       .sort((a, b) => (a.losesAt?.getTime() ?? Infinity) - (b.losesAt?.getTime() ?? Infinity))
@@ -150,6 +159,8 @@ const createProductSchema = z.object({
   isSurplus: z.boolean().optional(),
   discountPct: z.number().int().min(0).max(70).optional(),
   harvestDate: z.string().datetime().optional(),
+  // "Se daña pronto": fecha límite que pone el productor (null la quita).
+  expiresAt: z.string().datetime().nullable().optional(),
   vereda: z.string().optional(),
   municipio: z.string(),
   latitude: z.number().min(-90).max(90),
@@ -163,6 +174,7 @@ productsRouter.post("/", requireAuth, requireRole("PRODUCER"), async (req, res, 
       data: {
         ...data,
         harvestDate: data.harvestDate ? new Date(data.harvestDate) : undefined,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
         producerId: req.user!.userId,
       },
     });
@@ -192,6 +204,7 @@ productsRouter.patch("/:id", requireAuth, requireRole("PRODUCER"), async (req, r
       data: {
         ...data,
         harvestDate: data.harvestDate ? new Date(data.harvestDate) : undefined,
+        expiresAt: data.expiresAt === undefined ? undefined : data.expiresAt ? new Date(data.expiresAt) : null,
       },
     });
     // Avisar solo cuando la cosecha entra a excedente o mejora el descuento, no en cada edición.

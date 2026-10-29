@@ -116,6 +116,9 @@ model Product {
   isSurplus    Boolean   @default(false) // modo excedente = descuento
   discountPct  Int       @default(0)     // 0-70
   harvestDate  DateTime?
+  // Hasta cuándo está bueno, según el productor ("se daña pronto"). Con esto
+  // sale en el cuadro "Rescátalo hoy" del inicio con su cuenta regresiva.
+  expiresAt    DateTime?
 
   // Ubicación del producto (aprox. a la del productor, pero se puede
   // ajustar si la finca está en otra vereda)

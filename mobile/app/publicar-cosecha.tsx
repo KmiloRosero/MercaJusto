@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Switch,
   Text,
   TextInput,
   View,
@@ -32,8 +31,9 @@ import { toast } from "../src/store/toast";
 import { clearPublishDraft, draftHasContent, loadPublishDraft, PublishDraft, savePublishDraft } from "../src/lib/publishDraft";
 import { usePublishQueue } from "../src/store/publishQueue";
 import { SlowActionHint } from "../src/components/QueryState";
+import { FreshnessOffer } from "../src/components/FreshnessOffer";
+import { expiresAtFor } from "../src/lib/freshness";
 const UNITS = ["Kilo", "Libra", "Atado", "Docena", "Unidad", "Litro"];
-const DISCOUNTS = [10, 20, 30];
 
 // Una pregunta por pantalla: menos decisiones a la vez para quien publica desde el campo.
 const STEPS = ["¿Qué vas a vender?", "¿A cuánto lo vendes?", "¿Dónde está tu cosecha?"];
@@ -78,6 +78,7 @@ export default function PublicarCosecha() {
   const [description, setDescription] = useState("");
   const [isSurplus, setIsSurplus] = useState(false);
   const [discountPct, setDiscountPct] = useState(20);
+  const [spoilsIn, setSpoilsIn] = useState<number | null>(null);
   const [municipio, setMunicipio] = useState(farm?.municipio ?? "Pasto");
   const [vereda, setVereda] = useState(farm?.vereda ?? "");
   const [step, setStep] = useState(0);
@@ -93,7 +94,7 @@ export default function PublicarCosecha() {
   const [draftRestored, setDraftRestored] = useState(false);
   const currentDraft: PublishDraft = {
     name, categoryId, price, traditionalPrice, unit, stock, description,
-    isSurplus, discountPct, municipio, vereda, coords, photoUri, photoMime,
+    isSurplus, discountPct, spoilsIn, municipio, vereda, coords, photoUri, photoMime,
   };
 
   const applyDraft = (d: PublishDraft) => {
@@ -106,6 +107,7 @@ export default function PublicarCosecha() {
     setDescription(d.description);
     setIsSurplus(d.isSurplus);
     setDiscountPct(d.discountPct);
+    setSpoilsIn(d.spoilsIn ?? null);
     setMunicipio(d.municipio);
     setVereda(d.vereda);
     setCoords(d.coords);
@@ -140,7 +142,7 @@ export default function PublicarCosecha() {
     await clearPublishDraft();
     applyDraft({
       name: "", categoryId: null, price: "", traditionalPrice: "", unit: "Kilo", stock: "",
-      description: "", isSurplus: false, discountPct: 20, municipio: farm?.municipio ?? "Pasto", vereda: farm?.vereda ?? "",
+      description: "", isSurplus: false, discountPct: 20, spoilsIn: null, municipio: farm?.municipio ?? "Pasto", vereda: farm?.vereda ?? "",
       coords: null, photoUri: null, photoMime: null,
     });
     setDraftRestored(false);
@@ -295,6 +297,7 @@ export default function PublicarCosecha() {
           photoUrl: photoUri,
           isSurplus,
           discountPct: isSurplus ? discountPct : 0,
+          expiresAt: spoilsIn !== null ? expiresAtFor(spoilsIn) : null,
           municipio: municipio.trim() || "Nariño",
           vereda: vereda.trim() || null,
           latitude: 0,
@@ -336,6 +339,7 @@ export default function PublicarCosecha() {
       stock: numStock,
       isSurplus,
       discountPct: isSurplus ? discountPct : 0,
+      expiresAt: spoilsIn !== null ? expiresAtFor(spoilsIn) : undefined,
       municipio: municipio.trim(),
       vereda: vereda.trim() || undefined,
       latitude: defaultCoords.lat,
@@ -602,57 +606,16 @@ export default function PublicarCosecha() {
           {step === 2 ? (
             <>
               <Card>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: spacing[3] }}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                      <Icon name="leaf" size={18} color={t.accent} />
-                      <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: t.textPrimary }}>¿Te sobró cosecha?</Text>
-                    </View>
-                    <Text style={{ fontSize: fontSize.sm, color: t.textSecondary, marginTop: 2, lineHeight: 18 }}>
-                      Activa el modo excedente con un descuento para venderla antes de que se pierda.
-                    </Text>
-                  </View>
-                  <Switch
-                    value={isSurplus}
-                    onValueChange={setIsSurplus}
-                    trackColor={{ true: t.accent, false: t.gray300 }}
-                    thumbColor={isSurplus ? t.onAccent : t.bgCard}
-                    accessibilityLabel="Modo excedente"
-                  />
-                </View>
-
-                {isSurplus ? (
-                  <View style={{ gap: spacing[2] }}>
-                    <Text style={{ fontSize: fontSize.sm, fontWeight: "600", color: t.textSecondary }}>Descuento</Text>
-                    <View style={{ flexDirection: "row", gap: spacing[2] }}>
-                      {DISCOUNTS.map((d) => {
-                        const selected = d === discountPct;
-                        return (
-                          <Pressable
-                            key={d}
-                            onPress={() => setDiscountPct(d)}
-                            accessibilityRole="radio"
-                            accessibilityState={{ checked: selected }}
-                            style={{
-                              flex: 1,
-                              minHeight: 48,
-                              justifyContent: "center",
-                              borderRadius: radius.md,
-                              borderWidth: 1.5,
-                              alignItems: "center",
-                              borderColor: selected ? t.accent : t.border,
-                              backgroundColor: selected ? t.accentLight : t.bgPrimary,
-                            }}
-                          >
-                            <Text style={{ fontSize: fontSize.base, fontWeight: "800", color: selected ? t.onAccentLight : t.textSecondary }}>
-                              -{d} %
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </View>
-                  </View>
-                ) : null}
+                <FreshnessOffer
+                  spoilsIn={spoilsIn}
+                  onSpoilsIn={setSpoilsIn}
+                  isSurplus={isSurplus}
+                  onSurplus={setIsSurplus}
+                  discountPct={discountPct}
+                  onDiscount={setDiscountPct}
+                  price={Number(price) || 0}
+                  unit={unit.toLowerCase()}
+                />
               </Card>
 
               <Card>

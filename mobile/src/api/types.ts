@@ -44,6 +44,8 @@ export interface Product {
   isSurplus: boolean;
   discountPct: number;
   harvestDate?: string | null;
+  /** Hasta cuándo está bueno, según el productor ("se daña pronto"). */
+  expiresAt?: string | null;
   vereda?: string | null;
   municipio: string;
   latitude: number;

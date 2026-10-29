@@ -25,6 +25,7 @@ import { EditHarvestSheet } from "../../src/components/EditHarvestSheet";
 import { Avatar } from "../../src/components/Avatar";
 import { PressableScale } from "../../src/components/PressableScale";
 import { productUrl, shareText } from "../../src/lib/share";
+import { spoilsLabel } from "../../src/lib/freshness";
 export default function ProductDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -196,6 +197,11 @@ export default function ProductDetail() {
                 Disponible: {product.stock} {product.unit}
               </Pill>
             )}
+            {spoilsLabel(product.expiresAt) ? (
+              <Pill variant="accent" icon="alarm-outline">
+                {spoilsLabel(product.expiresAt)}
+              </Pill>
+            ) : null}
             {product.harvestDate ? (
               <Pill variant="primary" icon="time-outline">
                 Cosechado {new Date(product.harvestDate).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
