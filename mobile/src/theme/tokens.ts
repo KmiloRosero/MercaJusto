@@ -255,8 +255,8 @@ export const shadow = {
 } as const;
 
 export const nav = {
-  /** Barra de pestañas sin el área segura: ícono + etiqueta sin recortes. */
-  bottomHeight: 68,
+  /** Dock de pestañas sin el área segura: cápsula de 62 + aire arriba y abajo. */
+  bottomHeight: 78,
   /** App bar de Material. */
   topbarHeight: 64,
 } as const;

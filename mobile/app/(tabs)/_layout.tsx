@@ -10,15 +10,14 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { Tabs } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "../../src/store/auth";
-import { motion, nav, useTheme } from "../../src/theme";
+import { motion, useTheme } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { Icon, IconName } from "../../src/components/Icon";
+import { Dock } from "../../src/components/ui/Dock";
 
 export default function TabsLayout() {
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   // Productos distintos, no unidades: 3 kg de papa cuentan como un producto.
   const cartCount = useCart((s) => s.items.length);
   const fetchCart = useCart((s) => s.fetch);
@@ -33,18 +32,11 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <Dock {...props} />}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: t.primary,
         tabBarInactiveTintColor: t.textTertiary,
-        tabBarStyle: {
-          backgroundColor: t.bgPrimary,
-          borderTopColor: t.border,
-          height: nav.bottomHeight + insets.bottom,
-          paddingTop: 6,
-          paddingBottom: 6 + insets.bottom,
-        },
-        tabBarLabelStyle: { fontSize: 12, lineHeight: 16, fontWeight: "700" },
       }}
     >
       <Tabs.Screen
@@ -110,9 +102,9 @@ export default function TabsLayout() {
   );
 }
 
-function TabIcon({ icon, color, focused }: { icon: IconName; color: ColorValue; focused: boolean }) {
+function TabIcon({ icon, color }: { icon: IconName; color: ColorValue; focused?: boolean }) {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", transform: [{ scale: focused ? 1.1 : 1 }] }}>
+    <View style={{ alignItems: "center", justifyContent: "center" }}>
       <Icon name={icon} size={22} color={color as string} />
     </View>
   );
@@ -157,7 +149,7 @@ function CartBadge({ count }: { count: number }) {
           borderRadius: 9,
           backgroundColor: t.primary,
           borderWidth: 1.5,
-          borderColor: t.bgPrimary,
+          borderColor: t.primaryLight,
           alignItems: "center",
           justifyContent: "center",
         },
