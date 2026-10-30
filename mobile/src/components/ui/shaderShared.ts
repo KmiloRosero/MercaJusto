@@ -20,39 +20,60 @@ export interface ShaderCanvasProps {
 }
 
 /**
- * Lomas en terrazas, como las laderas cultivadas de Nariño: curvas de nivel que
- * se mueven muy despacio, más marcadas arriba y desvanecidas hacia el contenido
- * para que el texto siempre se lea. Donde está el dedo (o el puntero) se
- * calienta un poco con el color de la tierra.
- * Colores: u_surface (fondo), u_field (relleno de las lomas, verde claro),
- * u_line (curvas de nivel) y u_sun (brillo de tierra).
+ * Amanecer sobre las lomas de Nariño: arriba un cielo con el brillo cálido del
+ * sol, y tres capas de lomas cultivadas en terrazas que se mueven a distinta
+ * velocidad (las de atrás más despacio y más veladas, como con bruma). Todo
+ * se funde con el color de la pantalla antes de llegar al contenido, para que
+ * el texto siempre se lea. El sol sigue al puntero en la web y deriva solo en
+ * el celular.
+ * Colores: u_surface (fondo), u_field (lomas, verde claro), u_line (verde
+ * fuerte para dar profundidad y terrazas), u_sun (sol) y u_glow (cielo cálido).
  */
 export const FIELDS_FRAGMENT = `
+float ridge(float x, float t, float seed) {
+  return sin(x * 1.7 + seed + t * 0.5) * 0.065
+       + sin(x * 3.9 + seed * 2.1 - t * 0.35) * 0.025
+       + sin(x * 0.8 + seed * 0.7 + t * 0.2) * 0.07;
+}
+
+vec3 hill(vec3 colour, vec2 p, float t, float base, float depth, float speed, float seed, float haze) {
+  float r = base + ridge(p.x + t * speed, t, seed);
+  float below = p.y - r;
+  float inside = smoothstep(-0.003, 0.003, below);
+  vec3 tone = mix(u_field, u_line, depth);
+  // Terrazas: franjas que siguen la forma de la loma, marcadas cerca de la cima.
+  float band = fract(below * 26.0 + sin(p.x * 2.3 + seed) * 0.35);
+  float terrace = smoothstep(0.0, 0.06, band) * smoothstep(0.22, 0.08, band) * (1.0 - smoothstep(0.0, 0.32, below));
+  tone = mix(tone, u_line, terrace * 0.1);
+  // Borde iluminado por el sol en la cresta.
+  tone = mix(tone, u_glow, exp(-below * below * 9000.0) * 0.5);
+  // Bruma: lo de atrás se acerca al cielo.
+  tone = mix(tone, u_glow, haze);
+  return mix(colour, tone, inside);
+}
+
 void main() {
-  vec2 uv = gl_FragCoord.xy / u_resolution;
-  float aspect = u_resolution.x / u_resolution.y;
-  vec2 p = vec2(uv.x * aspect, uv.y);
-  float t = u_time * 0.08;
-
-  float h = sin(p.x * 2.2 + t * 3.0) * 0.07
-          + sin(p.x * 5.1 - t * 2.0 + 1.3) * 0.03
-          + sin(p.x * 1.1 + t) * 0.05;
-  float y = uv.y + h;
-
-  float bands = fract(y * 7.0 - t * 0.6);
-  float contour = smoothstep(0.0, 0.05, bands) * smoothstep(0.14, 0.05, bands);
-  float ridge = smoothstep(0.0, 1.0, bands) * 0.5;
-
-  float hill = smoothstep(0.42, 1.0, y);
-
-  vec2 m = vec2(u_pointer.x * aspect, u_pointer.y);
-  vec2 d = p - m;
-  float glow = 0.16 / (0.16 + dot(d, d) * 3.5);
+  float unit = min(u_resolution.x, u_resolution.y * 0.55);
+  // x en anchos, y hacia abajo desde el borde superior.
+  vec2 p = vec2(gl_FragCoord.x / unit, (u_resolution.y - gl_FragCoord.y) / unit);
+  float t = u_time * 0.05;
 
   vec3 colour = u_surface;
-  colour = mix(colour, u_field, hill * (0.6 + ridge * 0.3));
-  colour = mix(colour, u_line, contour * hill * 0.14);
-  colour = mix(colour, u_sun, glow * hill * 0.12);
+
+  // Cielo: un velo cálido arriba y un halo alrededor del sol.
+  // Sin disco: un halo sin borde, para que nunca compita con el texto de arriba.
+  vec2 sun = vec2(u_pointer.x * u_resolution.x / unit, 0.2);
+  float d = length(p - sun);
+  float sky = 1.0 - smoothstep(0.0, 0.75, p.y);
+  colour = mix(colour, u_glow, sky * (0.35 + exp(-d * d * 7.0) * 0.65));
+  colour = mix(colour, u_sun, exp(-d * d * 40.0) * 0.16 * sky);
+
+  colour = hill(colour, p, t, 0.33, 0.02, 0.15, 1.0, 0.55);
+  colour = hill(colour, p, t, 0.47, 0.18, 0.3, 4.0, 0.22);
+  colour = hill(colour, p, t, 0.61, 0.36, 0.5, 7.3, 0.0);
+
+  // Neblina hacia el contenido.
+  colour = mix(colour, u_surface, smoothstep(0.62, 1.2, p.y));
   gl_FragColor = vec4(colour, 1.0);
 }
 `;
