@@ -28,6 +28,7 @@ import { useShareLocation, type ShareStatus } from "../lib/useShareLocation";
 import { fetchRoadRoute } from "../lib/roadRoute";
 import { sinceLabel } from "../lib/geo";
 import { PageShader } from "./PageShader";
+import { useDockInset } from "./ui/Dock";
 
 const GUTTER = spacing[5];
 
@@ -46,6 +47,7 @@ function callPhone(phone: string) {
  */
 export function CourierHome() {
   const t = useTheme();
+  const dockInset = useDockInset();
   const router = useRouter();
   const queryClient = useQueryClient();
   const user = useAuth((s) => s.user);
@@ -131,7 +133,7 @@ export function CourierHome() {
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgSecondary }} edges={["top"]}>
       <PageShader surface={t.bgSecondary} />
       <ScrollView
-        contentContainerStyle={{ paddingBottom: spacing[10] }}
+        contentContainerStyle={{ paddingBottom: spacing[10] + dockInset }}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.primary} />}
       >
         {/* Encabezado y cifras del día */}

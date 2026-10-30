@@ -3,7 +3,8 @@ import { Text, View } from "react-native";
 import Animated, { Easing, SlideInDown, SlideOutDown, useReducedMotion } from "react-native-reanimated";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { formatCOP, motion, nav, radius, spacing, useTheme } from "../theme";
+import { formatCOP, motion, radius, spacing, useTheme } from "../theme";
+import { useDockInset } from "./ui/Dock";
 import { useCart } from "../store/cart";
 import { useToast } from "../store/toast";
 import { useAuth } from "../store/auth";
@@ -19,10 +20,11 @@ import { Icon } from "./Icon";
 export function CartBar({ overTabs }: { overTabs?: boolean }) {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  // Dentro de la pestaña, la pantalla ya termina sobre las pestañas.
-  const bottom = overTabs ? 0 : insets.bottom;
+  const dockInset = useDockInset();
+  // En una pestaña va sobre el dock, que flota encima de la pantalla.
+  const bottom = overTabs ? dockInset : insets.bottom;
   // El snackbar se mide desde el borde de la ventana.
-  const below = overTabs ? nav.bottomHeight + insets.bottom : insets.bottom;
+  const below = bottom;
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const isBuyer = useAuth((s) => s.user?.role === "BUYER");

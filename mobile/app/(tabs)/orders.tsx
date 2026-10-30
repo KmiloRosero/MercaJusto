@@ -16,6 +16,7 @@ import { PressableScale } from "../../src/components/PressableScale";
 import Animated from "react-native-reanimated";
 import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
 import { PageShader } from "../../src/components/PageShader";
+import { useDockInset } from "../../src/components/ui/Dock";
 
 const isActive = (o: Order) => o.status !== "DELIVERED" && o.status !== "CANCELLED";
 
@@ -26,6 +27,7 @@ const isActive = (o: Order) => o.status !== "DELIVERED" && o.status !== "CANCELL
 export default function Orders() {
   const router = useRouter();
   const t = useTheme();
+  const dockInset = useDockInset();
   const user = useAuth((s) => s.user);
   const isBuyer = user?.role === "BUYER";
   const isCourier = user?.role === "COURIER";
@@ -59,7 +61,7 @@ export default function Orders() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: spacing[5], paddingBottom: spacing[10], gap: spacing[3] }}
+        contentContainerStyle={{ paddingHorizontal: spacing[5], paddingBottom: spacing[10] + dockInset, gap: spacing[3] }}
         stickySectionHeadersEnabled={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.primary} />}
         ListHeaderComponent={

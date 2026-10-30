@@ -13,9 +13,11 @@ import { useAuth } from "../../src/store/auth";
 
 import { ErrorState, ProductGridSkeleton } from "../../src/components/QueryState";
 import { PageShader } from "../../src/components/PageShader";
+import { useDockInset } from "../../src/components/ui/Dock";
 export default function Search() {
   const router = useRouter();
   const t = useTheme();
+  const dockInset = useDockInset();
   const params = useLocalSearchParams<{ surplus?: string; category?: string }>();
   const isBuyer = useAuth((s) => s.user?.role === "BUYER");
 
@@ -156,7 +158,7 @@ export default function Search() {
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={{ gap: spacing[4], paddingHorizontal: spacing[4] }}
-        contentContainerStyle={{ gap: spacing[6], paddingTop: spacing[2], paddingBottom: spacing[10] + 72 }}
+        contentContainerStyle={{ gap: spacing[6], paddingTop: spacing[2], paddingBottom: spacing[10] + 72 + dockInset }}
         refreshing={isRefetching}
         onRefresh={refetch}
         ListEmptyComponent={

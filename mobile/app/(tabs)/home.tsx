@@ -34,6 +34,7 @@ import Animated from "react-native-reanimated";
 import { useFirstLoadStagger } from "../../src/lib/useFirstLoadStagger";
 import { Avatar } from "../../src/components/Avatar";
 import { PageShader } from "../../src/components/PageShader";
+import { useDockInset } from "../../src/components/ui/Dock";
 const GUTTER = spacing[5];
 const CAROUSEL_CARD = 152;
 /** Espacio al final de las listas para que la barra "Ver canasta" no tape nada. */
@@ -105,6 +106,7 @@ function GreetingRow({ placeLabel, place }: { placeLabel: string; place: string 
 function BuyerHome() {
   const router = useRouter();
   const t = useTheme();
+  const dockInset = useDockInset();
   const { width: screenWidth } = useWindowDimensions();
   const heroWidth = Math.min(screenWidth - GUTTER * 2, 560);
   const user = useAuth((s) => s.user);
@@ -299,7 +301,7 @@ function BuyerHome() {
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={{ gap: spacing[4], paddingHorizontal: GUTTER }}
-        contentContainerStyle={{ gap: spacing[6], paddingBottom: spacing[12] + CART_BAR_SPACE }}
+        contentContainerStyle={{ gap: spacing[6], paddingBottom: spacing[12] + CART_BAR_SPACE + dockInset }}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={t.primary} />}
         ListHeaderComponent={header}
@@ -379,6 +381,7 @@ function producersFrom(products: Product[]): ProducerTile[] {
 function ProducerHome() {
   const router = useRouter();
   const t = useTheme();
+  const dockInset = useDockInset();
   const user = useAuth((s) => s.user);
   const { advance, advancingId } = useAdvanceOrder();
   const farm =
@@ -414,7 +417,7 @@ function ProducerHome() {
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
       <PageShader />
       <ScrollView
-        contentContainerStyle={{ gap: spacing[8], paddingTop: spacing[2], paddingBottom: spacing[12] }}
+        contentContainerStyle={{ gap: spacing[8], paddingTop: spacing[2], paddingBottom: spacing[12] + dockInset }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

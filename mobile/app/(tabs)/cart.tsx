@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../../src/components/Button";
 import { Avatar } from "../../src/components/Avatar";
 import { InlineStepper } from "../../src/components/AddControl";
 import { Icon } from "../../src/components/Icon";
 import { FieldTile } from "../../src/components/FieldTile";
-import { fontSize, nav, radius, spacing, type, useTheme, formatCOP } from "../../src/theme";
+import { fontSize, radius, spacing, type, useTheme, formatCOP } from "../../src/theme";
 import { useCart } from "../../src/store/cart";
 import { cartSavings } from "../../src/lib/savings";
 import { effectivePrice, orderTotals } from "../../src/lib/pricing";
@@ -18,13 +18,14 @@ import { ErrorState, LoadingState } from "../../src/components/QueryState";
 
 import { useSnackbarAnchor } from "../../src/lib/useSnackbarAnchor";
 import { PageShader } from "../../src/components/PageShader";
+import { useDockInset } from "../../src/components/ui/Dock";
 
 export default function Cart() {
   const router = useRouter();
   const t = useTheme();
-  const insets = useSafeAreaInsets();
   // El resumen va sobre las pestañas: el snackbar se ancla encima de ambos.
-  const onSummaryLayout = useSnackbarAnchor(nav.bottomHeight + insets.bottom);
+  const dockInset = useDockInset();
+  const onSummaryLayout = useSnackbarAnchor(dockInset);
   const { items, subtotal, fetch, updateQty, remove, pendingIds, error, loaded, loading, loadError } = useCart();
 
   useEffect(() => {
@@ -111,7 +112,7 @@ export default function Cart() {
           <FlatList
             data={Object.entries(groupedByProducer)}
             keyExtractor={([id]) => id}
-            contentContainerStyle={{ paddingBottom: 300 }}
+            contentContainerStyle={{ paddingBottom: 300 + dockInset }}
             ItemSeparatorComponent={() => <View style={{ height: spacing[2], backgroundColor: t.bgSecondary }} />}
             renderItem={({ item: [_, producerItems] }) => {
               const producer = producerItems[0].product.producer;
@@ -189,7 +190,8 @@ export default function Cart() {
               backgroundColor: t.bgCard,
               paddingHorizontal: spacing[5],
               paddingTop: spacing[4],
-              paddingBottom: spacing[4],
+              // Llega hasta abajo: el dock flota sobre el final del resumen.
+              paddingBottom: spacing[4] + dockInset,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
               gap: spacing[2],

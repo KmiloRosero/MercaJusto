@@ -15,6 +15,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { motion, nav, shadow, useTheme, useThemeScheme } from "../../theme";
 import { tapLight } from "../../lib/haptics";
 
+/**
+ * Espacio que ocupa el dock desde el borde de abajo. El dock flota sobre las
+ * pantallas de pestañas para que el contenido pase por detrás del vidrio; cada
+ * pantalla deja este espacio al final de su scroll para no quedar tapada.
+ */
+export function useDockInset() {
+  return nav.bottomHeight + useSafeAreaInsets().bottom;
+}
+
 export type DockProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>["tabBar"]>>[0];
 
 const PILL_HEIGHT = 62;
@@ -27,8 +36,8 @@ const lift = { damping: 14, stiffness: 300 };
  * Barra de pestañas flotante tipo dock: una cápsula de vidrio separada del
  * borde. La pestaña activa lleva un fondo verde que se desliza entre pestañas
  * y un punto debajo; al tocar (o pasar el mouse en la web) el ícono crece e
- * inclina un poco. Mide lo mismo que `nav.bottomHeight` + área segura, así
- * que la canasta y los avisos siguen quedando justo encima.
+ * inclina un poco. Flota sobre las pantallas: el contenido pasa por detrás y
+ * cada pantalla reserva `useDockInset()` al final.
  */
 export function Dock({ state, descriptors, navigation }: DockProps) {
   const t = useTheme();
@@ -65,7 +74,12 @@ export function Dock({ state, descriptors, navigation }: DockProps) {
 
   return (
     <View
+      pointerEvents="box-none"
       style={{
+        position: "absolute",
+        left: 0,
+        right: 0,
+        bottom: 0,
         height: nav.bottomHeight + insets.bottom,
         paddingHorizontal: 16,
         paddingBottom: insets.bottom + GAP_BELOW,
