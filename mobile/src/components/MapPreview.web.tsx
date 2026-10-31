@@ -6,8 +6,8 @@ import { useTheme } from "../theme";
 import { useRoadRoute } from "../lib/roadRoute";
 import { MAP_HEIGHT, boundsPoints, pathPoints, type Coordinate, type MapPreviewProps } from "./mapTypes";
 
-// Mapa real en la web: OpenStreetMap con Leaflet (react-native-maps solo existe
-// en el celular). La línea sigue la carretera (OSRM) y el repartidor aparece en
+// Mapa real en la web: OpenStreetMap con Leaflet (en el celular, el mismo mapa
+// va dentro de un WebView). La línea sigue la carretera (OSRM) y el repartidor aparece en
 // vivo como un marcador que se mueve.
 
 // Leaflet usa `window` al cargarse: solo se carga en el navegador, no en el
