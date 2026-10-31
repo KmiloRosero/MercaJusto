@@ -89,6 +89,9 @@
     "owner": "kmilorosero",
     "updates": {
       "url": "https://u.expo.dev/788dc40f-72a0-40f4-91c7-77ab8645d576"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }
