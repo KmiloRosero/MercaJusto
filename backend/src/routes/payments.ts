@@ -33,6 +33,11 @@ const paymentFields = { id: true, status: true, paymentMethod: true, paymentStat
 
 const checkoutSchema = z.object({ returnUrl: z.string().max(500).refine(isAllowedReturnUrl, "URL de regreso no permitida") });
 
+// GET /api/payments/config — la app sabe si ofrecer el pago en línea
+paymentsRouter.get("/config", (_req, res) => {
+  res.json({ online: wompiEnabled });
+});
+
 // POST /api/payments/wompi/:orderId/checkout — abre (o reintenta) el pago en línea
 paymentsRouter.post("/wompi/:orderId/checkout", requireAuth, async (req, res, next) => {
   try {

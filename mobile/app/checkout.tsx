@@ -8,14 +8,14 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
 import { AddressSheet } from "../src/components/AddressSheet";
 import { Icon, IconName } from "../src/components/Icon";
 import { fontSize, radius, spacing, type, useTheme, formatCOP, shadow } from "../src/theme";
 import { Address, PaymentMethod } from "../src/api/types";
-import { createOrder, apiErrorMessage } from "../src/api/client";
+import { createOrder, apiErrorMessage, getPaymentConfig } from "../src/api/client";
 import { success } from "../src/lib/haptics";
 import { useAuth } from "../src/store/auth";
 import { useCart } from "../src/store/cart";
@@ -53,7 +53,11 @@ export default function Checkout() {
   const selectedAddress =
     pickedAddress ?? addresses.find((a) => a.isDefault) ?? addresses[0] ?? null;
   const [addressSheetOpen, setAddressSheetOpen] = useState(false);
-  const [payment, setPayment] = useState<PaymentMethod>("WOMPI");
+  // El pago en línea solo se ofrece si el servidor tiene Wompi listo; si no, efectivo.
+  const paymentConfig = useQuery({ queryKey: ["payment-config"], queryFn: getPaymentConfig, staleTime: 5 * 60_000 });
+  const onlineAvailable = paymentConfig.data?.online === true;
+  const [pickedPayment, setPayment] = useState<PaymentMethod | null>(null);
+  const payment: PaymentMethod = pickedPayment === "WOMPI" && !onlineAvailable ? "CASH" : pickedPayment ?? (onlineAvailable ? "WOMPI" : "CASH");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -175,13 +179,16 @@ export default function Checkout() {
           <View style={{ gap: spacing[2] }}>
             {PAYMENT_METHODS.map((m) => {
               const selected = payment === m.key;
+              const disabled = m.key === "WOMPI" && !onlineAvailable;
+              const desc = disabled ? (paymentConfig.isPending ? "Revisando disponibilidad…" : "No disponible por ahora") : m.desc;
               return (
                 <Pressable
                   key={m.key}
                   onPress={() => setPayment(m.key)}
+                  disabled={disabled}
                   accessibilityRole="radio"
-                  accessibilityState={{ checked: selected }}
-                  accessibilityLabel={`${m.name}. ${m.desc}`}
+                  accessibilityState={{ checked: selected, disabled }}
+                  accessibilityLabel={`${m.name}. ${desc}`}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -193,6 +200,7 @@ export default function Checkout() {
                     marginHorizontal: -spacing[3],
                     borderRadius: radius.md,
                     backgroundColor: selected ? t.primaryLight : "transparent",
+                    opacity: disabled ? 0.5 : 1,
                   }}
                 >
                   <View
@@ -209,7 +217,7 @@ export default function Checkout() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={[type.callout, { color: t.textPrimary }]}>{m.name}</Text>
-                    <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{m.desc}</Text>
+                    <Text style={{ fontSize: fontSize.sm, color: t.textSecondary }}>{desc}</Text>
                   </View>
                   <View
                     style={{

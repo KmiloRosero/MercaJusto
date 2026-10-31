@@ -41,7 +41,10 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
   const [reordering, setReordering] = useState(false);
   const status = ORDER_STATUS[order.status];
   const action = !isBuyer ? NEXT_ACTION[order.status] : undefined;
-  const lines = isBuyer ? order.items : order.items.filter((it) => it.product?.producerId === userId);
+  // El repartidor lleva el pedido completo; el productor solo ve lo suyo.
+  const isCourier = !isBuyer && order.courier?.id === userId;
+  const lines = isBuyer || isCourier ? order.items : order.items.filter((it) => it.product?.producerId === userId);
+  const toCollect = order.paymentMethod === "CASH" && order.paymentStatus !== "PAID";
   const first = lines[0]?.product;
   const isDelivered = order.status === "DELIVERED";
   const reviewed = (order.reviews ?? []).some((r) => r.fromUserId === userId);
@@ -122,9 +125,16 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
             <Pill variant={status.variant} icon={status.icon}>
               {status.label}
             </Pill>
-            <Text style={{ fontSize: 16, fontWeight: "800", color: t.textPrimary }}>
-              {formatCOP(isBuyer ? order.total : lines.reduce((acc, it) => acc + it.subtotal, 0))}
-            </Text>
+            {isCourier ? (
+              // Al repartidor le importa cuánto cobra en la puerta, no el valor de la cosecha.
+              <Text style={{ fontSize: toCollect ? 16 : 13, fontWeight: "800", color: toCollect ? t.textPrimary : t.textTertiary }}>
+                {toCollect ? `Cobrar ${formatCOP(order.total)}` : "Pagado"}
+              </Text>
+            ) : (
+              <Text style={{ fontSize: 16, fontWeight: "800", color: t.textPrimary }}>
+                {formatCOP(isBuyer ? order.total : lines.reduce((acc, it) => acc + it.subtotal, 0))}
+              </Text>
+            )}
           </View>
         </View>
       </PressableScale>

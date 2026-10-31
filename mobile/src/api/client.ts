@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import axios, { AxiosError } from "axios";
+import { AxiosError, create as createAxios } from "axios";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import {
@@ -70,7 +70,7 @@ export const tokenStorage = {
 };
 
 // 60 s: el backend gratuito tarda hasta ~50 s en despertar tras estar inactivo.
-export const api = axios.create({
+export const api = createAxios({
   baseURL: `${API_URL}/api`,
   timeout: 60000,
 });
@@ -202,6 +202,12 @@ export async function unregisterPushToken(token?: string): Promise<void> {
 // ═══════════════════════════════════════════
 // CATEGORIES & PRODUCTS
 // ═══════════════════════════════════════════
+
+/** Si el servidor tiene Wompi configurado para cobrar en línea. */
+export async function getPaymentConfig(): Promise<{ online: boolean }> {
+  const { data } = await api.get("/payments/config");
+  return data;
+}
 
 export async function getCategories(): Promise<Category[]> {
   const { data } = await api.get("/categories");
