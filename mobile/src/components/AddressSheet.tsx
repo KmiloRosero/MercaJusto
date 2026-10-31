@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import * as Location from "expo-location";
+import { currentPosition } from "../lib/location";
 import { BottomSheet } from "./BottomSheet";
 import { Button } from "./Button";
 import { fontSize, radius, spacing, useTheme } from "../theme";
@@ -67,14 +68,14 @@ export function AddressSheet({
         );
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+      const here = await currentPosition();
+      setCoords({ lat: here.latitude, lng: here.longitude });
 
       // Reverse geocode para autocompletar municipio
       try {
         const [geo] = await Location.reverseGeocodeAsync({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
+          latitude: here.latitude,
+          longitude: here.longitude,
         });
         if (geo?.city) setMunicipio(geo.city);
         if (geo?.street) setDetail((d) => d || geo.street!);

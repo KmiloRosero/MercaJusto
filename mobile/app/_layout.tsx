@@ -13,6 +13,7 @@ import { useAuth } from "../src/store/auth";
 import { registerForPushNotifications } from "../src/lib/notifications";
 import { useTheme, useThemeScheme } from "../src/theme";
 import { Toast } from "../src/components/Toast";
+import { SheetHost } from "../src/components/SheetHost";
 import { AnimatedSplash } from "../src/components/AnimatedSplash";
 import { usePublishQueueRunner } from "../src/store/publishQueue";
 
@@ -120,6 +121,7 @@ export default function RootLayout() {
             <Stack.Screen name="impacto" />
           </Stack>
           ) : null}
+          <SheetHost />
           <Toast />
           {splashVisible ? <AnimatedSplash ready={hydrated} onFinish={hideSplash} /> : null}
         </QueryClientProvider>

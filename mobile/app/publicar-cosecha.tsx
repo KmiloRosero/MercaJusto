@@ -14,6 +14,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import { currentPosition } from "../src/lib/location";
 import * as ImagePicker from "expo-image-picker";
 import { TopBar } from "../src/components/TopBar";
 import { Button } from "../src/components/Button";
@@ -205,15 +206,13 @@ export default function PublicarCosecha() {
         setLocating(false);
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setCoords({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+      const here = await currentPosition();
+      setCoords({ lat: here.latitude, lng: here.longitude });
 
       try {
         const [rev] = await Location.reverseGeocodeAsync({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
+          latitude: here.latitude,
+          longitude: here.longitude,
         });
         if (rev?.city) setMunicipio(rev.city);
         if (rev?.subregion && !vereda) setVereda(rev.subregion);

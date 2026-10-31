@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useId, useLayoutEffect, useState } from "react";
 import {
-  Modal,
+  BackHandler,
   Pressable,
   ScrollView,
   Text,
@@ -18,10 +18,11 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { scheduleOnRN } from "react-native-worklets";
 import { motion, radius, spacing, useTheme } from "../theme";
 import { Icon } from "./Icon";
+import { useSheetPortal } from "./SheetHost";
 
 interface BottomSheetProps {
   visible: boolean;
@@ -99,12 +100,22 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
     opacity: interpolate(offset.value, [0, travel], [1, 0], "clamp"),
   }));
 
-  if (!mounted) return null;
+  // El botón atrás de Android cierra la hoja, como lo hacía el Modal.
+  useEffect(() => {
+    if (!visible) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onClose();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onClose]);
 
-  return (
-    <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
+  // La hoja se dibuja en SheetHost (raíz de la app), no aquí.
+  const id = useId();
+  const setNode = useSheetPortal((s) => s.set);
+  const removeNode = useSheetPortal((s) => s.remove);
+  const content = !mounted ? null : (
+        <View style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}>
           <Animated.View style={[{ flex: 1, backgroundColor: t.scrim }, scrimStyle]}>
             <Pressable
               style={{ flex: 1 }}
@@ -183,7 +194,12 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
             )}
           </Animated.View>
         </View>
-      </GestureHandlerRootView>
-    </Modal>
   );
+  useLayoutEffect(() => {
+    if (content) setNode(id, content);
+    else removeNode(id);
+  });
+  useEffect(() => () => removeNode(id), [id, removeNode]);
+
+  return null;
 }
