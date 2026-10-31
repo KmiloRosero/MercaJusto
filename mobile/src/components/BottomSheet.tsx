@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -13,6 +11,7 @@ import {
 import Animated, {
   Easing,
   interpolate,
+  useAnimatedKeyboard,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -54,6 +53,9 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
   // Una sola variable mueve la hoja y el fondo, así abrir, cerrar y arrastrar
   // se pueden interrumpir entre sí sin saltos.
   const offset = useSharedValue(windowHeight);
+  // Con Android de borde a borde la ventana ya no se encoge con el teclado:
+  // la hoja sube exactamente lo que mide el teclado, en las dos plataformas.
+  const keyboard = useAnimatedKeyboard();
 
   if (visible && !mounted) setMounted(true);
 
@@ -89,7 +91,9 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
     });
 
   const sheetStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: offset.value }],
+    transform: [{ translateY: offset.value - keyboard.height.value }],
+    // Con el teclado abierto la hoja se encoge para no salirse por arriba.
+    maxHeight: (windowHeight - keyboard.height.value) * 0.85,
   }));
   const scrimStyle = useAnimatedStyle(() => ({
     opacity: interpolate(offset.value, [0, travel], [1, 0], "clamp"),
@@ -100,7 +104,7 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <View style={{ flex: 1 }}>
           <Animated.View style={[{ flex: 1, backgroundColor: t.scrim }, scrimStyle]}>
             <Pressable
               style={{ flex: 1 }}
@@ -121,7 +125,6 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
                 borderTopLeftRadius: radius.xl,
                 borderTopRightRadius: radius.xl,
                 paddingBottom: spacing[6],
-                maxHeight: "85%",
               },
               sheetStyle,
             ]}
@@ -179,7 +182,7 @@ export function BottomSheet({ visible, onClose, title, children, scrollable = tr
               <View style={{ paddingHorizontal: spacing[4] }}>{children}</View>
             )}
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </GestureHandlerRootView>
     </Modal>
   );

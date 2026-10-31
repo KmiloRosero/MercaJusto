@@ -273,6 +273,7 @@ export default function Checkout() {
                 <FieldTile
                   category={it.product.category}
                   productName={it.product.name}
+                  photoUrl={it.product.photoUrl}
                   size={40}
                   iconSize={20}
                   radius={radius.sm}

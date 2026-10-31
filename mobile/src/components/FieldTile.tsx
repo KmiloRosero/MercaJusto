@@ -1,5 +1,6 @@
 import React from "react";
-import { View, ViewStyle } from "react-native";
+import { Image, ImageStyle, View, ViewStyle } from "react-native";
+import { sizedImage } from "../lib/image";
 import { Category } from "../api/types";
 import { useFieldColor } from "../theme";
 import { Icon } from "./Icon";
@@ -32,6 +33,8 @@ interface FieldTileProps {
   category?: Category | null;
   /** Nombre del producto: afina el ícono cuando el de la categoría no le corresponde. */
   productName?: string;
+  /** Foto que subió el productor; si hay, se muestra en vez del ícono. */
+  photoUrl?: string | null;
   /** Lado del cuadro. Si se omite, ocupa todo el contenedor. */
   size?: number;
   iconSize: number;
@@ -40,11 +43,22 @@ interface FieldTileProps {
 }
 
 /**
- * Marcador de producto sin foto: el ícono de su categoría sobre el color del
- * campo que la cultiva (la "colcha de retazos" de Nariño).
+ * Miniatura de producto: la foto del productor si la subió; si no, el ícono
+ * de su categoría sobre el color del campo que la cultiva (la "colcha de
+ * retazos" de Nariño).
  */
-export function FieldTile({ category, productName, size, iconSize, radius = 12, style }: FieldTileProps) {
+export function FieldTile({ category, productName, photoUrl, size, iconSize, radius = 12, style }: FieldTileProps) {
   const field = useFieldColor(category);
+  if (photoUrl) {
+    return (
+      <Image
+        source={{ uri: sizedImage(photoUrl, size ?? 160, 1) }}
+        resizeMode="cover"
+        accessibilityIgnoresInvertColors
+        style={[size ? { width: size, height: size } : { width: "100%", height: "100%" }, { borderRadius: radius, backgroundColor: field.ground }, style as ImageStyle]}
+      />
+    );
+  }
   return (
     <View
       style={[

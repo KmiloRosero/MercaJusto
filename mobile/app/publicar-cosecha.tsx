@@ -4,7 +4,6 @@ import {
   BackHandler,
   Image,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -395,7 +394,8 @@ export default function PublicarCosecha() {
         </Text>
       </View>
 
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      {/* Android de borde a borde no encoge la ventana con el teclado: padding en las dos plataformas. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={{ paddingHorizontal: spacing[5], paddingTop: spacing[4], gap: spacing[6], paddingBottom: spacing[10] }}

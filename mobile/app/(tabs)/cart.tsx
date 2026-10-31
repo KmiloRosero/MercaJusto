@@ -150,6 +150,7 @@ export default function Cart() {
                       <FieldTile
                         category={it.product.category}
                         productName={it.product.name}
+                        photoUrl={it.product.photoUrl}
                         size={64}
                         iconSize={30}
                         radius={radius.md}

@@ -89,7 +89,7 @@ export function OrderCard({ order, isBuyer, userId, onPress, onAdvance, advancin
         style={{ flexDirection: "row", gap: spacing[3] }}
       >
         <View>
-          <FieldTile category={first?.category} productName={first?.name} size={56} iconSize={28} radius={radius.md} />
+          <FieldTile category={first?.category} productName={first?.name} photoUrl={first?.photoUrl} size={56} iconSize={28} radius={radius.md} />
           {lines.length > 1 ? (
             <View
               style={{

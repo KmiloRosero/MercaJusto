@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, ScrollView, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "../src/components/Button";
@@ -50,7 +50,8 @@ export default function CambiarContrasena() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: t.bgPrimary }} edges={["top"]}>
       <TopBar showBack onBack={() => router.back()} title="Cambiar contraseña" />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      {/* Android de borde a borde no encoge la ventana con el teclado: padding en las dos plataformas. */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScrollView
           contentContainerStyle={{ padding: spacing[4], gap: spacing[4] }}
           keyboardShouldPersistTaps="handled"

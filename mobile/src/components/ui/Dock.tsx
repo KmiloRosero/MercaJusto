@@ -70,7 +70,10 @@ export function Dock({ state, descriptors, navigation }: DockProps) {
   const floating = useAnimatedStyle(() => ({ transform: [{ translateY: float.value }] }));
 
   const onRowLayout = (e: LayoutChangeEvent) => setSlot(e.nativeEvent.layout.width / Math.max(1, routes.length));
-  const glass = scheme === "dark" ? "rgba(22,22,22,0.86)" : "rgba(255,255,255,0.86)";
+  // En la web el vidrio lleva desenfoque; en el celular no, y el contenido de
+  // atrás se transparentaba sucio: ahí va casi opaco.
+  const alpha = Platform.OS === "web" ? 0.86 : 0.97;
+  const glass = scheme === "dark" ? `rgba(22,22,22,${alpha})` : `rgba(255,255,255,${alpha})`;
 
   return (
     <View

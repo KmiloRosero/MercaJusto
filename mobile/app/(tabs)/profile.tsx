@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import React, { useState } from "react";
 import { ScrollView, Switch, Text, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -243,7 +244,7 @@ export default function Profile() {
             onPress={onLogout}
           />
           <Text style={[type.footnote, { textAlign: "center", color: t.textTertiary, fontWeight: "400" }]}>
-            MercaJusto v1.0.0 · Hecho en Nariño, Colombia
+            MercaJusto v{Constants.expoConfig?.version ?? ""} · Hecho en Nariño, Colombia
           </Text>
         </View>
       </ScrollView>
