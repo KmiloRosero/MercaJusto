@@ -2,7 +2,7 @@
 
 **Del campo directo a tu mesa.** Plataforma móvil que conecta productores campesinos de Nariño con compradores urbanos, eliminando intermediarios.
 
-> Proyecto — Ingeniería de Sistemas · Universidad de Nariño
+
 
 ---
 
